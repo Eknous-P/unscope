@@ -42,6 +42,9 @@ endif()
 
 if (ahost_jack)
 	list(APPEND aud_srcs ${pa_path}/hostapi/jack/pa_jack.c)
+	pkg_check_modules(JACK jack2)
+	list(APPEND cpl_opts ${JACK_CFLAGS_OTHER})
+	list(APPEND lnk_libs ${JACK_LIBRARIES})
 endif()
 
 # GUI SOURCES
@@ -60,9 +63,9 @@ pkg_check_modules(SDL2 sdl2)
 list(APPEND cpl_opts ${SDL2_CFLAGS_OTHER})
 list(APPEND lnk_libs ${SDL2_LIBRARIES})
 
-pkg_check_modules(OPENGL3 opengl32)
-list(APPEND cpl_opts ${OPENGL3_CFLAGS_OTHER})
-list(APPEND lnk_libs ${OPENGL3_LIBRARIES})
+pkg_check_modules(OPENGL opengl)
+list(APPEND cpl_opts ${OPENGL_CFLAGS_OTHER})
+list(APPEND lnk_libs ${OPENGL_LIBRARIES})
 # SOURCES
 
 set(unscope_srcs)
