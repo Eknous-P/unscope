@@ -4,6 +4,7 @@ find_package(PkgConfig REQUIRED)
 
 set(pa_path ./submodules/portaudio/src)
 set(imgui_path ./submodules/imgui)
+set(implot_path ./submodules/implot)
 set(srcs_path ./src/)
 
 set(pa_includes
@@ -53,7 +54,11 @@ ${imgui_path}/imgui.cpp
 ${imgui_path}/imgui_demo.cpp
 ${imgui_path}/imgui_draw.cpp
 ${imgui_path}/imgui_tables.cpp
-${imgui_path}/imgui_widgets.cpp)
+${imgui_path}/imgui_widgets.cpp
+
+${implot_path}/implot.cpp
+${implot_path}/implot_demo.cpp
+${implot_path}/implot_items.cpp)
 
 list(APPEND gui_srcs
 ${imgui_path}/backends/imgui_impl_sdl2.cpp
@@ -87,6 +92,7 @@ ${SDL2_INCLUDE_DIRS}
 ${pa_includes}
 ${imgui_path}
 ${imgui_path}/backends
+${implot_path}
 ${srcs_path}
 ${srcs_path}/audio
 ${srcs_path}/gui)
