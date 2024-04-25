@@ -74,7 +74,9 @@ list(APPEND unscope_srcs ${aud_srcs} ${gui_srcs})
 list(APPEND unscope_srcs 
 ${srcs_path}/main.cpp
 ${srcs_path}/audio/audioInput.cpp
-${srcs_path}/audio/audioProcess.cpp)
+${srcs_path}/audio/audioProcess.cpp
+
+${srcs_path}/gui/gui.cpp)
 
 project(unscope VERSION 0) #temporary name
 
@@ -84,6 +86,7 @@ target_include_directories(unscope SYSTEM PRIVATE
 ${SDL2_INCLUDE_DIRS}
 ${pa_includes}
 ${imgui_path}
+${imgui_path}/backends
 ${srcs_path}
 ${srcs_path}/audio
 ${srcs_path}/gui)
