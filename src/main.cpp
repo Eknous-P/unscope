@@ -4,7 +4,6 @@
 
 int main() {
 	AudioInput i;
-	std::cin;
 	i.~AudioInput();
 	return 0;
 }
