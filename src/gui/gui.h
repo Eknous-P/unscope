@@ -16,7 +16,10 @@ class GUI {
 		ImGuiStyle style;
 		ImVec4 clear_color;
 		bool running;
+		float* oscData;
+		unsigned int oscDataSize;
 	public:
+		void writeOscData(float* data, unsigned int size);
 		bool isRunning();
 		int init();
 		void doFrame();

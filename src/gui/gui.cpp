@@ -98,5 +98,11 @@ void GUI::doFrame() {
 void GUI::drawGUI() {
 	ImGui::Begin("test");
 	ImGui::Text("helooooooooooo!!");
+  ImGui::PlotLines("scope",oscData,oscDataSize,0,NULL,-1.0f,1.0f,ImVec2(400,200));
 	ImGui::End();
+}
+
+void GUI::writeOscData(float* data, unsigned int size) {
+  oscData=data;
+  oscDataSize=size;
 }

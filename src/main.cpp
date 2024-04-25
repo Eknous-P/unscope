@@ -7,6 +7,7 @@ int main() {
 	GUI g;
 	g.init();
 	i.~AudioInput();
+
 	while (g.isRunning()) {
 		g.doFrame();
 	}
