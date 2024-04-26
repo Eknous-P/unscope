@@ -1,5 +1,6 @@
 #include "portaudio.h"
 #include <cstddef>
+#include <malloc.h>
 
 class AudioInput {
 	private:
@@ -13,6 +14,7 @@ class AudioInput {
 		struct audioBuffer {
 			float *data;
 			unsigned int index;
+			unsigned int size;
 		};
 
 		AudioConfig conf;
@@ -32,5 +34,7 @@ class AudioInput {
 
 		AudioInput();
 		int init();
+		int stop();
+		float *getData();
 		~AudioInput();
 };

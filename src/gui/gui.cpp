@@ -98,7 +98,7 @@ void GUI::doFrame() {
 void GUI::drawGUI() {
 	ImGui::Begin("test");
 	ImGui::Text("helooooooooooo!!");
-  // ImGui::PlotLines("scope",oscData,oscDataSize,0,NULL,-1.0f,1.0f,ImVec2(400,200));
+  ImGui::PlotLines("scope",oscData,oscDataSize,0,NULL,-1.0f,1.0f,ImVec2(400,200));
   // ImPlot::CreateContext();
   // ImPlot::ShowDemoWindow();
   // ImPlot::DestroyContext();

@@ -7,11 +7,43 @@ AudioInput::AudioInput() {
 }
 
 int AudioInput::bufferWriteCallback(const void *inputBuffer, void *outputBuffer,
-                                           unsigned long framesPerBuffer,
-                                           const PaStreamCallbackTimeInfo* timeInfo,
-                                           PaStreamCallbackFlags statusFlags,
-                                           void *userData) {
-  return 0;
+                                    unsigned long framesPerBuffer,
+                                    const PaStreamCallbackTimeInfo* timeInfo,
+                                    PaStreamCallbackFlags statusFlags,
+                                    void *userData) {
+  audioBuffer *buffer = (audioBuffer*)userData;
+  const float *datRPtr = (const float*)inputBuffer;
+  float *datWPtr = &buffer->data[buffer->index*2]; //replace 2!!!
+  long framesToCalc,i;
+  int finished;
+
+  unsigned long framesLeft = buffer->size-buffer->index;
+
+  (void) outputBuffer;
+  (void) timeInfo;
+  (void) statusFlags;
+  (void) userData;
+  if( framesLeft < framesPerBuffer ) {
+    framesToCalc = framesLeft;
+    finished = paComplete;
+  }
+  else {
+    framesToCalc = framesPerBuffer;
+    finished = paContinue;
+  }
+  if( inputBuffer == NULL ) {
+    for( i=0; i<framesToCalc; i++ ) {
+      *datWPtr++ = 0;  /* left */
+      *datWPtr++ = 0;  /* right */
+    }
+  }
+  else {
+    for( i=0; i<framesToCalc; i++ ) {
+      *datWPtr++ = *datRPtr++;  /* left */
+      *datWPtr++ = *datRPtr++;  /* right */
+    }
+  }
+  return finished;
 }
 
 int AudioInput::init() {
@@ -30,9 +62,25 @@ int AudioInput::init() {
     conf.frameSize,
     paClipOff,
     bufferWriteCallback,
-    NULL
+    &buffer
   );
 
-  return 0;
+  if (err!=paNoError) return -2;
+
+  err = Pa_StartStream(stream);
+
+  return err;
 }
-AudioInput::~AudioInput() {}
+
+int AudioInput::stop() {
+  return Pa_CloseStream(stream);
+}
+
+AudioInput::~AudioInput() {
+  Pa_Terminate();
+  if (buffer.data) free(buffer.data);
+}
+
+float *AudioInput::getData() {
+  return buffer.data;
+}
