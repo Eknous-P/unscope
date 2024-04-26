@@ -1,4 +1,5 @@
 #include "portaudio.h"
+#include <cstddef>
 
 class AudioInput {
 	private:
@@ -23,13 +24,13 @@ class AudioInput {
 
 	public:
 
-		static int bufferWriteCallback(void* inputBuffer,
-																	 void* outputBuffer,
-																	 unsigned long framesPerBuffer,
-        													 const PaStreamCallbackTimeInfo* timeInfo,
-        													 PaStreamCallbackFlags statusFlags,
-        													 void *userData );
+		static int bufferWriteCallback(const void *inputBuffer, void *outputBuffer,
+                                   unsigned long framesPerBuffer,
+                                   const PaStreamCallbackTimeInfo* timeInfo,
+                                   PaStreamCallbackFlags statusFlags,
+                                   void *userData);
 
 		AudioInput();
+		int init();
 		~AudioInput();
 };

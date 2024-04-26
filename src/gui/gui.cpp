@@ -98,7 +98,7 @@ void GUI::doFrame() {
 void GUI::drawGUI() {
 	ImGui::Begin("test");
 	ImGui::Text("helooooooooooo!!");
-  ImGui::PlotLines("scope",oscData,oscDataSize,0,NULL,-1.0f,1.0f,ImVec2(400,200));
+  // ImGui::PlotLines("scope",oscData,oscDataSize,0,NULL,-1.0f,1.0f,ImVec2(400,200));
   // ImPlot::CreateContext();
   // ImPlot::ShowDemoWindow();
   // ImPlot::DestroyContext();
@@ -108,4 +108,14 @@ void GUI::drawGUI() {
 void GUI::writeOscData(float* data, unsigned int size) {
   oscData=data;
   oscDataSize=size;
+}
+
+GUI::~GUI() {
+  // Cleanup
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplSDL2_Shutdown();
+  ImGui::DestroyContext();
+  SDL_GL_DeleteContext(gl_context);
+  SDL_DestroyWindow(window);
+  SDL_Quit();
 }

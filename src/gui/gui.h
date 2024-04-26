@@ -26,4 +26,5 @@ class GUI {
 		void doFrame();
 		void drawGUI();
 		GUI();
+		~GUI();
 };
