@@ -3,38 +3,45 @@
 #include <malloc.h>
 
 class AudioInput {
-	private:
+  private:
 
-		struct AudioConfig{
-			int sampleRate;
-			int frameSize;
-			unsigned char channels;
-		};
+    struct AudioConfig{
+      int sampleRate;
+      int frameSize;
+      unsigned char channels;
+    };
 
-		struct audioBuffer {
-			float *data;
-			unsigned int index;
-			unsigned int size;
-		};
+    struct AudioBuffer {
+      float *data;
+      unsigned int index;
+      unsigned int size;
+    };
 
-		AudioConfig conf;
-		audioBuffer buffer;
+    AudioConfig conf;
+    AudioBuffer buffer;
 
-		PaStream *stream;
-		PaError err;
-		PaStreamParameters streamParams;
+    PaStream *stream;
+    PaError err;
+    PaStreamParameters streamParams;
 
-	public:
+  public:
 
-		static int bufferWriteCallback(const void *inputBuffer, void *outputBuffer,
-                                   unsigned long framesPerBuffer,
-                                   const PaStreamCallbackTimeInfo* timeInfo,
-                                   PaStreamCallbackFlags statusFlags,
-                                   void *userData);
+    int bufferGetCallback(
+      const void *input, void *output,
+      unsigned long frameCount,
+      const PaStreamCallbackTimeInfo* timeInfo,
+      PaStreamCallbackFlags statusFlags);
 
-		AudioInput();
-		int init();
-		int stop();
-		float *getData();
-		~AudioInput();
+    static int _PaCallback(
+      const void *input, void *output,
+      unsigned long frameCount,
+      const PaStreamCallbackTimeInfo* timeInfo,
+      PaStreamCallbackFlags statusFlags,
+      void *userData);
+
+    AudioInput();
+    int init();
+    int stop();
+    float *getData();
+    ~AudioInput();
 };

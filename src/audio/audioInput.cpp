@@ -6,44 +6,22 @@ AudioInput::AudioInput() {
   conf.frameSize=512;
 }
 
-int AudioInput::bufferWriteCallback(const void *inputBuffer, void *outputBuffer,
-                                    unsigned long framesPerBuffer,
-                                    const PaStreamCallbackTimeInfo* timeInfo,
-                                    PaStreamCallbackFlags statusFlags,
-                                    void *userData) {
-  audioBuffer *buffer = (audioBuffer*)userData;
-  const float *datRPtr = (const float*)inputBuffer;
-  float *datWPtr = &buffer->data[buffer->index*2]; //replace 2!!!
-  long framesToCalc,i;
-  int finished;
+int AudioInput::_PaCallback(
+  const void *input, void *output,
+  unsigned long frameCount,
+  const PaStreamCallbackTimeInfo* timeInfo,
+  PaStreamCallbackFlags statusFlags,
+  void *userData )
+{
+  return ((AudioInput*)userData)->bufferGetCallback(input, output, frameCount, timeInfo, statusFlags);
+}
 
-  unsigned long framesLeft = buffer->size-buffer->index;
-
-  (void) outputBuffer;
-  (void) timeInfo;
-  (void) statusFlags;
-  (void) userData;
-  if( framesLeft < framesPerBuffer ) {
-    framesToCalc = framesLeft;
-    finished = paComplete;
-  }
-  else {
-    framesToCalc = framesPerBuffer;
-    finished = paContinue;
-  }
-  if( inputBuffer == NULL ) {
-    for( i=0; i<framesToCalc; i++ ) {
-      *datWPtr++ = 0;  /* left */
-      *datWPtr++ = 0;  /* right */
-    }
-  }
-  else {
-    for( i=0; i<framesToCalc; i++ ) {
-      *datWPtr++ = *datRPtr++;  /* left */
-      *datWPtr++ = *datRPtr++;  /* right */
-    }
-  }
-  return finished;
+int AudioInput::bufferGetCallback(
+  const void *inputBuffer, void *outputBuffer,
+  unsigned long framesPerBuffer,
+  const PaStreamCallbackTimeInfo* timeInfo,
+  PaStreamCallbackFlags statusFlags) {
+    
 }
 
 int AudioInput::init() {
@@ -61,8 +39,8 @@ int AudioInput::init() {
     conf.sampleRate,
     conf.frameSize,
     paClipOff,
-    bufferWriteCallback,
-    &buffer
+    _PaCallback,
+    this
   );
 
   if (err!=paNoError) return -2;
