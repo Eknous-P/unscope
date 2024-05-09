@@ -8,9 +8,8 @@ int main() {
 	g.init();
 	i.~AudioInput();
 	while (g.isRunning()) {
-		g.writeOscData(i.getData(),2048);
+		g.writeOscData((float*)i.getData(),i.getDataSize());
 		g.doFrame();
 	}
-	std::cout << i.getData();
 	return 0;
 }

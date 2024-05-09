@@ -102,11 +102,14 @@ void GUI::drawGUI() {
   // ImPlot::CreateContext();
   // ImPlot::ShowDemoWindow();
   // ImPlot::DestroyContext();
+
+	ImGui::Text("%.2x",(unsigned long)oscData);
+
 	ImGui::End();
 }
 
-void GUI::writeOscData(void* data, unsigned int size) {
-  oscData=(float*)data;
+void GUI::writeOscData(float* data, unsigned int size) {
+  oscData=data;
   oscDataSize=size;
 }
 

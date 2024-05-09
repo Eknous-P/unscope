@@ -1,9 +1,11 @@
 #include "audio.h"
 
 AudioInput::AudioInput() {
-  conf.channels=2;
+  conf.channels=1;
   conf.sampleRate=44100;
   conf.frameSize=512;
+
+  buffer.size=2048;
 }
 
 int AudioInput::_PaCallback(
@@ -21,7 +23,16 @@ int AudioInput::bufferGetCallback(
   unsigned long framesPerBuffer,
   const PaStreamCallbackTimeInfo* timeInfo,
   PaStreamCallbackFlags statusFlags) {
-    
+    const float* audIn = (const float*)inputBuffer;
+  
+    (void) outputBuffer;
+    (void) timeInfo;
+    (void) statusFlags;
+
+    for (unsigned long i=0; i < framesPerBuffer; i++) {
+      *buffer.data++ = 0.0f;
+    }
+    return paContinue;
 }
 
 int AudioInput::init() {
@@ -61,4 +72,8 @@ AudioInput::~AudioInput() {
 
 void *AudioInput::getData() {
   return &buffer.data;
+}
+
+unsigned long AudioInput::getDataSize() {
+  return buffer.size;
 }

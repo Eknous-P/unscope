@@ -13,8 +13,8 @@ class AudioInput {
 
     struct AudioBuffer {
       float *data;
-      unsigned int index;
-      unsigned int size;
+      unsigned long index;
+      unsigned long size;
     };
 
     AudioConfig conf;
@@ -43,5 +43,6 @@ class AudioInput {
     int init();
     int stop();
     void *getData();
+    unsigned long getDataSize();
     ~AudioInput();
 };
