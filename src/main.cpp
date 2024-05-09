@@ -5,14 +5,12 @@
 int main() {
 	AudioInput i;
 	GUI g;
-	float data[4]={-1.0f,0.0f,1.0f,0.0f};
 	g.init();
 	i.~AudioInput();
-	g.writeOscData(data,4);
 	while (g.isRunning()) {
-		// g.writeOscData(i.getData(),64);
+		g.writeOscData(i.getData(),2048);
 		g.doFrame();
 	}
-	std::cout << (float*)i.getData();
+	std::cout << i.getData();
 	return 0;
 }

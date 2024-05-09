@@ -42,6 +42,6 @@ class AudioInput {
     AudioInput();
     int init();
     int stop();
-    float *getData();
+    void *getData();
     ~AudioInput();
 };

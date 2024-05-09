@@ -105,8 +105,8 @@ void GUI::drawGUI() {
 	ImGui::End();
 }
 
-void GUI::writeOscData(float* data, unsigned int size) {
-  oscData=data;
+void GUI::writeOscData(void* data, unsigned int size) {
+  oscData=(float*)data;
   oscDataSize=size;
 }
 

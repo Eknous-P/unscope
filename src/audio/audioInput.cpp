@@ -59,6 +59,6 @@ AudioInput::~AudioInput() {
   if (buffer.data) free(buffer.data);
 }
 
-float *AudioInput::getData() {
-  return buffer.data;
+void *AudioInput::getData() {
+  return &buffer.data;
 }
