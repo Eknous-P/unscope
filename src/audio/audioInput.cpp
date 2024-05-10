@@ -5,7 +5,7 @@ AudioInput::AudioInput() {
   conf.sampleRate=44100;
   conf.frameSize=512;
 
-  buffer.size=2048;
+  buffer.size=8192;
 }
 
 int AudioInput::_PaCallback(

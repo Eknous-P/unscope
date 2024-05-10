@@ -10,6 +10,10 @@
 
 class GUI {
 	private:
+		struct scopeConfig {
+			int traceSize;
+			int traceOffset;
+		};
 		SDL_WindowFlags window_flags;
 		SDL_Window* window;
 		SDL_GLContext gl_context;
@@ -19,12 +23,16 @@ class GUI {
 		bool running;
 		float* oscData;
 		unsigned int oscDataSize;
+
+		scopeConfig sc;
+
 	public:
-		void writeOscData(float* data, unsigned int size);
+		void writeOscData(void* data, unsigned int size);
 		bool isRunning();
 		int init();
 		void doFrame();
 		void drawGUI();
+		void drawScope();
 		GUI();
 		~GUI();
 };

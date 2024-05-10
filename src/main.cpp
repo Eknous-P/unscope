@@ -8,7 +8,7 @@ int main() {
 	g.init();
 	i.~AudioInput();
 	while (g.isRunning()) {
-		g.writeOscData((float*)i.getData(),i.getDataSize());
+		g.writeOscData(i.getData(),i.getDataSize());
 		g.doFrame();
 	}
 	return 0;

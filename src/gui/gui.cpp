@@ -5,6 +5,8 @@ bool GUI::isRunning() {
 }
 
 GUI::GUI() {
+  sc.traceSize=64;
+  sc.traceOffset=0;
 }
 
 int GUI::init() {
@@ -97,19 +99,25 @@ void GUI::doFrame() {
 
 void GUI::drawGUI() {
 	ImGui::Begin("test");
-	ImGui::Text("helooooooooooo!!");
-  ImGui::PlotLines("scope",oscData,oscDataSize,0,NULL,-1.0f,1.0f,ImVec2(400,200));
   // ImPlot::CreateContext();
   // ImPlot::ShowDemoWindow();
   // ImPlot::DestroyContext();
-
+  ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize, "%d");
+  ImGui::SliderInt("offset", &sc.traceOffset, 0, 2048, "%d");
 	ImGui::Text("%.2x",(unsigned long)oscData);
 
 	ImGui::End();
+  GUI::drawScope();
 }
 
-void GUI::writeOscData(float* data, unsigned int size) {
-  oscData=data;
+void GUI::drawScope() {
+  ImGui::Begin("Scope");
+  ImGui::PlotLines("",oscData+sc.traceOffset,sc.traceSize,0,NULL,-1.0f,1.0f,ImGui::GetContentRegionAvail());
+  ImGui::End();
+}
+
+void GUI::writeOscData(void* data, unsigned int size) {
+  oscData=(float*)data;
   oscDataSize=size;
 }
 
