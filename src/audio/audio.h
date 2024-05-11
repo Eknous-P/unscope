@@ -3,6 +3,14 @@
 #include <memory.h>
 #include <malloc.h>
 
+enum AudioErrors {
+  NOERR=0,
+  NOINIT,
+  NODEVS,
+  NODEV,
+  NOSTART
+};
+
 class AudioInput {
   private:
 

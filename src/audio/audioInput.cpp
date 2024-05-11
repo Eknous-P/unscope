@@ -2,7 +2,6 @@
 #include <iostream>
 
 AudioInput::AudioInput() {
-  Pa_Initialize();
   conf.channels=1;
   conf.sampleRate=48000;
   conf.frameSize=8192;
@@ -47,8 +46,11 @@ int AudioInput::bufferGetCallback(
 }
 
 int AudioInput::init() {
+  Pa_Initialize();
+  if (Pa_GetDeviceCount() == 0) return NODEVS;
+  if (Pa_GetDeviceCount() < 0) return Pa_GetDeviceCount();
   streamParams.device = Pa_GetDefaultInputDevice();
-  if (streamParams.device == paNoDevice) return -1;
+  if (streamParams.device == paNoDevice) return NODEV;
   streamParams.channelCount = conf.channels;
   streamParams.sampleFormat = paFloat32;
   streamParams.suggestedLatency = Pa_GetDeviceInfo(streamParams.device)->defaultLowInputLatency;
@@ -65,7 +67,7 @@ int AudioInput::init() {
     this
   );
 
-  if (err!=paNoError) return -2;
+  if (err!=paNoError) return NOSTART;
 
   err = Pa_StartStream(stream);
 

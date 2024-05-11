@@ -4,9 +4,23 @@
 
 int main() {
 	AudioInput i;
-	if (i.init() != 0) {
+	int e=i.init();
+	if (e!=NOERR) {
 		std::cout << "cant init audio you fuk\n";
-		return 1;
+		switch (e) {
+			case NODEVS:
+				std::cout << "no devices found\n";
+				return 1;
+			case NODEV:
+				std::cout << "cant open device\n";
+				return 1;
+			case NOSTART:
+				std::cout << "cant start device\n";
+				return 1;
+			default:
+				std::cout << Pa_GetErrorText(e) << '\n';
+				return 1;
+		}
 	}
 	GUI g;
 	g.init();
