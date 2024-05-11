@@ -2,6 +2,7 @@
 #include <iostream>
 
 AudioInput::AudioInput() {
+  Pa_Initialize();
   conf.channels=1;
   conf.sampleRate=48000;
   conf.frameSize=8192;
@@ -46,7 +47,6 @@ int AudioInput::bufferGetCallback(
 }
 
 int AudioInput::init() {
-  Pa_Initialize();
   if (Pa_GetDeviceCount() == 0) return NODEVS;
   if (Pa_GetDeviceCount() < 0) return Pa_GetDeviceCount();
   streamParams.device = Pa_GetDefaultInputDevice();
