@@ -103,8 +103,8 @@ void GUI::drawGUI() {
   // ImPlot::ShowDemoWindow();
   // ImPlot::DestroyContext();
   ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize, "%d");
-  ImGui::SliderInt("offset", &sc.traceOffset, 0, 2048, "%d");
-	ImGui::Text("%.2x",(unsigned long)oscData);
+  ImGui::SliderInt("offset", &sc.traceOffset, -0xfff, 0xfff, "%d");
+	ImGui::Text("data address: 0x%.2x",(unsigned long)oscData);
 
 	ImGui::End();
   GUI::drawScope();
@@ -117,7 +117,7 @@ void GUI::drawScope() {
 }
 
 void GUI::writeOscData(void* data, unsigned int size) {
-  oscData=(float*)data;
+  oscData=(float*)(data);
   oscDataSize=size;
 }
 

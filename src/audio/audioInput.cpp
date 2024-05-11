@@ -1,21 +1,26 @@
 #include "audio.h"
+#include <iostream>
 
 AudioInput::AudioInput() {
+  Pa_Initialize();
   conf.channels=1;
-  conf.sampleRate=44100;
-  conf.frameSize=512;
+  conf.sampleRate=48000;
+  conf.frameSize=8192;
 
   buffer.size=8192;
+  for (buffer.index=0; buffer.index<buffer.size; buffer.index++) {
+    buffer.data[buffer.index]==(float)(buffer.index)/8192;
+  }
 }
 
 int AudioInput::_PaCallback(
-  const void *input, void *output,
-  unsigned long frameCount,
+  const void *inputBuffer, void *outputBuffer,
+  unsigned long framesPerBuffer,
   const PaStreamCallbackTimeInfo* timeInfo,
   PaStreamCallbackFlags statusFlags,
   void *userData )
 {
-  return ((AudioInput*)userData)->bufferGetCallback(input, output, frameCount, timeInfo, statusFlags);
+  return ((AudioInput*)userData)->bufferGetCallback(inputBuffer, outputBuffer, framesPerBuffer, timeInfo, statusFlags);
 }
 
 int AudioInput::bufferGetCallback(
@@ -29,8 +34,14 @@ int AudioInput::bufferGetCallback(
     (void) timeInfo;
     (void) statusFlags;
 
-    for (unsigned long i=0; i < framesPerBuffer; i++) {
-      *buffer.data++ = 0.0f;
+    if (inputBuffer==NULL) {
+      for (buffer.index = 0; buffer.index < framesPerBuffer; buffer.index++) {
+        *buffer.data++ = 1.0f;
+      }
+    } else {
+      for (buffer.index = 0; buffer.index < framesPerBuffer; buffer.index++) {
+        *buffer.data++ = *audIn++;
+      }
     }
     return paContinue;
 }

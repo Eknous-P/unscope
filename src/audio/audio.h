@@ -1,5 +1,6 @@
 #include "portaudio.h"
 #include <cstddef>
+#include <memory.h>
 #include <malloc.h>
 
 class AudioInput {
@@ -12,7 +13,7 @@ class AudioInput {
     };
 
     struct AudioBuffer {
-      float *data;
+      float* data;
       unsigned long index;
       unsigned long size;
     };
@@ -24,21 +25,20 @@ class AudioInput {
     PaError err;
     PaStreamParameters streamParams;
 
-  public:
-
     int bufferGetCallback(
-      const void *input, void *output,
-      unsigned long frameCount,
+      const void *inputBuffer, void *outputBuffer,
+      unsigned long framesPerBuffer,
       const PaStreamCallbackTimeInfo* timeInfo,
       PaStreamCallbackFlags statusFlags);
 
     static int _PaCallback(
-      const void *input, void *output,
-      unsigned long frameCount,
+      const void *inputBuffer, void *outputBuffer,
+      unsigned long framesPerBuffer,
       const PaStreamCallbackTimeInfo* timeInfo,
       PaStreamCallbackFlags statusFlags,
-      void *userData);
-
+      void *userData );
+  
+  public:
     AudioInput();
     int init();
     int stop();

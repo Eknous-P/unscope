@@ -32,6 +32,7 @@ ${pa_path}/os/unix/pa_unix_hostapis.c
 ${pa_path}/os/unix/pa_unix_util.c)
 
 option(ahost_alsa "build for alsa" ON)
+option(ahost_pulse "build for pulseaudio" ON)
 option(ahost_jack "build for jack" OFF)
 
 if (ahost_alsa)
@@ -39,6 +40,17 @@ if (ahost_alsa)
 	pkg_check_modules(ALSA alsa)
 	list(APPEND cpl_opts ${ALSA_CFLAGS_OTHER})
 	list(APPEND lnk_libs ${ALSA_LIBRARIES})
+endif()
+
+if (ahost_pulse)
+	list(APPEND aud_srcs
+		${pa_path}/hostapi/pulseaudio/pa_linux_pulseaudio_block.c
+		${pa_path}/hostapi/pulseaudio/pa_linux_pulseaudio_cb.c
+		${pa_path}/hostapi/pulseaudio/pa_linux_pulseaudio.c
+		)
+	pkg_check_modules(PULSE libpulse)
+	list(APPEND cpl_opts ${PULSE_CFLAGS_OTHER})
+	list(APPEND lnk_libs ${PULSE_LIBRARIES})
 endif()
 
 if (ahost_jack)
