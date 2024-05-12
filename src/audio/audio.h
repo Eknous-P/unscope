@@ -1,4 +1,4 @@
-#include "portaudio.h"
+#include <portaudio.h>
 #include <cstddef>
 #include <memory.h>
 #include <malloc.h>
@@ -8,7 +8,8 @@ enum AudioErrors {
   NOINIT,
   NODEVS,
   NODEV,
-  NOSTART
+  NOSTART,
+  NOGOOD
 };
 
 class AudioInput {
@@ -32,6 +33,8 @@ class AudioInput {
     PaStream *stream;
     PaError err;
     PaStreamParameters streamParams;
+
+    bool isGood, running;
 
     int bufferGetCallback(
       const void *inputBuffer, void *outputBuffer,

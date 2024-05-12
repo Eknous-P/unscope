@@ -17,6 +17,9 @@ int main() {
 			case NOSTART:
 				std::cout << "cant start device\n";
 				return 1;
+			case NOGOOD:
+				std::cout << "cant init portaudio\n";
+				return 1;
 			default:
 				std::cout << Pa_GetErrorText(e) << '\n';
 				return 1;

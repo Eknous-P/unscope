@@ -37,7 +37,9 @@ option(ahost_jack "build for jack" OFF)
 
 if (ahost_alsa)
 	list(APPEND aud_srcs ${pa_path}/hostapi/alsa/pa_linux_alsa.c)
-	pkg_check_modules(ALSA alsa)
+	pkg_check_modules(ALSA REQUIRED alsa)
+	# message(STATUS ${ALSA_CFLAGS_OTHER} ${ALSA_LIBRARIES})
+	list(APPEND pa_includes ${ALSA_INCLUDE_DIRS})
 	list(APPEND cpl_opts ${ALSA_CFLAGS_OTHER})
 	list(APPEND lnk_libs ${ALSA_LIBRARIES})
 endif()
@@ -48,15 +50,17 @@ if (ahost_pulse)
 		${pa_path}/hostapi/pulseaudio/pa_linux_pulseaudio_cb.c
 		${pa_path}/hostapi/pulseaudio/pa_linux_pulseaudio.c
 		)
-	pkg_check_modules(PULSE libpulse)
+	pkg_check_modules(PULSE REQUIRED libpulse)
+	# message(STATUS ${PULSE_CFLAGS_OTHER} ${PULSE_LIBRARIES})
 	list(APPEND cpl_opts ${PULSE_CFLAGS_OTHER})
 	list(APPEND lnk_libs ${PULSE_LIBRARIES})
 endif()
 
 if (ahost_jack)
 	list(APPEND aud_srcs ${pa_path}/hostapi/jack/pa_jack.c)
-	pkg_check_modules(JACK jack2)
-	list(APPEND cpl_opts ${JACK_CFLAGS_OTHER})
+	pkg_check_modules(JACK REQUIRED jack2)
+	# message(STATUS ${JACK_CFLAGS_OTHER} ${JACK_LIBRARIES})
+	list(APPEND cpl_opts ${JACK_CFLAGS_OTHER} "-ljack")
 	list(APPEND lnk_libs ${JACK_LIBRARIES})
 endif()
 
@@ -111,6 +115,6 @@ ${srcs_path}
 ${srcs_path}/audio
 ${srcs_path}/gui)
 
-target_compile_options(unscope PRIVATE "-lpthread" ${cpl_opts})
+target_compile_options(unscope PRIVATE "-lrt -lm -lpthread" ${cpl_opts})
 target_link_libraries(unscope PRIVATE ${lnk_libs})
 
