@@ -24,7 +24,6 @@ class AudioInput {
 
     struct AudioBuffer {
       float* data;
-      float* origin;
       unsigned long int index;
       unsigned long int size;
     };

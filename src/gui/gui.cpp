@@ -7,10 +7,12 @@ bool GUI::isRunning() {
 GUI::GUI() {
   sc.traceSize=64;
   sc.traceOffset=0;
+  sc.yScale=1.0f;
+  running = false;
 }
 
 int GUI::init() {
-  running = false;
+  if (running) return 0;
   // Setup SDL
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) {
     printf("Error: %s\n", SDL_GetError());
@@ -104,7 +106,7 @@ void GUI::drawGUI() {
   // ImPlot::DestroyContext();
   ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize, "%d");
   ImGui::SliderInt("offset", &sc.traceOffset, -0xfff, 0xfff, "%d");
-	ImGui::Text("data address: 0x%.2x",(unsigned long int)oscData);
+  ImGui::SliderFloat("scale", &sc.yScale, 0.5f, 5.0f, "%f");
 
 	ImGui::End();
   GUI::drawScope();
@@ -112,7 +114,7 @@ void GUI::drawGUI() {
 
 void GUI::drawScope() {
   ImGui::Begin("Scope");
-  ImGui::PlotLines("",oscData+sc.traceOffset,sc.traceSize,0,NULL,-1.0f,1.0f,ImGui::GetContentRegionAvail());
+  ImGui::PlotLines("",oscData+sc.traceOffset,sc.traceSize,0,NULL,-1.0f/sc.yScale,1.0f/sc.yScale,ImGui::GetContentRegionAvail());
   ImGui::End();
 }
 

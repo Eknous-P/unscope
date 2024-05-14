@@ -13,6 +13,7 @@ class GUI {
 		struct scopeConfig {
 			int traceSize;
 			int traceOffset;
+			float yScale;
 		};
 		SDL_WindowFlags window_flags;
 		SDL_Window* window;

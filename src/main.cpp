@@ -4,7 +4,10 @@
 
 int main() {
 	AudioInput i;
-	int e=i.init(Pa_GetDefaultInputDevice());
+	GUI g;
+	int e;
+	g.init();
+	e=i.init(Pa_GetDefaultInputDevice());
 	if (e!=NOERR) {
 		std::cout << "cant init audio you fuk\n";
 		switch (e) {
@@ -25,8 +28,6 @@ int main() {
 				return 1;
 		}
 	}
-	GUI g;
-	g.init();
 	while (g.isRunning()) {
 		g.writeOscData(i.getData(),i.getDataSize());
 		g.doFrame();

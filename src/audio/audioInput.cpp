@@ -5,14 +5,12 @@ AudioInput::AudioInput() {
   running=false;
   conf.channels=1;
   conf.sampleRate=48000;
-  conf.frameSize=128;
+  conf.frameSize=800;
 
   conf.device=0;
 
-  buffer.size=128;
-  buffer.data=(float*)malloc(buffer.size);
-
-  buffer.origin = buffer.data;
+  buffer.size=800;
+  buffer.data=(float*)malloc(buffer.size*sizeof(float));
 }
 
 int AudioInput::_PaCallback(
@@ -34,7 +32,6 @@ int AudioInput::bufferGetCallback(
     (void) outputBuffer;
     (void) timeInfo;
     (void) statusFlags;
-    // if (buffer.data - buffer.size > buffer.origin) buffer.data=buffer.origin;
 
     if (inputBuffer==NULL) {
       for (buffer.index = 0; buffer.index < framesPerBuffer; buffer.index++) {
@@ -89,6 +86,8 @@ int AudioInput::stop() {
 
 AudioInput::~AudioInput() {
   if (isGood) Pa_Terminate();
+  // if (buffer.data) delete buffer.data;
+  // if (stream) free(stream);
 }
 
 float *AudioInput::getData() {
