@@ -5,7 +5,7 @@ bool GUI::isRunning() {
 }
 
 GUI::GUI() {
-  sc.traceSize=64;
+  sc.traceSize=512;
   sc.traceOffset=0;
   sc.yScale=1.0f;
   running = false;
@@ -101,11 +101,7 @@ void GUI::doFrame() {
 
 void GUI::drawGUI() {
 	ImGui::Begin("test");
-  // ImPlot::CreateContext();
-  // ImPlot::ShowDemoWindow();
-  // ImPlot::DestroyContext();
   ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize, "%d");
-  ImGui::SliderInt("offset", &sc.traceOffset, -0xfff, 0xfff, "%d");
   ImGui::SliderFloat("scale", &sc.yScale, 0.5f, 5.0f, "%f");
 
 	ImGui::End();
@@ -115,6 +111,10 @@ void GUI::drawGUI() {
 void GUI::drawScope() {
   ImGui::Begin("Scope");
   ImGui::PlotLines("",oscData+sc.traceOffset,sc.traceSize,0,NULL,-1.0f/sc.yScale,1.0f/sc.yScale,ImGui::GetContentRegionAvail());
+  // ImPlot::CreateContext();
+  // ImPlot::ShowDemoWindow();
+  // ImPlot::PlotLine("");
+  // ImPlot::DestroyContext();
   ImGui::End();
 }
 

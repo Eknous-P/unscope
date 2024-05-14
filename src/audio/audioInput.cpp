@@ -10,7 +10,7 @@ AudioInput::AudioInput() {
   conf.device=0;
 
   buffer.size=800;
-  buffer.data=(float*)malloc(buffer.size*sizeof(float));
+  buffer.data=new float[buffer.size];
 }
 
 int AudioInput::_PaCallback(
@@ -86,8 +86,10 @@ int AudioInput::stop() {
 
 AudioInput::~AudioInput() {
   if (isGood) Pa_Terminate();
-  // if (buffer.data) delete buffer.data;
-  // if (stream) free(stream);
+  if (buffer.data) {
+    delete[] buffer.data;
+    buffer.data=NULL;
+  }
 }
 
 float *AudioInput::getData() {
