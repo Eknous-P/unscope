@@ -16,6 +16,7 @@ class AudioInput {
   private:
 
     struct AudioConfig{
+      PaDeviceIndex device;
       int sampleRate;
       int frameSize;
       unsigned char channels;
@@ -23,8 +24,9 @@ class AudioInput {
 
     struct AudioBuffer {
       float* data;
-      unsigned long index;
-      unsigned long size;
+      float* origin;
+      unsigned long int index;
+      unsigned long int size;
     };
 
     AudioConfig conf;
@@ -38,22 +40,23 @@ class AudioInput {
 
     int bufferGetCallback(
       const void *inputBuffer, void *outputBuffer,
-      unsigned long framesPerBuffer,
+      unsigned long int framesPerBuffer,
       const PaStreamCallbackTimeInfo* timeInfo,
       PaStreamCallbackFlags statusFlags);
 
     static int _PaCallback(
       const void *inputBuffer, void *outputBuffer,
-      unsigned long framesPerBuffer,
+      unsigned long int framesPerBuffer,
       const PaStreamCallbackTimeInfo* timeInfo,
       PaStreamCallbackFlags statusFlags,
       void *userData );
   
   public:
     AudioInput();
-    int init();
+    int init(PaDeviceIndex dev);
     int stop();
-    void *getData();
-    unsigned long getDataSize();
+    float *getData();
+    unsigned long int getDataSize();
+    const PaDeviceInfo* getDeviceInfo();
     ~AudioInput();
 };

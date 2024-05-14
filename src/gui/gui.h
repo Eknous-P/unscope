@@ -27,7 +27,7 @@ class GUI {
 		scopeConfig sc;
 
 	public:
-		void writeOscData(void* data, unsigned int size);
+		void writeOscData(float* data, unsigned int size);
 		bool isRunning();
 		int init();
 		void doFrame();

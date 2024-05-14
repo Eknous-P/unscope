@@ -1,60 +1,61 @@
 #include "audio.h"
-#include <iostream>
 
 AudioInput::AudioInput() {
   isGood = Pa_Initialize() == paNoError;
   running=false;
   conf.channels=1;
   conf.sampleRate=48000;
-  conf.frameSize=256;
+  conf.frameSize=128;
 
-  buffer.size=8192;
-  for (buffer.index=0; buffer.index<buffer.size; buffer.index++) {
-    buffer.data[buffer.index]==(float)(buffer.index)/8192;
-  }
+  conf.device=0;
+
+  buffer.size=128;
+  buffer.data=(float*)malloc(buffer.size);
+
+  buffer.origin = buffer.data;
 }
 
 int AudioInput::_PaCallback(
   const void *inputBuffer, void *outputBuffer,
-  unsigned long framesPerBuffer,
+  unsigned long int framesPerBuffer,
   const PaStreamCallbackTimeInfo* timeInfo,
   PaStreamCallbackFlags statusFlags,
-  void *userData )
-{
-  return ((AudioInput*)userData)->bufferGetCallback(inputBuffer, outputBuffer, framesPerBuffer, timeInfo, statusFlags);
+  void *userData ) {
+    return ((AudioInput*)userData)->bufferGetCallback(inputBuffer, outputBuffer, framesPerBuffer, timeInfo, statusFlags);
 }
 
 int AudioInput::bufferGetCallback(
   const void *inputBuffer, void *outputBuffer,
-  unsigned long framesPerBuffer,
+  unsigned long int framesPerBuffer,
   const PaStreamCallbackTimeInfo* timeInfo,
   PaStreamCallbackFlags statusFlags) {
-    const float* audIn = (const float*)inputBuffer;
+    const float *audIn = (const float*)inputBuffer;
   
     (void) outputBuffer;
     (void) timeInfo;
     (void) statusFlags;
+    // if (buffer.data - buffer.size > buffer.origin) buffer.data=buffer.origin;
 
     if (inputBuffer==NULL) {
       for (buffer.index = 0; buffer.index < framesPerBuffer; buffer.index++) {
-        *buffer.data++ = 1.0f;
+        buffer.data[buffer.index] = 0;
       }
     } else {
       for (buffer.index = 0; buffer.index < framesPerBuffer; buffer.index++) {
-        *buffer.data++ = *audIn++;
+        buffer.data[buffer.index] = *audIn++;
       }
     }
     return paContinue;
 }
 
-int AudioInput::init() {
+int AudioInput::init(PaDeviceIndex dev) {
   if (!isGood) return NOGOOD;
   if (running) return NOERR;
   int nDevs = Pa_GetDeviceCount();
   if (nDevs == 0) return NODEVS;
   if (nDevs < 0) return nDevs;
 
-  streamParams.device = Pa_GetDefaultInputDevice();
+  streamParams.device = dev;
   if (streamParams.device == paNoDevice) return NODEV;
   streamParams.channelCount = conf.channels;
   streamParams.sampleFormat = paFloat32;
@@ -68,13 +69,16 @@ int AudioInput::init() {
     conf.sampleRate,
     conf.frameSize,
     paClipOff,
-    _PaCallback,
+    &AudioInput::_PaCallback,
     this
   );
+  Pa_Sleep(100);
 
-  if (err!=paNoError) return NOSTART;
+  if (err!=paNoError) return err;
 
   err = Pa_StartStream(stream);
+  
+  conf.device=dev;
   running = err==paNoError;
   return err;
 }
@@ -85,13 +89,16 @@ int AudioInput::stop() {
 
 AudioInput::~AudioInput() {
   if (isGood) Pa_Terminate();
-  if (buffer.data) free(buffer.data);
 }
 
-void *AudioInput::getData() {
-  return &buffer.data;
+float *AudioInput::getData() {
+  return buffer.data;
 }
 
-unsigned long AudioInput::getDataSize() {
+unsigned long int AudioInput::getDataSize() {
   return buffer.size;
+}
+
+const PaDeviceInfo* AudioInput::getDeviceInfo() {
+  return Pa_GetDeviceInfo(conf.device);
 }
