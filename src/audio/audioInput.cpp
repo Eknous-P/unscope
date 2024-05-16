@@ -9,7 +9,8 @@ AudioInput::AudioInput() {
 
   conf.device=0;
 
-  buffer.size=BUFFER_SIZE;
+  buffer.size=65536;
+  buffer.page=0;
   buffer.data=new float[buffer.size];
 }
 
@@ -35,13 +36,15 @@ int AudioInput::bufferGetCallback(
 
     if (inputBuffer==NULL) {
       for (buffer.index = 0; buffer.index < framesPerBuffer; buffer.index++) {
-        buffer.data[buffer.index] = 0;
+        buffer.data[buffer.index + framesPerBuffer * buffer.page] = 0;
       }
     } else {
       for (buffer.index = 0; buffer.index < framesPerBuffer; buffer.index++) {
-        buffer.data[buffer.index] = *audIn++;
+        buffer.data[buffer.index + framesPerBuffer * buffer.page] = *audIn++;
       }
     }
+    buffer.page++;
+    if (buffer.page * framesPerBuffer > buffer.size) buffer.page = 0;
     return paContinue;
 }
 

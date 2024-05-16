@@ -5,7 +5,7 @@ bool GUI::isRunning() {
 }
 
 GUI::GUI() {
-  sc.traceSize=512;
+  sc.traceSize=800;
   sc.traceOffset=0;
   sc.yScale=1.0f;
   running = false;

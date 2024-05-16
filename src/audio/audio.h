@@ -3,7 +3,7 @@
 #include <memory.h>
 #include <malloc.h>
 
-#define BUFFER_SIZE 800
+#define BUFFER_SIZE 64
 
 enum AudioErrors {
   NOERR=0,
@@ -26,8 +26,9 @@ class AudioInput {
 
     struct AudioBuffer {
       float* data;
-      unsigned long int index;
       unsigned long int size;
+      unsigned long int index;
+      unsigned int page;
     };
 
     AudioConfig conf;
