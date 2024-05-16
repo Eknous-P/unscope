@@ -3,7 +3,7 @@
 #include <memory.h>
 #include <malloc.h>
 
-#define BUFFER_SIZE 64
+#define BUFFER_SIZE 128
 
 enum AudioErrors {
   NOERR=0,

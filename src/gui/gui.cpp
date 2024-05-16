@@ -112,7 +112,7 @@ void GUI::drawGUI() {
 
 void GUI::drawMainScope() {
   ImGui::Begin("Scope");
-  ImGui::PlotLines("",oscData,sc.traceSize,0,NULL,-1.0f/sc.yScale,1.0f/sc.yScale,ImGui::GetContentRegionAvail());
+  ImGui::PlotLines("",oscData + (oscDataSize -sc.traceSize),sc.traceSize,0,NULL,-1.0f/sc.yScale,1.0f/sc.yScale,ImGui::GetContentRegionAvail());
   // ImPlot::CreateContext();
   // ImPlot::ShowDemoWindow();
   // ImPlot::PlotLine("");
