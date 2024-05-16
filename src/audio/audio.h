@@ -28,7 +28,6 @@ class AudioInput {
       float* data;
       unsigned long int size;
       unsigned long int index;
-      unsigned int page;
     };
 
     AudioConfig conf;
