@@ -22,18 +22,20 @@ class GUI {
 		ImGuiStyle style;
 		ImVec4 clear_color;
 		bool running;
-		float* oscData;
-		unsigned int oscDataSize;
+		float *oscData, *oscAuxData;
+		unsigned int oscDataSize, oscAuxDataSize;
 
 		scopeConfig sc;
 
 	public:
 		void writeOscData(float* data, unsigned int size);
+		void writeOscAuxData(float* data, unsigned int size);
 		bool isRunning();
 		int init();
 		void doFrame();
 		void drawGUI();
-		void drawScope();
+		void drawMainScope();
+		void drawAuxScope();
 		GUI();
 		~GUI();
 };

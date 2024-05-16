@@ -4,6 +4,7 @@
 
 int main() {
 	AudioInput i;
+	// AudioProcess p;
 	GUI g;
 	int e;
 	g.init();
@@ -29,7 +30,10 @@ int main() {
 		}
 	}
 	while (g.isRunning()) {
+		// p.writeDataIn(i.getData());
+		// p.integrate();
 		g.writeOscData(i.getData(),i.getDataSize());
+		// g.writeOscAuxData(p.getDataOut(),i.getDataSize());
 		g.doFrame();
 	}
 	e=i.stop();

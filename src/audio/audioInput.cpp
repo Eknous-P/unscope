@@ -5,11 +5,11 @@ AudioInput::AudioInput() {
   running=false;
   conf.channels=1;
   conf.sampleRate=48000;
-  conf.frameSize=800;
+  conf.frameSize=BUFFER_SIZE;
 
   conf.device=0;
 
-  buffer.size=800;
+  buffer.size=BUFFER_SIZE;
   buffer.data=new float[buffer.size];
 }
 

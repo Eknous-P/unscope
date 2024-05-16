@@ -42,7 +42,7 @@ int GUI::init() {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
 	io = ImGui::GetIO();
-  // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
   // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
   // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
@@ -77,6 +77,7 @@ void GUI::doFrame() {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplSDL2_NewFrame();
   ImGui::NewFrame();
+  ImGui::DockSpaceOverViewport(NULL,0);
 
 	GUI::drawGUI();
 
@@ -105,12 +106,13 @@ void GUI::drawGUI() {
   ImGui::SliderFloat("scale", &sc.yScale, 0.5f, 5.0f, "%f");
 
 	ImGui::End();
-  GUI::drawScope();
+  GUI::drawMainScope();
+  // GUI::drawAuxScope();
 }
 
-void GUI::drawScope() {
+void GUI::drawMainScope() {
   ImGui::Begin("Scope");
-  ImGui::PlotLines("",oscData+sc.traceOffset,sc.traceSize,0,NULL,-1.0f/sc.yScale,1.0f/sc.yScale,ImGui::GetContentRegionAvail());
+  ImGui::PlotLines("",oscData,sc.traceSize,0,NULL,-1.0f/sc.yScale,1.0f/sc.yScale,ImGui::GetContentRegionAvail());
   // ImPlot::CreateContext();
   // ImPlot::ShowDemoWindow();
   // ImPlot::PlotLine("");
@@ -118,10 +120,27 @@ void GUI::drawScope() {
   ImGui::End();
 }
 
+void GUI::drawAuxScope() {
+  ImGui::Begin("Scope (Auxiliary)");
+  ImGui::PlotLines("",oscAuxData,sc.traceSize,0,NULL,-1.0f/sc.yScale,1.0f/sc.yScale,ImGui::GetContentRegionAvail());
+  // ImPlot::CreateContext();
+  // ImPlot::ShowDemoWindow();
+  // ImPlot::PlotLine("");
+  // ImPlot::DestroyContext();
+  ImGui::End();
+}
+
+
 void GUI::writeOscData(float* data, unsigned int size) {
   oscData=data;
   oscDataSize=size;
 }
+
+void GUI::writeOscAuxData(float* data, unsigned int size) {
+  oscAuxData=data;
+  oscAuxDataSize=size;
+}
+
 
 GUI::~GUI() {
   // Cleanup
