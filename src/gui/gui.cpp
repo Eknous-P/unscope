@@ -9,6 +9,7 @@ GUI::GUI() {
   sc.traceOffset=0;
   sc.yScale=1.0f;
   running = false;
+  oscData = new float[65536];
 }
 
 int GUI::init() {
@@ -104,6 +105,7 @@ void GUI::drawGUI() {
 	ImGui::Begin("test");
   ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize, "%d");
   ImGui::SliderFloat("scale", &sc.yScale, 0.5f, 5.0f, "%f");
+  ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%f");
 
 	ImGui::End();
   GUI::drawMainScope();
@@ -112,11 +114,15 @@ void GUI::drawGUI() {
 
 void GUI::drawMainScope() {
   ImGui::Begin("Scope");
-  ImGui::PlotLines("",oscData + (oscDataSize -sc.traceSize),sc.traceSize,0,NULL,-1.0f/sc.yScale,1.0f/sc.yScale,ImGui::GetContentRegionAvail());
-  // ImPlot::CreateContext();
-  // ImPlot::ShowDemoWindow();
+  // ImGui::PlotLines("",oscData + (oscDataSize-sc.traceSize),sc.traceSize,0,NULL,-1.0f/sc.yScale,1.0f/sc.yScale,ImGui::GetContentRegionAvail());
+  ImPlot::CreateContext();
+  ImPlot::ShowDemoWindow();
   // ImPlot::PlotLine("");
-  // ImPlot::DestroyContext();
+  if (ImPlot::BeginPlot("##scope")) {
+    ImPlot::PlotLine("##scopeplot", oscAlign, oscData, sc.traceSize,ImPlotFlags_NoLegend, oscDataSize - sc.traceSize);
+    ImPlot::EndPlot();
+  }
+  ImPlot::DestroyContext();
   ImGui::End();
 }
 
@@ -131,8 +137,9 @@ void GUI::drawAuxScope() {
 }
 
 
-void GUI::writeOscData(float* data, unsigned int size) {
-  oscData=data;
+void GUI::writeOscData(float* datax, float* datay, unsigned int size) {
+  oscAlign = datax;
+  memcpy(oscData,datay,oscDataSize*sizeof(float));
   oscDataSize=size;
 }
 
@@ -141,6 +148,13 @@ void GUI::writeOscAuxData(float* data, unsigned int size) {
   oscAuxDataSize=size;
 }
 
+unsigned long int GUI::getTraceSize() {
+  return sc.traceSize;
+}
+
+float GUI::getTrigger() {
+  return sc.trigger;
+}
 
 GUI::~GUI() {
   // Cleanup
@@ -150,4 +164,8 @@ GUI::~GUI() {
   SDL_GL_DeleteContext(gl_context);
   SDL_DestroyWindow(window);
   SDL_Quit();
+  if (oscData) {
+    delete[] oscData;
+    oscData = NULL;
+  }
 }

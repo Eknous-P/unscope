@@ -5,11 +5,11 @@ AudioInput::AudioInput() {
   running=false;
   conf.channels=1;
   conf.sampleRate=48000;
-  conf.frameSize=BUFFER_SIZE;
+  conf.frameSize=FRAME_SIZE;
 
   conf.device=0;
 
-  buffer.size=65536;
+  buffer.size=BUFFER_SIZE;
   buffer.data=new float[buffer.size];
 }
 
@@ -39,9 +39,10 @@ int AudioInput::bufferGetCallback(
       }
     } else {
       // push vaules back
-      for (buffer.index = 0; buffer.index < buffer.size - framesPerBuffer; buffer.index++) {
-        buffer.data[buffer.index] = buffer.data[buffer.index + framesPerBuffer];
-      }
+      // for (buffer.index = 0; buffer.index < buffer.size - framesPerBuffer; buffer.index++) {
+      //   buffer.data[buffer.index] = buffer.data[buffer.index + framesPerBuffer];
+      // }
+      memcpy(buffer.data,buffer.data+framesPerBuffer,(buffer.size-framesPerBuffer)*sizeof(float));
       // get data
       for (buffer.index = 0; buffer.index < framesPerBuffer; buffer.index++) {
         buffer.data[buffer.size - framesPerBuffer + buffer.index] = *audIn++;

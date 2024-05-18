@@ -3,6 +3,7 @@
 AudioProcess::AudioProcess() {
   // dataIn = new float[BUFFER_SIZE];
   dataOut = new float[BUFFER_SIZE];
+  alignRamp = new float[BUFFER_SIZE];
   dataSize = BUFFER_SIZE;
   i = 0;
 }
@@ -10,7 +11,9 @@ AudioProcess::AudioProcess() {
 AudioProcess::~AudioProcess() {
   // delete[] dataIn;
   delete[] dataOut;
+  delete[] alignRamp;
   dataIn = NULL; dataOut = NULL;
+  alignRamp = NULL;
 }
 
 void AudioProcess::writeDataIn(float *d) {
@@ -37,4 +40,19 @@ void AudioProcess::integrate() {
   for (i=1; i<dataSize; i++) {
     dataOut[i] = dataOut[i-1] + dataIn[i];
   }
+}
+
+float *AudioProcess::alignWave(float trigger, unsigned long int waveLen, long int offset, bool edge=false) {
+  unsigned long int i = dataSize - waveLen + offset;
+  // (void)edge;
+  // while (dataIn[i] - trigger < 0) i++;
+  // alignRamp[i] = 0;
+  // for (i=0;i<dataSize;i++) {
+  //   alignRamp[i] = alignRamp[i-1] + 1;
+  // }
+
+  for (i = 0; i<dataSize; i++) {
+    alignRamp[i]=2*(float)i/dataSize-1;
+  }
+  return alignRamp;
 }

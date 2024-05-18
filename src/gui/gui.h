@@ -14,6 +14,7 @@ class GUI {
 			int traceSize;
 			int traceOffset;
 			float yScale;
+			float trigger;
 		};
 		SDL_WindowFlags window_flags;
 		SDL_Window* window;
@@ -22,13 +23,13 @@ class GUI {
 		ImGuiStyle style;
 		ImVec4 clear_color;
 		bool running;
-		float *oscData, *oscAuxData;
+		float *oscData, *oscAuxData, *oscAlign;
 		unsigned int oscDataSize, oscAuxDataSize;
 
 		scopeConfig sc;
 
 	public:
-		void writeOscData(float* data, unsigned int size);
+		void writeOscData(float* datax, float* datay, unsigned int size);
 		void writeOscAuxData(float* data, unsigned int size);
 		bool isRunning();
 		int init();
@@ -36,6 +37,8 @@ class GUI {
 		void drawGUI();
 		void drawMainScope();
 		void drawAuxScope();
+		unsigned long int getTraceSize();
+		float getTrigger();
 		GUI();
 		~GUI();
 };
