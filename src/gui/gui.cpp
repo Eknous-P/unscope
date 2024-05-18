@@ -104,7 +104,7 @@ void GUI::doFrame() {
 void GUI::drawGUI() {
 	ImGui::Begin("test");
   ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize, "%d");
-  ImGui::SliderFloat("scale", &sc.yScale, 0.5f, 5.0f, "%f");
+  ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%f");
   ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%f");
 
 	ImGui::End();
@@ -114,12 +114,12 @@ void GUI::drawGUI() {
 
 void GUI::drawMainScope() {
   ImGui::Begin("Scope");
-  // ImGui::PlotLines("",oscData + (oscDataSize-sc.traceSize),sc.traceSize,0,NULL,-1.0f/sc.yScale,1.0f/sc.yScale,ImGui::GetContentRegionAvail());
   ImPlot::CreateContext();
-  ImPlot::ShowDemoWindow();
-  // ImPlot::PlotLine("");
   if (ImPlot::BeginPlot("##scope")) {
-    ImPlot::PlotLine("##scopeplot", oscAlign, oscData, sc.traceSize,ImPlotFlags_NoLegend, oscDataSize - sc.traceSize);
+    ImPlot::SetupAxes("t","##v",ImPlotAxisFlags_NoDecorations,0);
+    ImPlot::SetupAxisLimits(ImAxis_X1,(float)(oscDataSize - sc.traceSize)/oscDataSize, 1);
+    ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/sc.yScale,1.0f/sc.yScale);
+    ImPlot::PlotLine("##scopeplot", oscAlign, oscData, oscDataSize,ImPlotFlags_NoLegend, 0);
     ImPlot::EndPlot();
   }
   ImPlot::DestroyContext();
