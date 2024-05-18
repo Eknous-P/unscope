@@ -22,7 +22,7 @@ class GUI {
 		ImGuiIO io;
 		ImGuiStyle style;
 		ImVec4 clear_color;
-		bool running;
+		bool running, update;
 		float *oscData, *oscAuxData, *oscAlign;
 		unsigned int oscDataSize, oscAuxDataSize;
 

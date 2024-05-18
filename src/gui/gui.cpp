@@ -9,6 +9,7 @@ GUI::GUI() {
   sc.traceOffset=0;
   sc.yScale=1.0f;
   running = false;
+  update=true;
   oscData = new float[65536];
 }
 
@@ -103,6 +104,7 @@ void GUI::doFrame() {
 
 void GUI::drawGUI() {
 	ImGui::Begin("test");
+  ImGui::Checkbox("update",&update);
   ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize, "%d");
   ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%f");
   ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%f");
@@ -138,6 +140,7 @@ void GUI::drawAuxScope() {
 
 
 void GUI::writeOscData(float* datax, float* datay, unsigned int size) {
+  if (!update) return;
   oscAlign = datax;
   memcpy(oscData,datay,oscDataSize*sizeof(float));
   oscDataSize=size;
