@@ -1,10 +1,10 @@
 [submodule "submodules/imgui"]
 	path = submodules/imgui
-	url = git@github.com:ocornut/imgui.git
+	url = https://github.com/ocornut/imgui.git
 	branch = docking
 [submodule "submodules/portaudio"]
 	path = submodules/portaudio
-	url = git@github.com:PortAudio/portaudio.git
+	url = https://github.com/PortAudio/portaudio.git
 [submodule "submodules/implot"]
 	path = submodules/implot
-	url = git@github.com:epezent/implot.git
+	url = https://github.com/epezent/implot.git
