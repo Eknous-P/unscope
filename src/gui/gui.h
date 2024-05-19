@@ -23,6 +23,7 @@ class GUI {
     ImGuiStyle style;
     ImVec4 clear_color;
     bool running, update;
+    unsigned char channels;
     float *oscData, *oscAuxData, *oscAlign;
     unsigned int oscDataSize;
 
@@ -39,6 +40,6 @@ class GUI {
     void drawAuxScope();
     unsigned long int getTraceSize();
     float getTrigger();
-    GUI(unsigned long int dataSize, int traceSizeDef, float yScaleDef, float triggerDef);
+    GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, float yScaleDef, float triggerDef);
     ~GUI();
 };

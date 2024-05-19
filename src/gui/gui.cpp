@@ -4,14 +4,15 @@ bool GUI::isRunning() {
 	return running;
 }
 
-GUI::GUI(unsigned long int dataSize, int traceSizeDef, float yScaleDef, float triggerDef) {
+GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, float yScaleDef, float triggerDef) {
   sc.traceSize = traceSizeDef;
   sc.traceOffset = 0;
   sc.yScale = yScaleDef;
 
-  oscDataSize = dataSize;
-  oscData = new float[dataSize];
-  oscAuxData = new float[dataSize];
+  channels = chanCount;
+  oscDataSize = dataSize*channels;
+  oscData = new float[oscDataSize];
+  oscAuxData = new float[oscDataSize];
   running = false;
   update = true;
 }
@@ -122,10 +123,15 @@ void GUI::drawGUI() {
 void GUI::drawMainScope() {
   ImGui::Begin("Scope");
   if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail())) {
-    ImPlot::SetupAxes("t","##v",ImPlotAxisFlags_NoDecorations,0);
-    ImPlot::SetupAxisLimits(ImAxis_X1,(float)(oscDataSize - sc.traceSize)/oscDataSize, 1);
-    ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/sc.yScale,1.0f/sc.yScale);
-    ImPlot::PlotLine("##scopeplot", oscAlign, oscData, oscDataSize,ImPlotFlags_NoLegend, 0);
+    for (unsigned char i = 0; i < channels; i++) {
+      ImPlot::SetupAxis(ImAxis(i),"t",ImPlotAxisFlags_NoDecorations);
+      ImPlot::SetupAxis(ImAxis(i+3),"v",ImPlotAxisFlags_NoDecorations);
+      ImPlot::SetupAxisLimits(ImAxis(i),(float)(oscDataSize - sc.traceSize)/oscDataSize, 1);
+      ImPlot::SetupAxisLimits(ImAxis(i+3),-1.0f/sc.yScale,1.0f/sc.yScale);
+    }
+    for (unsigned char i = 0; i < channels; i++) {
+      ImPlot::PlotLine("##scopeplot", oscAlign, oscData + oscDataSize*i, oscDataSize,ImPlotFlags_NoLegend, 0);
+    }
     ImPlot::EndPlot();
   }
   ImGui::End();

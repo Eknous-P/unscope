@@ -3,7 +3,7 @@
 #include <iostream>
 
 int main() {
-  AudioInput i(1,48000);
+  AudioInput i(2,48000);
   int e;
 
   e = i.init(Pa_GetDefaultInputDevice());
@@ -29,7 +29,7 @@ int main() {
   }
 
   AudioProcess p(i.getDataSize()*i.getChanCount());
-  GUI g(i.getDataSize()*i.getChanCount(), 1600, 2.0f, 0.0f);
+  GUI g(i.getDataSize(),i.getChanCount(), 1600, 2.0f, 0.0f);
   g.init();
   while (g.isRunning()) {
     p.writeDataIn(i.getData());
