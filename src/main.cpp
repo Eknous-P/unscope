@@ -5,7 +5,8 @@
 int main() {
   AudioInput i;
   int e;
-  e=i.init(Pa_GetDefaultInputDevice());
+
+  e = i.init(Pa_GetDefaultInputDevice());
   if (e!=NOERR) {
     std::cout << "cant init audio!\n";
     switch (e) {
@@ -32,10 +33,12 @@ int main() {
   g.init();
   while (g.isRunning()) {
     p.writeDataIn(i.getData());
-    g.writeOscData(p.alignWave(g.getTrigger(),g.getTraceSize(),0,0),i.getData());
+    g.writeOscData(
+      p.alignWave(g.getTrigger(),g.getTraceSize(),0,0),
+      i.getData());
     g.doFrame();
   }
-  e=i.stop();
+  e = i.stop();
   std::cout << Pa_GetErrorText(e) << '\n';
-  return ~(e==paNoError);
+  return e=!paNoError;
 }
