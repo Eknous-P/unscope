@@ -1,7 +1,7 @@
 #include "gui.h"
 
 bool GUI::isRunning() {
-	return running;
+  return running;
 }
 
 GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, float yScaleDef, float triggerDef) {
@@ -82,7 +82,7 @@ int GUI::init() {
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-	io = ImGui::GetIO();
+  io = ImGui::GetIO();
   ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
   // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
   ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
@@ -104,17 +104,17 @@ int GUI::init() {
   ImGui_ImplOpenGL3_Init(glsl_version);
   clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
   running = true;
-	return 0;
+  return 0;
 }
 
 void GUI::doFrame() {
-	SDL_Event event;
+  SDL_Event event;
   while (SDL_PollEvent(&event)) {
-      ImGui_ImplSDL2_ProcessEvent(&event);
-      if (event.type == SDL_QUIT)
-          running = false;
-      if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
-          running = false;
+    ImGui_ImplSDL2_ProcessEvent(&event);
+    if (event.type == SDL_QUIT)
+      running = false;
+    if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
+      running = false;
   }
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplSDL2_NewFrame();
@@ -122,7 +122,7 @@ void GUI::doFrame() {
   
   ImGui::DockSpaceOverViewport(ImGui::GetWindowViewport(),0);
 
-	GUI::drawGUI();
+  GUI::drawGUI();
 
   ImGui::Render();
   glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
@@ -144,7 +144,7 @@ void GUI::doFrame() {
 }
 
 void GUI::drawGUI() {
-	ImGui::Begin("Controls");
+  ImGui::Begin("Controls");
   ImGui::Checkbox("update",&update);
   ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize/channels, "%d");
   ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%f");
@@ -152,7 +152,7 @@ void GUI::drawGUI() {
 
   ImGui::ColorPicker4("color",sc.color);
 
-	ImGui::End();
+  ImGui::End();
   ImPlot::CreateContext();
     GUI::drawMainScope();
     // GUI::drawAuxScope();
