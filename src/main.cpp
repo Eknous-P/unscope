@@ -3,7 +3,7 @@
 #include <iostream>
 
 int main() {
-  AudioInput i(2,48000);
+  AudioInput i(1,48000);
   int e;
 
   e = i.init(Pa_GetDefaultInputDevice());
