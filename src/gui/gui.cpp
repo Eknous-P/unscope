@@ -106,7 +106,7 @@ void GUI::doFrame() {
 }
 
 void GUI::drawGUI() {
-	ImGui::Begin("test");
+	ImGui::Begin("Controls");
   ImGui::Checkbox("update",&update);
   ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize, "%d");
   ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%f");
@@ -121,7 +121,7 @@ void GUI::drawGUI() {
 
 void GUI::drawMainScope() {
   ImGui::Begin("Scope");
-  if (ImPlot::BeginPlot("##scope")) {
+  if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail())) {
     ImPlot::SetupAxes("t","##v",ImPlotAxisFlags_NoDecorations,0);
     ImPlot::SetupAxisLimits(ImAxis_X1,(float)(oscDataSize - sc.traceSize)/oscDataSize, 1);
     ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/sc.yScale,1.0f/sc.yScale);
@@ -133,7 +133,7 @@ void GUI::drawMainScope() {
 
 void GUI::drawAuxScope() {
   ImGui::Begin("Scope (Auxiliary)");
-  if (ImPlot::BeginPlot("##scope")) {
+  if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail())) {
     ImPlot::SetupAxes("t","##v",ImPlotAxisFlags_NoDecorations,0);
     ImPlot::SetupAxisLimits(ImAxis_X1,(float)(oscDataSize - sc.traceSize)/oscDataSize, 1);
     ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/sc.yScale,1.0f/sc.yScale);
