@@ -4,13 +4,16 @@ bool GUI::isRunning() {
 	return running;
 }
 
-GUI::GUI() {
-  sc.traceSize=800;
+GUI::GUI(unsigned long int dataSize, int traceSizeDef, float yScaleDef, float triggerDef) {
+  sc.traceSize=traceSizeDef;
   sc.traceOffset=0;
-  sc.yScale=1.0f;
+  sc.yScale=yScaleDef;
+
+  oscDataSize = dataSize;
+  oscData = new float[dataSize];
+  oscAuxData = new float[dataSize];
   running = false;
   update=true;
-  oscData = new float[65536];
 }
 
 int GUI::init() {
@@ -139,16 +142,15 @@ void GUI::drawAuxScope() {
 }
 
 
-void GUI::writeOscData(float* datax, float* datay, unsigned int size) {
+void GUI::writeOscData(float* datax, float* datay) {
   if (!update) return;
   oscAlign = datax;
   memcpy(oscData,datay,oscDataSize*sizeof(float));
-  oscDataSize=size;
 }
 
-void GUI::writeOscAuxData(float* data, unsigned int size) {
-  oscAuxData=data;
-  oscAuxDataSize=size;
+void GUI::writeOscAuxData(float* data) {
+  if (!update) return;
+  memcpy(oscData,data,oscDataSize*sizeof(float));
 }
 
 unsigned long int GUI::getTraceSize() {
@@ -170,5 +172,9 @@ GUI::~GUI() {
   if (oscData) {
     delete[] oscData;
     oscData = NULL;
+  }
+  if (oscAuxData) {
+    delete[] oscAuxData;
+    oscAuxData = NULL;
   }
 }

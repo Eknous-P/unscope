@@ -10,7 +10,7 @@
 
 class GUI {
 	private:
-		struct scopeConfig {
+		struct scopeParams {
 			int traceSize;
 			int traceOffset;
 			float yScale;
@@ -24,13 +24,13 @@ class GUI {
 		ImVec4 clear_color;
 		bool running, update;
 		float *oscData, *oscAuxData, *oscAlign;
-		unsigned int oscDataSize, oscAuxDataSize;
+		unsigned int oscDataSize;
 
-		scopeConfig sc;
+		scopeParams sc;
 
 	public:
-		void writeOscData(float* datax, float* datay, unsigned int size);
-		void writeOscAuxData(float* data, unsigned int size);
+		void writeOscData(float* datax, float* datay);
+		void writeOscAuxData(float* data);
 		bool isRunning();
 		int init();
 		void doFrame();
@@ -39,6 +39,6 @@ class GUI {
 		void drawAuxScope();
 		unsigned long int getTraceSize();
 		float getTrigger();
-		GUI();
+		GUI(unsigned long int dataSize, int traceSizeDef, float yScaleDef, float triggerDef);
 		~GUI();
 };

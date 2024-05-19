@@ -5,9 +5,7 @@
 int main() {
 	AudioInput i;
 	AudioProcess p;
-	GUI g;
 	int e;
-	g.init();
 	e=i.init(Pa_GetDefaultInputDevice());
 	if (e!=NOERR) {
 		std::cout << "cant init audio you fuk\n";
@@ -29,10 +27,12 @@ int main() {
 				return 1;
 		}
 	}
+	GUI g(i.getDataSize(), 1600, 2.0f, 0.0f);
+	g.init();
 	while (g.isRunning()) {
 		p.writeDataIn(i.getData());
 		// p.integrate();
-		g.writeOscData(p.alignWave(g.getTrigger(),g.getTraceSize(),0,0),i.getData(),i.getDataSize());
+		g.writeOscData(p.alignWave(g.getTrigger(),g.getTraceSize(),0,0),i.getData());
 		// g.writeOscAuxData(p.getDataOut(),i.getDataSize());
 		g.doFrame();
 	}
