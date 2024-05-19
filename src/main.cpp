@@ -4,11 +4,10 @@
 
 int main() {
 	AudioInput i;
-	AudioProcess p;
 	int e;
 	e=i.init(Pa_GetDefaultInputDevice());
 	if (e!=NOERR) {
-		std::cout << "cant init audio you fuk\n";
+		std::cout << "cant init audio!\n";
 		switch (e) {
 			case NODEVS:
 				std::cout << "no devices found\n";
@@ -27,13 +26,13 @@ int main() {
 				return 1;
 		}
 	}
+
+	AudioProcess p;
 	GUI g(i.getDataSize(), 1600, 2.0f, 0.0f);
 	g.init();
 	while (g.isRunning()) {
 		p.writeDataIn(i.getData());
-		// p.integrate();
 		g.writeOscData(p.alignWave(g.getTrigger(),g.getTraceSize(),0,0),i.getData());
-		// g.writeOscAuxData(p.getDataOut(),i.getDataSize());
 		g.doFrame();
 	}
 	e=i.stop();

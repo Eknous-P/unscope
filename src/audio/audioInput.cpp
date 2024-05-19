@@ -1,16 +1,16 @@
 #include "audio.h"
 
 AudioInput::AudioInput() {
-  isGood = Pa_Initialize() == paNoError;
-  running=false;
-  conf.channels=1;
-  conf.sampleRate=48000;
-  conf.frameSize=FRAME_SIZE;
+  isGood = Pa_Initialize()==paNoError;
+  running = false;
+  conf.channels = 1;
+  conf.sampleRate = 48000;
+  conf.frameSize = FRAME_SIZE;
 
-  conf.device=0;
+  conf.device = 0;
 
-  buffer.size=BUFFER_SIZE;
-  buffer.data=new float[buffer.size];
+  buffer.size = BUFFER_SIZE;
+  buffer.data = new float[buffer.size];
 }
 
 int AudioInput::_PaCallback(
@@ -35,7 +35,7 @@ int AudioInput::bufferGetCallback(
 
     if (inputBuffer==NULL) {
       for (buffer.index = 0; buffer.index < buffer.size; buffer.index++) {
-        buffer.data[buffer.index ] = 0;
+        buffer.data[buffer.index] = 0;
       }
     } else {
       // push vaules back
@@ -94,7 +94,7 @@ AudioInput::~AudioInput() {
   if (isGood) Pa_Terminate();
   if (buffer.data) {
     delete[] buffer.data;
-    buffer.data=NULL;
+    buffer.data = NULL;
   }
 }
 
@@ -106,6 +106,6 @@ unsigned long int AudioInput::getDataSize() {
   return buffer.size;
 }
 
-const PaDeviceInfo* AudioInput::getDeviceInfo() {
+const PaDeviceInfo *AudioInput::getDeviceInfo() {
   return Pa_GetDeviceInfo(conf.device);
 }

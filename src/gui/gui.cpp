@@ -5,15 +5,15 @@ bool GUI::isRunning() {
 }
 
 GUI::GUI(unsigned long int dataSize, int traceSizeDef, float yScaleDef, float triggerDef) {
-  sc.traceSize=traceSizeDef;
-  sc.traceOffset=0;
-  sc.yScale=yScaleDef;
+  sc.traceSize = traceSizeDef;
+  sc.traceOffset = 0;
+  sc.yScale = yScaleDef;
 
   oscDataSize = dataSize;
   oscData = new float[dataSize];
   oscAuxData = new float[dataSize];
   running = false;
-  update=true;
+  update = true;
 }
 
 int GUI::init() {
@@ -113,13 +113,14 @@ void GUI::drawGUI() {
   ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%f");
 
 	ImGui::End();
+  ImPlot::CreateContext();
   GUI::drawMainScope();
   // GUI::drawAuxScope();
+  ImPlot::DestroyContext();
 }
 
 void GUI::drawMainScope() {
   ImGui::Begin("Scope");
-  ImPlot::CreateContext();
   if (ImPlot::BeginPlot("##scope")) {
     ImPlot::SetupAxes("t","##v",ImPlotAxisFlags_NoDecorations,0);
     ImPlot::SetupAxisLimits(ImAxis_X1,(float)(oscDataSize - sc.traceSize)/oscDataSize, 1);
@@ -127,17 +128,18 @@ void GUI::drawMainScope() {
     ImPlot::PlotLine("##scopeplot", oscAlign, oscData, oscDataSize,ImPlotFlags_NoLegend, 0);
     ImPlot::EndPlot();
   }
-  ImPlot::DestroyContext();
   ImGui::End();
 }
 
 void GUI::drawAuxScope() {
   ImGui::Begin("Scope (Auxiliary)");
-  ImGui::PlotLines("",oscAuxData,sc.traceSize,0,NULL,-1.0f/sc.yScale,1.0f/sc.yScale,ImGui::GetContentRegionAvail());
-  // ImPlot::CreateContext();
-  // ImPlot::ShowDemoWindow();
-  // ImPlot::PlotLine("");
-  // ImPlot::DestroyContext();
+  if (ImPlot::BeginPlot("##scope")) {
+    ImPlot::SetupAxes("t","##v",ImPlotAxisFlags_NoDecorations,0);
+    ImPlot::SetupAxisLimits(ImAxis_X1,(float)(oscDataSize - sc.traceSize)/oscDataSize, 1);
+    ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/sc.yScale,1.0f/sc.yScale);
+    ImPlot::PlotLine("##scopeplot", oscAlign, oscAuxData, oscDataSize,ImPlotFlags_NoLegend, 0);
+    ImPlot::EndPlot();
+  }
   ImGui::End();
 }
 
@@ -169,6 +171,7 @@ GUI::~GUI() {
   SDL_GL_DeleteContext(gl_context);
   SDL_DestroyWindow(window);
   SDL_Quit();
+
   if (oscData) {
     delete[] oscData;
     oscData = NULL;

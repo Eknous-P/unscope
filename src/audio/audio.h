@@ -26,7 +26,7 @@ class AudioInput {
     };
 
     struct AudioBuffer {
-      float* data;
+      float *data;
       unsigned long int size;
       unsigned long int index;
     };
@@ -66,12 +66,12 @@ class AudioInput {
 class AudioProcess {
   private:
     float *dataIn, *dataOut;
-    unsigned long int dataSize,i;
+    unsigned long int dataSize, i;
     float *alignRamp;
   public:
     void writeDataIn(float* d);
-    float* getDataIn();
-    float* getDataOut();
+    float *getDataIn();
+    float *getDataOut();
     void derive();
     void integrate();
 
