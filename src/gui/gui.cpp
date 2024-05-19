@@ -114,8 +114,8 @@ void GUI::drawGUI() {
 
 	ImGui::End();
   ImPlot::CreateContext();
-  GUI::drawMainScope();
-  // GUI::drawAuxScope();
+    GUI::drawMainScope();
+    // GUI::drawAuxScope();
   ImPlot::DestroyContext();
 }
 

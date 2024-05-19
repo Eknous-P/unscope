@@ -9,36 +9,36 @@
 #define PROGRAM_VER 0
 
 class GUI {
-	private:
-		struct scopeParams {
-			int traceSize;
-			int traceOffset;
-			float yScale;
-			float trigger;
-		};
-		SDL_WindowFlags window_flags;
-		SDL_Window* window;
-		SDL_GLContext gl_context;
-		ImGuiIO io;
-		ImGuiStyle style;
-		ImVec4 clear_color;
-		bool running, update;
-		float *oscData, *oscAuxData, *oscAlign;
-		unsigned int oscDataSize;
+  private:
+    struct scopeParams {
+      int traceSize;
+      int traceOffset;
+      float yScale;
+      float trigger;
+    };
+    SDL_WindowFlags window_flags;
+    SDL_Window* window;
+    SDL_GLContext gl_context;
+    ImGuiIO io;
+    ImGuiStyle style;
+    ImVec4 clear_color;
+    bool running, update;
+    float *oscData, *oscAuxData, *oscAlign;
+    unsigned int oscDataSize;
 
-		scopeParams sc;
+    scopeParams sc;
 
-	public:
-		void writeOscData(float* datax, float* datay);
-		void writeOscAuxData(float* data);
-		bool isRunning();
-		int init();
-		void doFrame();
-		void drawGUI();
-		void drawMainScope();
-		void drawAuxScope();
-		unsigned long int getTraceSize();
-		float getTrigger();
-		GUI(unsigned long int dataSize, int traceSizeDef, float yScaleDef, float triggerDef);
-		~GUI();
+  public:
+    void writeOscData(float* datax, float* datay);
+    void writeOscAuxData(float* data);
+    bool isRunning();
+    int init();
+    void doFrame();
+    void drawGUI();
+    void drawMainScope();
+    void drawAuxScope();
+    unsigned long int getTraceSize();
+    float getTrigger();
+    GUI(unsigned long int dataSize, int traceSizeDef, float yScaleDef, float triggerDef);
+    ~GUI();
 };
