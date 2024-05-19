@@ -9,6 +9,11 @@ GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, 
   sc.traceOffset = 0;
   sc.yScale = yScaleDef;
 
+  sc.color[0] = 0.13f;
+  sc.color[1] = 0.97f;
+  sc.color[2] = 0.21f;
+  sc.color[3] = 0.95f;
+
   channels = chanCount;
   oscDataSize = dataSize*channels;
   oscData = new float[oscDataSize];
@@ -109,9 +114,11 @@ void GUI::doFrame() {
 void GUI::drawGUI() {
 	ImGui::Begin("Controls");
   ImGui::Checkbox("update",&update);
-  ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize, "%d");
+  ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize/channels, "%d");
   ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%f");
   ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%f");
+
+  ImGui::ColorPicker4("color",sc.color);
 
 	ImGui::End();
   ImPlot::CreateContext();
@@ -121,16 +128,20 @@ void GUI::drawGUI() {
 }
 
 void GUI::drawMainScope() {
+  unsigned char i = 0;
   ImGui::Begin("Scope");
   if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail())) {
-    for (unsigned char i = 0; i < channels; i++) {
+    for (i = 0; i < channels; i++) {
       ImPlot::SetupAxis(ImAxis(i),"t",ImPlotAxisFlags_NoDecorations);
       ImPlot::SetupAxis(ImAxis(i+3),"v",ImPlotAxisFlags_NoDecorations);
-      ImPlot::SetupAxisLimits(ImAxis(i),(float)(oscDataSize - sc.traceSize)/oscDataSize, 1);
+      ImPlot::SetupAxisLimits(ImAxis(i),(float)(oscDataSize - sc.traceSize)/oscDataSize, 1 + i);
       ImPlot::SetupAxisLimits(ImAxis(i+3),-1.0f/sc.yScale,1.0f/sc.yScale);
     }
-    for (unsigned char i = 0; i < channels; i++) {
-      ImPlot::PlotLine("##scopeplot", oscAlign, oscData + oscDataSize*i, oscDataSize,ImPlotFlags_NoLegend, 0);
+      ImPlot::SetupAxis(ImAxis_Y1,"##v",0);
+    for (i = 0; i < channels; i++) {
+      ImPlot::SetNextLineStyle(ImVec4(sc.color[0],sc.color[1],sc.color[2],sc.color[3]),0.25f);
+      ImPlot::PlotLine("##scopeplot", oscAlign, oscData + oscDataSize*i, oscDataSize/channels,ImPlotFlags_NoLegend, 0);
+      // + oscDataSize*i
     }
     ImPlot::EndPlot();
   }

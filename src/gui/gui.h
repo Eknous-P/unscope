@@ -15,6 +15,7 @@ class GUI {
       int traceOffset;
       float yScale;
       float trigger;
+      float color[4];
     };
     SDL_WindowFlags window_flags;
     SDL_Window* window;
