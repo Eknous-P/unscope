@@ -1,15 +1,15 @@
 #include "audio.h"
 
-AudioInput::AudioInput() {
+AudioInput::AudioInput(unsigned char channelsDef, unsigned int sampleRateDef) {
   isGood = Pa_Initialize()==paNoError;
   running = false;
-  conf.channels = 1;
-  conf.sampleRate = 48000;
+  conf.channels = channelsDef;
+  conf.sampleRate = sampleRateDef;
   conf.frameSize = FRAME_SIZE;
 
   conf.device = 0;
 
-  buffer.size = BUFFER_SIZE;
+  buffer.size = BUFFER_SIZE*conf.channels;
   buffer.data = new float[buffer.size];
 }
 
@@ -33,19 +33,25 @@ int AudioInput::bufferGetCallback(
     (void) timeInfo;
     (void) statusFlags;
 
+    unsigned char j = 0;
+
     if (inputBuffer==NULL) {
       for (buffer.index = 0; buffer.index < buffer.size; buffer.index++) {
         buffer.data[buffer.index] = 0;
       }
     } else {
       // push vaules back
-      // for (buffer.index = 0; buffer.index < buffer.size - framesPerBuffer; buffer.index++) {
-      //   buffer.data[buffer.index] = buffer.data[buffer.index + framesPerBuffer];
-      // }
-      memcpy(buffer.data,buffer.data+framesPerBuffer,(buffer.size-framesPerBuffer)*sizeof(float));
+      for (j = 0; j < conf.channels; j++) {
+        memcpy(buffer.data + (buffer.size/conf.channels)*j,
+        buffer.data+framesPerBuffer + (buffer.size/conf.channels)*j,
+        (buffer.size/conf.channels-framesPerBuffer)*sizeof(float));
+      }
       // get data
+      j = 0;
       for (buffer.index = 0; buffer.index < framesPerBuffer; buffer.index++) {
-        buffer.data[buffer.size - framesPerBuffer + buffer.index] = *audIn++;
+        if (j >= conf.channels) j = 0; 
+        buffer.data[buffer.size - framesPerBuffer + buffer.index + j*(buffer.size/conf.channels)] = *audIn++;
+        j++;
       }
     }
     return paContinue;
@@ -104,6 +110,10 @@ float *AudioInput::getData() {
 
 unsigned long int AudioInput::getDataSize() {
   return buffer.size;
+}
+
+unsigned long int AudioInput::getPerChanDataSize() {
+  return buffer.size/conf.channels;
 }
 
 const PaDeviceInfo *AudioInput::getDeviceInfo() {

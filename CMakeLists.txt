@@ -67,6 +67,6 @@ ${srcs_path}
 ${srcs_path}/audio
 ${srcs_path}/gui)
 
-target_compile_options(unscope PRIVATE "-lrt -lm -lpthread" ${cpl_opts})
+target_compile_options(unscope PRIVATE ${cpl_opts})
 target_link_libraries(unscope PRIVATE ${lnk_libs})
 

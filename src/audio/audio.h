@@ -54,11 +54,12 @@ class AudioInput {
       void *userData );
   
   public:
-    AudioInput();
+    AudioInput(unsigned char channelsDef, unsigned int sampleRateDef);
     int init(PaDeviceIndex dev);
     int stop();
     float *getData();
     unsigned long int getDataSize();
+    unsigned long int getPerChanDataSize();
     const PaDeviceInfo* getDeviceInfo();
     ~AudioInput();
 };
