@@ -8,6 +8,7 @@ GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, 
   sc.traceSize = traceSizeDef;
   sc.traceOffset = 0;
   sc.yScale = yScaleDef;
+  sc.trigger = 0;
 
   sc.color[0] = 0.13f;
   sc.color[1] = 0.97f;
