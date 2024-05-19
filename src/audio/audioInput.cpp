@@ -9,8 +9,8 @@ AudioInput::AudioInput(unsigned char channelsDef, unsigned int sampleRateDef) {
 
   conf.device = 0;
 
-  buffer.size = BUFFER_SIZE*conf.channels;
-  buffer.data = new float[buffer.size];
+  buffer.size = BUFFER_SIZE;
+  buffer.data = new float[buffer.size*conf.channels];
 }
 
 int AudioInput::_PaCallback(
@@ -36,22 +36,22 @@ int AudioInput::bufferGetCallback(
     unsigned char j = 0;
 
     if (inputBuffer==NULL) {
-      for (buffer.index = 0; buffer.index < buffer.size; buffer.index++) {
+      for (buffer.index = 0; buffer.index < buffer.size*conf.channels; buffer.index++) {
         buffer.data[buffer.index] = 0;
       }
     } else {
       // push vaules back
       for (j = 0; j < conf.channels; j++) {
-        memcpy(buffer.data + (buffer.size/conf.channels)*j,
-        buffer.data+framesPerBuffer + (buffer.size/conf.channels)*j,
-        (buffer.size/conf.channels-framesPerBuffer)*sizeof(float));
+        memcpy(buffer.data + buffer.size*j,
+        buffer.data+framesPerBuffer + buffer.size*j,
+        (buffer.size-framesPerBuffer)*sizeof(float));
       }
       // get data
-      j = 0;
       for (buffer.index = 0; buffer.index < framesPerBuffer; buffer.index++) {
-        if (j >= conf.channels) j = 0; 
-        buffer.data[buffer.size - framesPerBuffer + buffer.index + j*(buffer.size/conf.channels)] = *audIn++;
-        j++;
+        for (j = 0; j < conf.channels; j++) {
+        // buffer.data[buffer.size - framesPerBuffer + buffer.index] = *audIn++;
+          buffer.data[buffer.size - framesPerBuffer + buffer.index + buffer.size*j] = *audIn++;
+        }
       }
     }
     return paContinue;
@@ -112,8 +112,8 @@ unsigned long int AudioInput::getDataSize() {
   return buffer.size;
 }
 
-unsigned long int AudioInput::getPerChanDataSize() {
-  return buffer.size/conf.channels;
+unsigned long int AudioInput::getChanCount() {
+  return conf.channels;
 }
 
 const PaDeviceInfo *AudioInput::getDeviceInfo() {

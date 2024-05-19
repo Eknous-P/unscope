@@ -59,7 +59,7 @@ class AudioInput {
     int stop();
     float *getData();
     unsigned long int getDataSize();
-    unsigned long int getPerChanDataSize();
+    unsigned long int getChanCount();
     const PaDeviceInfo* getDeviceInfo();
     ~AudioInput();
 };
@@ -78,6 +78,6 @@ class AudioProcess {
 
     float *alignWave(float trigger,unsigned long int waveLen, long int offset, bool edge); // true -> falling, false ->rising
 
-    AudioProcess();
+    AudioProcess(unsigned int bufferSizeDef);
     ~AudioProcess();
 };

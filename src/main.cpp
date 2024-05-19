@@ -28,8 +28,8 @@ int main() {
     }
   }
 
-  AudioProcess p;
-  GUI g(i.getDataSize(), 1600, 2.0f, 0.0f);
+  AudioProcess p(i.getDataSize()*i.getChanCount());
+  GUI g(i.getDataSize()*i.getChanCount(), 1600, 2.0f, 0.0f);
   g.init();
   while (g.isRunning()) {
     p.writeDataIn(i.getData());

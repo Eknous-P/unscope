@@ -1,9 +1,9 @@
 #include "audio.h"
 
-AudioProcess::AudioProcess() {
-  dataOut = new float[BUFFER_SIZE];
-  alignRamp = new float[BUFFER_SIZE];
-  dataSize = BUFFER_SIZE;
+AudioProcess::AudioProcess(unsigned int bufferSizeDef) {
+  dataOut = new float[bufferSizeDef];
+  alignRamp = new float[bufferSizeDef];
+  dataSize = bufferSizeDef;
   i = 0;
 }
 
