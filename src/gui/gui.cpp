@@ -14,6 +14,36 @@ GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, 
   sc.color[2] = 0.21f;
   sc.color[3] = 0.95f;
 
+  winC.w = 1000;
+  winC.h = 360;
+  winC.layout = 
+"[Window][DockSpaceViewport_11111111]\n"
+"Pos=0,0\n"
+"Size=1280,720\n"
+"Collapsed=0\n"
+"\n"
+"[Window][Debug##Default]\n"
+"Pos=60,60\n"
+"Size=400,400\n"
+"Collapsed=0\n"
+"\n"
+"[Window][Controls]\n"
+"Pos=1000,0\n"
+"Size=275,720\n"
+"Collapsed=0\n"
+"DockId=0x00000002,0\n"
+"\n"
+"[Window][Scope]\n"
+"Pos=0,0\n"
+"Size=1000,720\n"
+"Collapsed=0\n"
+"DockId=0x00000001,0\n"
+"\n"
+"[Docking][Data]\n"
+"DockSpace   ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,0 Size=1280,720 Split=X Selected=0x7C3EDFF1\n"
+"  DockNode  ID=0x00000001 Parent=0x8B93E3BD SizeRef=578,371 CentralNode=1 HiddenTabBar=1 Selected=0x7C3EDFF1\n"
+"  DockNode  ID=0x00000002 Parent=0x8B93E3BD SizeRef=275,371 HiddenTabBar=1 Selected=0x67284010\n";
+
   channels = chanCount;
   oscDataSize = dataSize*channels;
   oscData = new float[oscDataSize];
@@ -41,7 +71,7 @@ int GUI::init() {
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
   window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-  window = SDL_CreateWindow(PROGRAM_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+  window = SDL_CreateWindow(PROGRAM_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, winC.w, winC.h, window_flags);
   if (window == nullptr) {
     printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
     return -1;
@@ -53,9 +83,9 @@ int GUI::init() {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
 	io = ImGui::GetIO();
-  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+  ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
   // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-  io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+  ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
   // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
   //io.ConfigViewportsNoAutoMerge = true;
   //io.ConfigViewportsNoTaskBarIcon = true;
@@ -64,10 +94,11 @@ int GUI::init() {
   //ImGui::StyleColorsLight();
   // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
   style = ImGui::GetStyle();
-  if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+  if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
     style.WindowRounding = 0.0f;
     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
   }
+  ImGui::LoadIniSettingsFromMemory(winC.layout);
   // Setup Platform/Renderer backends
   ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
   ImGui_ImplOpenGL3_Init(glsl_version);
@@ -88,7 +119,8 @@ void GUI::doFrame() {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplSDL2_NewFrame();
   ImGui::NewFrame();
-  ImGui::DockSpaceOverViewport(NULL,0);
+  
+  ImGui::DockSpaceOverViewport(ImGui::GetWindowViewport(),0);
 
 	GUI::drawGUI();
 

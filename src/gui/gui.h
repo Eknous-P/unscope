@@ -17,6 +17,10 @@ class GUI {
       float trigger;
       float color[4];
     };
+    struct windowConfig {
+      unsigned short int w,h;
+      const char *layout;
+    };
     SDL_WindowFlags window_flags;
     SDL_Window* window;
     SDL_GLContext gl_context;
@@ -29,6 +33,7 @@ class GUI {
     unsigned int oscDataSize;
 
     scopeParams sc;
+    windowConfig winC;
 
   public:
     void writeOscData(float* datax, float* datay);
