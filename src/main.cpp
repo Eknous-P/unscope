@@ -1,6 +1,6 @@
 #include "audio/audio.h"
 #include "gui/gui.h"
-#include <iostream>
+#include <string>
 
 struct unscopeDefaults {
   unsigned int audioBufferSize;
@@ -22,6 +22,31 @@ struct unscopeDefaults {
     trigger(0.0f) {}
 };
 
+const char* errMsgs[] = {
+  "no devices found\n",
+  "cant open device\n",
+  "cant start device\n",
+  "cant init portaudio\n"
+};
+
+std::string getErrorMsg(int e) {
+  std::string errm = "cant init audio!\n";
+  switch (e) {
+    case NOERR:
+      return "";
+    case NODEVS:
+      return errm + errMsgs[0];
+    case NODEV:
+      return errm + errMsgs[1];
+    case NOSTART:
+      return errm + errMsgs[2];
+    case NOGOOD:
+      return errm + errMsgs[3];
+    default: 
+      return errm + Pa_GetErrorText(e) + '\n';
+  }
+}
+
 int main() {
   unscopeDefaults DEF;
 
@@ -41,26 +66,7 @@ int main() {
   int e;
 
   e = i.init(Pa_GetDefaultInputDevice());
-  if (e!=NOERR) {
-    std::cout << "cant init audio!\n";
-    switch (e) {
-      case NODEVS:
-        std::cout << "no devices found\n";
-        return 1;
-      case NODEV:
-        std::cout << "cant open device\n";
-        return 1;
-      case NOSTART:
-        std::cout << "cant start device\n";
-        return 1;
-      case NOGOOD:
-        std::cout << "cant init portaudio\n";
-        return 1;
-      default:
-        std::cout << Pa_GetErrorText(e) << '\n';
-        return 1;
-    }
-  }
+  if (e =! paNoError) printf("%s", getErrorMsg(e).c_str());
 
   AudioProcess p(DEF.bufferSize*DEF.channels);
 
@@ -72,6 +78,6 @@ int main() {
     g.doFrame();
   }
   e = i.stop();
-  std::cout << Pa_GetErrorText(e) << '\n';
+  printf("%s\n", Pa_GetErrorText(e));
   return e=!paNoError;
 }
