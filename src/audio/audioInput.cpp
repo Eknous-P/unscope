@@ -1,6 +1,6 @@
 #include "audio.h"
 
-AudioInput::AudioInput(unsigned int frameSize, unsigned int bufferSize,unsigned char channelsDef, unsigned int sampleRateDef) {
+AudioInput::AudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned char channelsDef, unsigned int sampleRateDef) {
   isGood = Pa_Initialize()==paNoError;
   running = false;
   conf.channels = channelsDef;

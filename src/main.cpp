@@ -2,21 +2,23 @@
 #include "gui/gui.h"
 #include <string>
 
-struct unscopeDefaults {
+struct unscopeParams {
   unsigned int audioBufferSize;
   unsigned int audioFrameSize;
   unsigned char channels;
   unsigned int sampleRate;
+  int audioDevice;
 
   // gui ...
   unsigned int bufferSize;
   float scale;
   float trigger;
-  unscopeDefaults():
+  unscopeParams():
     audioBufferSize(65536),
     audioFrameSize(128),
     channels(1),
     sampleRate(48000),
+    audioDevice(0),
     bufferSize(1600),
     scale(2.0f),
     trigger(0.0f) {}
@@ -48,27 +50,32 @@ std::string getErrorMsg(int e) {
 }
 
 int main() {
-  unscopeDefaults DEF;
+  unscopeParams params;
 
-  GUI g(DEF.audioBufferSize,
-        DEF.channels,
-        DEF.bufferSize,
-        DEF.scale,
-        DEF.trigger);
+  GUI g(params.audioBufferSize,
+        params.channels,
+        params.bufferSize,
+        params.scale,
+        params.trigger);
 
   g.init();
 
-  AudioInput i(DEF.audioFrameSize,
-               DEF.audioBufferSize,
-               DEF.channels,
-               DEF.sampleRate);
+  AudioInput i(params.audioFrameSize,
+               params.audioBufferSize,
+               params.channels,
+               params.sampleRate);
 
   int e;
 
-  e = i.init(Pa_GetDefaultInputDevice());
-  if (e =! paNoError) printf("%s", getErrorMsg(e).c_str());
+  params.audioDevice = Pa_GetDefaultInputDevice();
 
-  AudioProcess p(DEF.bufferSize*DEF.channels);
+  e = i.init(params.audioDevice);
+  if (e != paNoError) {
+    printf("%d:%s", e,  getErrorMsg(e).c_str());
+    return e;
+  }
+
+  AudioProcess p(params.audioBufferSize*params.channels);
 
   while (g.isRunning()) {
     p.writeDataIn(i.getData());
@@ -79,5 +86,5 @@ int main() {
   }
   e = i.stop();
   printf("%s\n", Pa_GetErrorText(e));
-  return e=!paNoError;
+  return e!=paNoError;
 }
