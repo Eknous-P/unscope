@@ -3,9 +3,6 @@
 #include <memory.h>
 #include <malloc.h>
 
-#define BUFFER_SIZE 65536
-#define FRAME_SIZE 128
-
 enum AudioErrors {
   NOERR=0,
   NOINIT,
@@ -54,12 +51,10 @@ class AudioInput {
       void *userData );
   
   public:
-    AudioInput(unsigned char channelsDef, unsigned int sampleRateDef);
+    AudioInput(unsigned int frameSize, unsigned int bufferSize,unsigned char channelsDef, unsigned int sampleRateDef);
     int init(PaDeviceIndex dev);
     int stop();
     float *getData();
-    unsigned long int getDataSize();
-    unsigned long int getChanCount();
     const PaDeviceInfo* getDeviceInfo();
     ~AudioInput();
 };

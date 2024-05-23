@@ -2,8 +2,42 @@
 #include "gui/gui.h"
 #include <iostream>
 
+struct unscopeDefaults {
+  unsigned int audioBufferSize;
+  unsigned int audioFrameSize;
+  unsigned char channels;
+  unsigned int sampleRate;
+
+  // gui ...
+  unsigned int bufferSize;
+  float scale;
+  float trigger;
+  unscopeDefaults():
+    audioBufferSize(65536),
+    audioFrameSize(128),
+    channels(1),
+    sampleRate(48000),
+    bufferSize(1600),
+    scale(2.0f),
+    trigger(0.0f) {}
+};
+
 int main() {
-  AudioInput i(1,48000);
+  unscopeDefaults DEF;
+
+  GUI g(DEF.audioBufferSize,
+        DEF.channels,
+        DEF.bufferSize,
+        DEF.scale,
+        DEF.trigger);
+
+  g.init();
+
+  AudioInput i(DEF.audioFrameSize,
+               DEF.audioBufferSize,
+               DEF.channels,
+               DEF.sampleRate);
+
   int e;
 
   e = i.init(Pa_GetDefaultInputDevice());
@@ -28,9 +62,8 @@ int main() {
     }
   }
 
-  AudioProcess p(i.getDataSize()*i.getChanCount());
-  GUI g(i.getDataSize(), i.getChanCount(), 1600, 2.0f, 0.0f);
-  g.init();
+  AudioProcess p(DEF.bufferSize*DEF.channels);
+
   while (g.isRunning()) {
     p.writeDataIn(i.getData());
     g.writeOscData(

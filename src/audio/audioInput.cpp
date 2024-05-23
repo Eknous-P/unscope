@@ -1,15 +1,15 @@
 #include "audio.h"
 
-AudioInput::AudioInput(unsigned char channelsDef, unsigned int sampleRateDef) {
+AudioInput::AudioInput(unsigned int frameSize, unsigned int bufferSize,unsigned char channelsDef, unsigned int sampleRateDef) {
   isGood = Pa_Initialize()==paNoError;
   running = false;
   conf.channels = channelsDef;
   conf.sampleRate = sampleRateDef;
-  conf.frameSize = FRAME_SIZE;
+  conf.frameSize = frameSize;
 
   conf.device = 0;
 
-  buffer.size = BUFFER_SIZE;
+  buffer.size = bufferSize;
   buffer.data = new float[buffer.size*conf.channels];
 }
 
@@ -106,14 +106,6 @@ AudioInput::~AudioInput() {
 
 float *AudioInput::getData() {
   return buffer.data;
-}
-
-unsigned long int AudioInput::getDataSize() {
-  return buffer.size;
-}
-
-unsigned long int AudioInput::getChanCount() {
-  return conf.channels;
 }
 
 const PaDeviceInfo *AudioInput::getDeviceInfo() {
