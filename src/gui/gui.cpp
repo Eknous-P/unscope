@@ -50,7 +50,10 @@ GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, 
   oscData = new float[oscDataSize];
   oscAuxData = new float[oscDataSize];
   running = false;
-  update = true;
+  updateOsc = true;
+  restartAudio = true;
+
+  devs.clear();
 }
 
 int GUI::init() {
@@ -150,7 +153,7 @@ void GUI::doFrame() {
 
 void GUI::drawGUI() {
   ImGui::Begin("Controls");
-  ImGui::Checkbox("update",&update);
+  ImGui::Checkbox("update",&updateOsc);
   ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize/channels, "%d");
   ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%f");
   // ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%f");
@@ -168,6 +171,8 @@ void GUI::drawGUI() {
     }
     ImGui::EndCombo();
   }
+
+  if (ImGui::Button("restart audio")) restartAudio = true;
 
   ImGui::End();
   ImPlot::CreateContext();
@@ -211,13 +216,13 @@ void GUI::drawAuxScope() {
 
 
 void GUI::writeOscData(float* datax, float* datay) {
-  if (!update) return;
+  if (!updateOsc) return;
   oscAlign = datax;
   memcpy(oscData,datay,oscDataSize*sizeof(float));
 }
 
 void GUI::writeOscAuxData(float* data) {
-  if (!update) return;
+  if (!updateOsc) return;
   memcpy(oscData,data,oscDataSize*sizeof(float));
 }
 
@@ -227,6 +232,22 @@ unsigned long int GUI::getTraceSize() {
 
 float GUI::getTrigger() {
   return sc.trigger;
+}
+
+void GUI::audioSet() {
+  restartAudio = false;
+}
+
+bool GUI::doRestartAudio() {
+  return restartAudio;
+}
+
+int GUI::getAudioDeviceSetting() {
+  return device;
+}
+
+void GUI::setAudioDeviceSetting(int d) {
+  device = d;
 }
 
 GUI::~GUI() {

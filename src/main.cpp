@@ -71,17 +71,29 @@ int main() {
   params.audioDevice = Pa_GetDefaultInputDevice();
 
   g.getDevices(i.enumerateDevs());
-  // return 0;
-
-  e = i.init(params.audioDevice);
-  if (e != paNoError) {
-    printf("%d:%s", e,  getErrorMsg(e).c_str());
-    return e;
-  }
 
   AudioProcess p(params.audioBufferSize*params.channels);
 
   while (g.isRunning()) {
+    if (g.doRestartAudio()) {
+      e = i.stop();
+      params.audioDevice = g.getAudioDeviceSetting();
+      printf("opening device %d...\n",params.audioDevice);
+      e = i.init(params.audioDevice);
+      if (e != paNoError) {
+        printf("%d:%s", e, getErrorMsg(e).c_str());
+        // try again
+        printf("tring default device...\n");
+        params.audioDevice = Pa_GetDefaultInputDevice();
+        e = i.init(params.audioDevice);
+        if (e != paNoError) {
+          printf("%d:%s", e, getErrorMsg(e).c_str());
+          return e;
+        }
+      }
+      g.setAudioDeviceSetting(params.audioDevice);
+      g.audioSet();
+    }
     p.writeDataIn(i.getData());
     g.writeOscData(
       p.alignWave(g.getTrigger(),g.getTraceSize(),0,0),

@@ -61,6 +61,7 @@ std::vector<DeviceEntry> AudioInput::enumerateDevs() {
   devs.clear();
   for (int i = 0; i < Pa_GetDeviceCount(); i++) {
     const PaDeviceInfo *info = Pa_GetDeviceInfo(i);
+    if (info == NULL) continue;
     if (info->maxInputChannels < 1) continue;
     devs.push_back(DeviceEntry(i, info->name));
   }
@@ -103,6 +104,8 @@ int AudioInput::init(PaDeviceIndex dev) {
 }
 
 int AudioInput::stop() {
+  if (!running) return 0;
+  running = false;
   return Pa_CloseStream(stream);
 }
 

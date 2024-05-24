@@ -31,7 +31,7 @@ class GUI {
     ImGuiIO io;
     ImGuiStyle style;
     ImVec4 clear_color;
-    bool running, update;
+    bool running, updateOsc, restartAudio;
     unsigned char channels;
     float *oscData, *oscAuxData, *oscAlign;
     unsigned int oscDataSize;
@@ -45,15 +45,25 @@ class GUI {
   public:
     void writeOscData(float* datax, float* datay);
     void writeOscAuxData(float* data);
+  
     bool isRunning();
     int init();
     void getDevices(std::vector<DeviceEntry> d);
     void doFrame();
     void drawGUI();
+  
     void drawMainScope();
     void drawAuxScope();
+  
     unsigned long int getTraceSize();
     float getTrigger();
+  
+    void audioSet();
+    bool doRestartAudio();
+
+    int getAudioDeviceSetting();
+    void setAudioDeviceSetting(int d);
+  
     GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, float yScaleDef, float triggerDef);
     ~GUI();
 };
