@@ -3,6 +3,8 @@
 #include <memory.h>
 #include <malloc.h>
 
+#include "../shared.h"
+
 enum AudioErrors {
   NOERR=0,
   NOINIT,
@@ -31,6 +33,8 @@ class AudioInput {
     AudioConfig conf;
     AudioBuffer buffer;
 
+    std::vector<DeviceEntry> devs;
+  
     PaStream *stream;
     PaError err;
     PaStreamParameters streamParams;
@@ -52,6 +56,7 @@ class AudioInput {
   
   public:
     AudioInput(unsigned int frameSize, unsigned int bufferSize,unsigned char channelsDef, unsigned int sampleRateDef);
+    std::vector<DeviceEntry> enumerateDevs();
     int init(PaDeviceIndex dev);
     int stop();
     float *getData();

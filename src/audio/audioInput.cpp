@@ -57,6 +57,16 @@ int AudioInput::bufferGetCallback(
     return paContinue;
 }
 
+std::vector<DeviceEntry> AudioInput::enumerateDevs() {
+  devs.clear();
+  for (int i = 0; i < Pa_GetDeviceCount(); i++) {
+    const PaDeviceInfo *info = Pa_GetDeviceInfo(i);
+    if (info->maxInputChannels < 1) continue;
+    devs.push_back(DeviceEntry(i, info->name));
+  }
+  return devs;
+}
+
 int AudioInput::init(PaDeviceIndex dev) {
   if (!isGood) return NOGOOD;
   if (running) return NOERR;

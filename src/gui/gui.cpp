@@ -108,6 +108,10 @@ int GUI::init() {
   return 0;
 }
 
+void GUI::getDevices(std::vector<DeviceEntry> d) {
+  devs = d;
+}
+
 void GUI::doFrame() {
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
@@ -151,7 +155,19 @@ void GUI::drawGUI() {
   ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%f");
   // ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%f");
 
-  ImGui::ColorPicker4("color",sc.color);
+  if (ImGui::TreeNode("color")) {
+    ImGui::ColorPicker4("##color",sc.color);
+    ImGui::TreePop();
+  }
+
+  if (ImGui::BeginCombo("device",devs[device].devName)) {
+    for (int i = 0; i < devs.size(); i++) {
+      if (ImGui::Selectable(devs[i].devName, device == i)) {
+        device = i;
+      }
+    }
+    ImGui::EndCombo();
+  }
 
   ImGui::End();
   ImPlot::CreateContext();

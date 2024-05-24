@@ -5,6 +5,8 @@
 #include <SDL.h>
 #include <SDL_opengl.h>
 
+#include "../shared.h"
+
 #define PROGRAM_NAME "unscope"
 #define PROGRAM_VER 0
 
@@ -17,10 +19,12 @@ class GUI {
       float trigger;
       float color[4];
     };
+
     struct windowConfig {
       unsigned short int w,h;
       const char *layout;
     };
+
     SDL_WindowFlags window_flags;
     SDL_Window* window;
     SDL_GLContext gl_context;
@@ -32,6 +36,9 @@ class GUI {
     float *oscData, *oscAuxData, *oscAlign;
     unsigned int oscDataSize;
 
+    std::vector<DeviceEntry> devs;
+    int device;
+
     scopeParams sc;
     windowConfig winC;
 
@@ -40,6 +47,7 @@ class GUI {
     void writeOscAuxData(float* data);
     bool isRunning();
     int init();
+    void getDevices(std::vector<DeviceEntry> d);
     void doFrame();
     void drawGUI();
     void drawMainScope();

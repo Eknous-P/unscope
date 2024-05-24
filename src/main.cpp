@@ -1,5 +1,6 @@
 #include "audio/audio.h"
 #include "gui/gui.h"
+#include "../shared.h"
 #include <string>
 
 struct unscopeParams {
@@ -68,6 +69,9 @@ int main() {
   int e;
 
   params.audioDevice = Pa_GetDefaultInputDevice();
+
+  g.getDevices(i.enumerateDevs());
+  // return 0;
 
   e = i.init(params.audioDevice);
   if (e != paNoError) {
