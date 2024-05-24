@@ -23,6 +23,7 @@ ${imgui_path}/imgui_demo.cpp
 ${imgui_path}/imgui_draw.cpp
 ${imgui_path}/imgui_tables.cpp
 ${imgui_path}/imgui_widgets.cpp
+${imgui_path}/misc/cpp/imgui_stdlib.cpp
 
 ${implot_path}/implot.cpp
 ${implot_path}/implot_demo.cpp
@@ -61,6 +62,7 @@ add_executable(unscope ${unscope_srcs})
 target_include_directories(unscope SYSTEM PRIVATE
 ${SDL2_INCLUDE_DIRS}
 ${imgui_path}
+${imgui_path}/misc/cpp
 ${imgui_path}/backends
 ${implot_path}
 ${srcs_path}

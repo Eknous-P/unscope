@@ -4,6 +4,7 @@
 #include <implot.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
+#include "imgui_stdlib.h"
 
 #include "../shared.h"
 

@@ -163,9 +163,9 @@ void GUI::drawGUI() {
     ImGui::TreePop();
   }
 
-  if (ImGui::BeginCombo("device",devs[device].devName)) {
+  if (ImGui::BeginCombo("device",devs[device].devName.c_str())) {
     for (int i = 0; i < devs.size(); i++) {
-      if (ImGui::Selectable(devs[i].devName, device == i)) {
+      if (ImGui::Selectable(devs[i].devName.c_str(), device == i)) {
         device = i;
       }
     }

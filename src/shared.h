@@ -2,11 +2,12 @@
 #define SHARED_H
 
 #include <vector>
+#include <string>
 
 struct DeviceEntry {
   int dev;
-  const char* devName;
-  DeviceEntry(int d, const char* dn) {
+  std::string devName;
+  DeviceEntry(int d, std::string dn) {
     dev = d;
     devName = dn;
   }

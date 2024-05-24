@@ -69,6 +69,7 @@ int main() {
   int e;
 
   params.audioDevice = Pa_GetDefaultInputDevice();
+  g.setAudioDeviceSetting(params.audioDevice);
 
   g.getDevices(i.enumerateDevs());
 
