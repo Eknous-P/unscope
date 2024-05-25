@@ -176,13 +176,18 @@ void GUI::doFrame() {
 void GUI::drawGUI() {
   ImGui::Begin("Controls");
   ImGui::Checkbox("update",&updateOsc);
-  ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize/channels, "%d");
+  ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize, "%d");
   ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%f");
   ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%f");
   showTrigger = ImGui::IsItemHovered();
 
-  if (ImGui::TreeNode("color")) {
-    ImGui::ColorPicker4("##color",sc.color[0]);
+  if (ImGui::TreeNode("colors")) {
+    for (unsigned char i = 0; i < channels; i++) {
+      if (ImGui::TreeNode((void*)(intptr_t)i,"channel %d",i)) {
+        ImGui::ColorPicker4("##color",sc.color[i]);
+        ImGui::TreePop();
+      }
+    }
     ImGui::TreePop();
   }
 
