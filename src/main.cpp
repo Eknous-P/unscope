@@ -17,7 +17,7 @@ struct unscopeParams {
   unscopeParams():
     audioBufferSize(65536),
     audioFrameSize(128),
-    channels(1),
+    channels(2),
     sampleRate(48000),
     audioDevice(0),
     bufferSize(1600),
@@ -73,7 +73,7 @@ int main() {
 
   g.getDevices(i.enumerateDevs());
 
-  AudioProcess p(params.audioBufferSize*params.channels);
+  AudioProcess p(params.audioBufferSize,params.channels);
 
   while (g.isRunning()) {
     if (g.doRestartAudio()) {
@@ -84,7 +84,7 @@ int main() {
       if (e != paNoError) {
         printf("%d:%s", e, getErrorMsg(e).c_str());
         // try again
-        printf("tring default device...\n");
+        printf("trying default device...\n");
         params.audioDevice = Pa_GetDefaultInputDevice();
         e = i.init(params.audioDevice);
         if (e != paNoError) {
@@ -95,12 +95,14 @@ int main() {
       g.setAudioDeviceSetting(params.audioDevice);
       g.audioSet();
     }
-    p.writeDataIn(i.getData());
-    g.writeOscData(
-      p.alignWave(g.getTrigger(),g.getTraceSize(),0,0),
-      i.getData());
+    for (unsigned char j = 0; j < params.channels; j++) {
+      p.writeDataIn(i.getData(j),j);
+      g.writeOscData(j,
+        p.alignWave(j,g.getTrigger(),g.getTraceSize(),0,0),
+        i.getData(j));
+    }
     g.doFrame();
-  }
+    }
   e = i.stop();
   printf("%s\n", Pa_GetErrorText(e));
   return e!=paNoError;

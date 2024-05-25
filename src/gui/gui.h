@@ -18,7 +18,7 @@ class GUI {
       int traceOffset;
       float yScale;
       float trigger;
-      float color[4];
+      float color[4][4];
     };
 
     struct windowConfig {
@@ -34,7 +34,7 @@ class GUI {
     ImVec4 clear_color;
     bool running, updateOsc, restartAudio;
     unsigned char channels;
-    float *oscData, *oscAuxData, *oscAlign;
+    float **oscData, **oscAuxData, **oscAlign;
     unsigned int oscDataSize;
 
     std::vector<DeviceEntry> devs;
@@ -43,9 +43,11 @@ class GUI {
     scopeParams sc;
     windowConfig winC;
 
+    bool showTrigger;
+
   public:
-    void writeOscData(float* datax, float* datay);
-    void writeOscAuxData(float* data);
+    void writeOscData(unsigned char chan, float* datax, float* datay);
+    void writeOscAuxData(unsigned char chan, float* data);
   
     bool isRunning();
     int init();

@@ -1,9 +1,17 @@
 #include "audio.h"
 
-AudioProcess::AudioProcess(unsigned int bufferSizeDef) {
-  dataOut = new float[bufferSizeDef];
-  alignRamp = new float[bufferSizeDef];
+AudioProcess::AudioProcess(unsigned int bufferSizeDef, unsigned char chans) {
+  channels = chans;
+  // dataOut = new float[bufferSizeDef];
+  // alignRamp = new float[bufferSizeDef];
+
   dataSize = bufferSizeDef;
+  dataOut = new float*[channels];
+  alignRamp = new float*[channels];
+  for (i = 0; i < channels; i++) {
+    dataOut[i] = new float[dataSize];
+    alignRamp[i] = new float[dataSize];
+  }
   i = 0;
 }
 
@@ -14,36 +22,36 @@ AudioProcess::~AudioProcess() {
   alignRamp = NULL;
 }
 
-void AudioProcess::writeDataIn(float *d) {
-  dataIn = d;
+void AudioProcess::writeDataIn(float *d, unsigned char chan) {
+  dataIn[chan] = d;
 }
 
-float *AudioProcess::getDataOut() {
-  return dataOut;
-}
-
-float *AudioProcess::getDataIn() {
-  return dataIn;
+float *AudioProcess::getDataOut(unsigned char chan) {
+  return dataOut[chan];
 }
 
 void AudioProcess::derive() {
   dataOut[i] = 0;
-  for (i = 1; i < dataSize; i++) {
-    dataOut[i] = dataIn[i] - dataIn[i-1];
+  for (unsigned char j = 0; j < channels; j++) {
+    for (i = 1; i < dataSize; i++) {
+      dataOut[j][i] = dataIn[j][i] - dataIn[j][i-1];
+    }
   }
   i = 0;
 }
 
 void AudioProcess::integrate() {
   dataOut[0] = dataIn[0];
-  for (i = 1; i < dataSize; i++) {
-    dataOut[i] = dataOut[i-1] + dataIn[i];
+  for (unsigned char j = 0; j < channels; j++) {
+    for (i = 1; i < dataSize; i++) {
+      dataOut[j][i] = dataOut[j][i-1] + dataIn[j][i];
+    }
   }
   i = 0;
 }
 
-float *AudioProcess::alignWave(float trigger, unsigned long int waveLen, long int offset, bool edge=false) {
-  memset(alignRamp,0.0f,sizeof(float)*dataSize);
+float *AudioProcess::alignWave(unsigned char chan, float trigger, unsigned long int waveLen, long int offset, bool edge=false) {
+  memset(alignRamp[chan],0.0f,sizeof(float)*dataSize);
   // i = dataSize - waveLen + offset;
   // i = waveLen;
   // while ((dataIn[i] < trigger) == (edge == 0)) {
@@ -54,14 +62,13 @@ float *AudioProcess::alignWave(float trigger, unsigned long int waveLen, long in
   //   alignRamp[i] = alignRamp[i-1] + delta/dataSize;
   // }
 
-  // float delta = (float)((float)dataSize-(float)waveLen+1)/(float)dataSize/48000;
   float delta = (float)dataSize/((float)waveLen)/(float)dataSize;
-  alignRamp[dataSize-1] = 1.0f;
+  alignRamp[chan][dataSize-1] = 1.0f;
   for (i = dataSize-2; i > 0; i--) {
-    alignRamp[i] = alignRamp[i+1] - 2*delta;
+    alignRamp[chan][i] = alignRamp[chan][i+1] - 2*delta;
   }
-  alignRamp[0] = -1.0f;
+  alignRamp[chan][0] = -1.0f;
 
   i = 0;
-  return alignRamp;
+  return alignRamp[chan];
 }

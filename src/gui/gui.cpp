@@ -10,10 +10,25 @@ GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, 
   sc.yScale = yScaleDef;
   sc.trigger = 0;
 
-  sc.color[0] = 0.13f;
-  sc.color[1] = 0.97f;
-  sc.color[2] = 0.21f;
-  sc.color[3] = 0.95f;
+  sc.color[0][0] = 0.13f;
+  sc.color[0][1] = 0.97f;
+  sc.color[0][2] = 0.21f;
+  sc.color[0][3] = 0.95f;
+
+  sc.color[1][0] = 0.93f;
+  sc.color[1][1] = 0.17f;
+  sc.color[1][2] = 0.23f;
+  sc.color[1][3] = 0.95f;
+
+  sc.color[2][0] = 0.87f;
+  sc.color[2][1] = 0.93f;
+  sc.color[2][2] = 0.14f;
+  sc.color[2][3] = 0.95f;
+
+  sc.color[3][0] = 0.63f;
+  sc.color[3][1] = 0.17f;
+  sc.color[3][2] = 0.94f;
+  sc.color[3][3] = 0.95f;
 
   winC.w = 1000;
   winC.h = 360;
@@ -46,14 +61,21 @@ GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, 
 "  DockNode  ID=0x00000002 Parent=0x8B93E3BD SizeRef=275,371 HiddenTabBar=1 Selected=0x67284010\n";
 
   channels = chanCount;
-  oscDataSize = dataSize*channels;
-  oscData = new float[oscDataSize];
-  oscAuxData = new float[oscDataSize];
+  oscDataSize = dataSize;
+
+  oscData = new float*[channels];
+  oscAuxData = new float*[channels];
+  oscAlign = new float*[channels];
+  for (unsigned char i = 0; i < channels; i++) {
+    oscData[i] = new float[oscDataSize];
+    oscAuxData[i] = new float[oscDataSize];
+  }
   running = false;
   updateOsc = true;
   restartAudio = true;
 
   devs.clear();
+  showTrigger = false;
 }
 
 int GUI::init() {
@@ -157,9 +179,10 @@ void GUI::drawGUI() {
   ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize/channels, "%d");
   ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%f");
   ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%f");
+  showTrigger = ImGui::IsItemHovered();
 
   if (ImGui::TreeNode("color")) {
-    ImGui::ColorPicker4("##color",sc.color);
+    ImGui::ColorPicker4("##color",sc.color[0]);
     ImGui::TreePop();
   }
 
@@ -179,9 +202,9 @@ void GUI::drawGUI() {
     GUI::drawMainScope();
     // GUI::drawAuxScope();
   ImPlot::DestroyContext();
-  ImGui::Begin("Trigger");
-  ImGui::PlotLines("##trigger",oscAlign,65536,0,"",-1,1,ImGui::GetContentRegionAvail());
-  ImGui::End();
+  // ImGui::Begin("Trigger");
+  // ImGui::PlotLines("##trigger",oscAlign,65536,0,"",-1,1,ImGui::GetContentRegionAvail());
+  // ImGui::End();
 }
 
 void GUI::drawMainScope() {
@@ -191,17 +214,16 @@ void GUI::drawMainScope() {
     for (i = 0; i < channels; i++) {
       ImPlot::SetupAxis(ImAxis(i),"t",ImPlotAxisFlags_NoDecorations);
       ImPlot::SetupAxis(ImAxis(i+3),"v",ImPlotAxisFlags_NoDecorations);
-      ImPlot::SetupAxisLimits(ImAxis(i),-1, 1 + i);//(float)(oscDataSize - sc.traceSize)/oscDataSize
+      ImPlot::SetupAxisLimits(ImAxis(i),-1, 1);
       ImPlot::SetupAxisLimits(ImAxis(i+3),-1.0f/sc.yScale,1.0f/sc.yScale);
     }
       ImPlot::SetupAxis(ImAxis_Y1,"##v",0);
     for (i = 0; i < channels; i++) {
-      ImPlot::SetNextLineStyle(ImVec4(sc.color[0],sc.color[1],sc.color[2],sc.color[3]),0.25f);
-      ImPlot::PlotLine("##scopeplot", oscAlign, oscData + oscDataSize*i, oscDataSize/channels,ImPlotFlags_NoLegend, 0);
-      // + oscDataSize*i
+      ImPlot::SetNextLineStyle(ImVec4(sc.color[i][0],sc.color[i][1],sc.color[i][2],sc.color[i][3]),0.25f);
+      ImPlot::PlotLine("##scopeplot", oscAlign[i], oscData[i], oscDataSize,ImPlotFlags_NoLegend, 0);
     }
     // ImPlot::DragLineY(-1,(double*)&sc.trigger,ImVec4(1,0,0,1),1,ImPlotDragToolFlags_NoFit);
-    ImPlot::TagY(sc.trigger,ImVec4(1,0,0,1),"trigger");
+    if (showTrigger) ImPlot::TagY(sc.trigger,ImVec4(1,0,0,1),"trig");
     // ImPlot::TagYV()
     ImPlot::EndPlot();
   }
@@ -214,22 +236,22 @@ void GUI::drawAuxScope() {
     ImPlot::SetupAxes("t","##v",ImPlotAxisFlags_NoDecorations,0);
     ImPlot::SetupAxisLimits(ImAxis_X1,(float)(oscDataSize - sc.traceSize)/oscDataSize, 1);
     ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/sc.yScale,1.0f/sc.yScale);
-    ImPlot::PlotLine("##scopeplot", oscAlign, oscAuxData, oscDataSize,ImPlotFlags_NoLegend, 0);
+    ImPlot::PlotLine("##scopeplot", oscAlign[0], oscAuxData[0], oscDataSize,ImPlotFlags_NoLegend, 0);
     ImPlot::EndPlot();
   }
   ImGui::End();
 }
 
 
-void GUI::writeOscData(float* datax, float* datay) {
+void GUI::writeOscData(unsigned char chan, float* datax, float* datay) {
   if (!updateOsc) return;
-  oscAlign = datax;
-  memcpy(oscData,datay,oscDataSize*sizeof(float));
+  oscAlign[chan] = datax;
+  memcpy(oscData[chan],datay,oscDataSize*sizeof(float));
 }
 
-void GUI::writeOscAuxData(float* data) {
+void GUI::writeOscAuxData(unsigned char chan, float* data) {
   if (!updateOsc) return;
-  memcpy(oscData,data,oscDataSize*sizeof(float));
+  memcpy(oscData[chan],data,oscDataSize*sizeof(float));
 }
 
 unsigned long int GUI::getTraceSize() {

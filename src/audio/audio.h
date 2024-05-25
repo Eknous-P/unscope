@@ -25,7 +25,7 @@ class AudioInput {
     };
 
     struct AudioBuffer {
-      float *data;
+      float **data;
       unsigned long int size;
       unsigned long int index;
     };
@@ -59,25 +59,25 @@ class AudioInput {
     std::vector<DeviceEntry> enumerateDevs();
     int init(PaDeviceIndex dev);
     int stop();
-    float *getData();
+    float *getData(unsigned char chan);
     const PaDeviceInfo* getDeviceInfo();
     ~AudioInput();
 };
 
 class AudioProcess {
   private:
-    float *dataIn, *dataOut;
+    float **dataIn, **dataOut;
     unsigned long int dataSize, i;
-    float *alignRamp;
+    float **alignRamp;
+    unsigned char channels;
   public:
-    void writeDataIn(float* d);
-    float *getDataIn();
-    float *getDataOut();
+    void writeDataIn(float* d, unsigned char chan);
+    float *getDataOut(unsigned char chan);
     void derive();
     void integrate();
 
-    float *alignWave(float trigger,unsigned long int waveLen, long int offset, bool edge); // true -> falling, false ->rising
+    float *alignWave(unsigned char chan, float trigger,unsigned long int waveLen, long int offset, bool edge); // true -> falling, false ->rising
 
-    AudioProcess(unsigned int bufferSizeDef);
+    AudioProcess(unsigned int bufferSizeDef, unsigned char chans);
     ~AudioProcess();
 };
