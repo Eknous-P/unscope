@@ -64,7 +64,10 @@ std::vector<DeviceEntry> AudioInput::enumerateDevs() {
     if (info == NULL) continue;
     if (info->maxInputChannels < 1) continue;
     if (info->maxOutputChannels > 0) continue;
-    devs.push_back(DeviceEntry(i, std::string(Pa_GetHostApiInfo(info->hostApi)->name) + " | " + std::string(info->name)));
+    devs.push_back(DeviceEntry(i,
+      std::to_string(i) + ": " +
+      std::string(Pa_GetHostApiInfo(info->hostApi)->name) + " | " + 
+      std::string(info->name)));
   }
   return devs;
 }

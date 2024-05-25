@@ -156,21 +156,21 @@ void GUI::drawGUI() {
   ImGui::Checkbox("update",&updateOsc);
   ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize/channels, "%d");
   ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%f");
-  // ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%f");
+  ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%f");
 
   if (ImGui::TreeNode("color")) {
     ImGui::ColorPicker4("##color",sc.color);
     ImGui::TreePop();
   }
 
-  if (ImGui::BeginCombo("device",devs[device].devName.c_str())) {
-    for (int i = 0; i < devs.size(); i++) {
-      if (ImGui::Selectable(devs[i].devName.c_str(), device == i)) {
-        device = i;
-      }
-    }
-    ImGui::EndCombo();
-  }
+  // if (ImGui::BeginCombo("device",devs[device].devName.c_str())) {
+  //   for (int i = 0; i < devs.size(); i++) {
+  //     if (ImGui::Selectable(devs[i].devName.c_str(), device == i)) {
+  //       device = i;
+  //     }
+  //   }
+  //   ImGui::EndCombo();
+  // }
 
   if (ImGui::Button("restart audio")) restartAudio = true;
 
@@ -179,6 +179,9 @@ void GUI::drawGUI() {
     GUI::drawMainScope();
     // GUI::drawAuxScope();
   ImPlot::DestroyContext();
+  ImGui::Begin("Trigger");
+  ImGui::PlotLines("##trigger",oscAlign,65536,0,"",-1,1,ImGui::GetContentRegionAvail());
+  ImGui::End();
 }
 
 void GUI::drawMainScope() {
@@ -188,7 +191,7 @@ void GUI::drawMainScope() {
     for (i = 0; i < channels; i++) {
       ImPlot::SetupAxis(ImAxis(i),"t",ImPlotAxisFlags_NoDecorations);
       ImPlot::SetupAxis(ImAxis(i+3),"v",ImPlotAxisFlags_NoDecorations);
-      ImPlot::SetupAxisLimits(ImAxis(i),(float)(oscDataSize - sc.traceSize)/oscDataSize, 1 + i);
+      ImPlot::SetupAxisLimits(ImAxis(i),-1, 1 + i);//(float)(oscDataSize - sc.traceSize)/oscDataSize
       ImPlot::SetupAxisLimits(ImAxis(i+3),-1.0f/sc.yScale,1.0f/sc.yScale);
     }
       ImPlot::SetupAxis(ImAxis_Y1,"##v",0);
@@ -197,6 +200,9 @@ void GUI::drawMainScope() {
       ImPlot::PlotLine("##scopeplot", oscAlign, oscData + oscDataSize*i, oscDataSize/channels,ImPlotFlags_NoLegend, 0);
       // + oscDataSize*i
     }
+    // ImPlot::DragLineY(-1,(double*)&sc.trigger,ImVec4(1,0,0,1),1,ImPlotDragToolFlags_NoFit);
+    ImPlot::TagY(sc.trigger,ImVec4(1,0,0,1),"trigger");
+    // ImPlot::TagYV()
     ImPlot::EndPlot();
   }
   ImGui::End();
