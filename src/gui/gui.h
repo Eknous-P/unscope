@@ -8,9 +8,6 @@
 
 #include "../shared.h"
 
-#define PROGRAM_NAME "unscope"
-#define PROGRAM_VER 0
-
 class GUI {
   private:
     struct scopeParams {

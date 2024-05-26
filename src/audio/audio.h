@@ -5,15 +5,6 @@
 
 #include "../shared.h"
 
-enum AudioErrors {
-  NOERR=0,
-  NOINIT,
-  NODEVS,
-  NODEV,
-  NOSTART,
-  NOGOOD
-};
-
 class AudioInput {
   private:
 
