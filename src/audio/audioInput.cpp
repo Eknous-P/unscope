@@ -66,6 +66,7 @@ std::vector<DeviceEntry> AudioInput::enumerateDevs() {
     const PaDeviceInfo *info = Pa_GetDeviceInfo(i);
     if (info == NULL) continue;
     if (info->maxInputChannels < 1) continue;
+    if (info->maxInputChannels > conf.channels) continue;
     if (info->maxOutputChannels > 0) continue;
     devs.push_back(DeviceEntry(i,
       std::to_string(i) + ": " +

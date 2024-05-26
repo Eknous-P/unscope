@@ -34,6 +34,6 @@ struct DeviceEntry {
   }
 };
 
-extern const char *helpMsg, *verMsg;
+extern const char *helpMsg, *verMsg, *errMsgs[];
 
 #endif

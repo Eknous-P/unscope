@@ -49,7 +49,7 @@ std::string getErrorMsg(int e) {
   }
 }
 
-#define pasreParams(p, argc, argv) { \
+#define parseParams(p, argc, argv) { \
   if (argc > 1) { \
     unsigned char flagStartIndex = 1; \
     int value = 0; \
@@ -98,7 +98,7 @@ std::string getErrorMsg(int e) {
 
 int main(int argc, char** argv) {
   unscopeParams params;
-  pasreParams(params, argc, argv);
+  parseParams(params, argc, argv);
 
   GUI g(params.audioBufferSize,
         params.channels,

@@ -25,11 +25,6 @@ GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, 
   sc.color[2][2] = 0.14f;
   sc.color[2][3] = 0.95f;
 
-  sc.color[3][0] = 0.63f;
-  sc.color[3][1] = 0.17f;
-  sc.color[3][2] = 0.94f;
-  sc.color[3][3] = 0.95f;
-
   winC.w = 1000;
   winC.h = 360;
   winC.layout = 
@@ -74,6 +69,7 @@ GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, 
   updateOsc = true;
   restartAudio = true;
 
+  device = 0;
   devs.clear();
   showTrigger = false;
 }
@@ -179,7 +175,7 @@ void GUI::drawGUI() {
   ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize, "%d");
   ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%f");
   ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%f");
-  showTrigger = ImGui::IsItemHovered();
+  showTrigger = ImGui::IsItemActive();
 
   if (ImGui::TreeNode("colors")) {
     for (unsigned char i = 0; i < channels; i++) {
@@ -281,6 +277,10 @@ int GUI::getAudioDeviceSetting() {
 
 void GUI::setAudioDeviceSetting(int d) {
   device = d;
+}
+
+int GUI::getCurrentDeviceId() {
+  return device;
 }
 
 GUI::~GUI() {
