@@ -2,16 +2,17 @@
 
 AudioProcess::AudioProcess(unsigned int bufferSizeDef, unsigned char chans) {
   channels = chans;
-  // dataOut = new float[bufferSizeDef];
-  // alignRamp = new float[bufferSizeDef];
-
   dataSize = bufferSizeDef;
+
   dataIn = new float*[channels];
   dataOut = new float*[channels];
   alignRamp = new float*[channels];
   for (i = 0; i < channels; i++) {
     dataOut[i] = new float[dataSize];
     alignRamp[i] = new float[dataSize];
+
+    memset(dataOut[i], 0, dataSize*sizeof(float));
+    memset(alignRamp[i], 0, dataSize*sizeof(float));
   }
   i = 0;
 }
@@ -37,9 +38,9 @@ AudioProcess::~AudioProcess() {
     delete[] alignRamp;
     alignRamp = NULL;
   }
-  if (dataOut) {
+  if (dataIn) {
     delete[] dataIn;
-    dataOut = NULL;
+    dataIn = NULL;
   }
 }
 

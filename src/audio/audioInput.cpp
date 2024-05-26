@@ -87,14 +87,14 @@ std::vector<DeviceEntry> AudioInput::enumerateDevs() {
 }
 
 int AudioInput::init(PaDeviceIndex dev) {
-  if (!isGood) return NOGOOD;
-  if (running) return NOERR;
+  if (!isGood) return UAUDIOERR_NOGOOD;
+  if (running) return UAUDIOERR_NOERR;
   int nDevs = Pa_GetDeviceCount();
-  if (nDevs == 0) return NODEVS;
+  if (nDevs == 0) return UAUDIOERR_NODEVS;
   if (nDevs < 0) return nDevs;
 
   streamParams.device = dev;
-  if (streamParams.device == paNoDevice) return NODEV;
+  if (streamParams.device == paNoDevice) return UAUDIOERR_NODEV;
   streamParams.channelCount = conf.channels;
   streamParams.sampleFormat = paFloat32;
   streamParams.suggestedLatency = Pa_GetDeviceInfo(streamParams.device)->defaultLowInputLatency;

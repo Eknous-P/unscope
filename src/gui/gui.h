@@ -63,7 +63,6 @@ class GUI {
 
     int getAudioDeviceSetting();
     void setAudioDeviceSetting(int d);
-    int getCurrentDeviceId();
   
     GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, float yScaleDef, float triggerDef);
     ~GUI();

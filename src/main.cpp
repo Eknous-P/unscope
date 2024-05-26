@@ -24,76 +24,22 @@ struct unscopeParams {
     trigger(0.0f) {}
 };
 
-const char* errMsgs[] = {
-  "no devices found\n",
-  "cant open device\n",
-  "cant start device\n",
-  "cant init portaudio\n"
-};
-
 std::string getErrorMsg(int e) {
   std::string errm = "cant init audio!\n";
   switch (e) {
-    case NOERR:
+    case UAUDIOERR_NOERR:
       return "";
-    case NODEVS:
+    case UAUDIOERR_NODEVS:
       return errm + errMsgs[0];
-    case NODEV:
+    case UAUDIOERR_NODEV:
       return errm + errMsgs[1];
-    case NOSTART:
+    case UAUDIOERR_NOSTART:
       return errm + errMsgs[2];
-    case NOGOOD:
+    case UAUDIOERR_NOGOOD:
       return errm + errMsgs[3];
     default: 
       return errm + Pa_GetErrorText(e) + '\n';
   }
-}
-
-#define parseParams(p, argc, argv) { \
-  if (argc > 1) { \
-    unsigned char flagStartIndex = 1; \
-    int value = 0; \
-    for (int i = 1; i < argc; i+=2) { \
-      if (argv[i][0] == '-') { \
-        if (argv[i][1] == '-') { \
-          flagStartIndex = 2; \
-        } \
-        flagStartIndex = 1; \
-        if (i + 1 == argc) { \
-          printf("no value for argument %s given\n", argv[i]); \
-          continue; \
-        } \
-        try { \
-          value = std::stoi(argv[i+1]); \
-        } catch (...) { \
-          printf("invalid argument for %s given: %s\n", argv[i], argv[i+1]); \
-          continue; \
-        } \
-        switch (argv[i][flagStartIndex]) { \
-          case UPARAM_HELP: \
-            printf("%s%s",verMsg,helpMsg); \
-            return 0; \
-          case UPARAM_BUFFERSIZE: \
-            p.audioBufferSize = value; \
-            break; \
-          case UPARAM_FRAMESIZE: \
-            p.audioFrameSize = value; \
-            break; \
-          case UPARAM_CHANNELCOUNT: \
-            p.channels = value; \
-            break; \
-          case UPARAM_SAMPLERATE: \
-            p.sampleRate = value; \
-            break; \
-          case UPARAM_VERSION: \
-            printf("%s",verMsg); \
-            return 0; \
-        } \
-      } else { \
-        printf("cannot parse argument %s\n",argv[i]); \
-      } \
-    } \
-  } \
 }
 
 int main(int argc, char** argv) {
@@ -156,8 +102,8 @@ int main(int argc, char** argv) {
   return e!=paNoError;
 }
 
-const char *verMsg = PROGRAM_NAME " (version " PROGRAM_VER ")\n";
-const char *helpMsg =
+const char* verMsg = PROGRAM_NAME " (version " PROGRAM_VER ")\n";
+const char* helpMsg =
 "Program arguments\n"
 "  -h: print this message\n"
 "  -b: set the audio buffer size (default: 65536)\n"
@@ -165,3 +111,9 @@ const char *helpMsg =
 "  -c: set the channel amount (default: 2)\n"
 "  -s: set the sample rate (default: 48000)\n"
 "  -v: print the program version\n";
+const char* errMsgs[] = {
+  "no devices found\n",
+  "cant open device\n",
+  "cant start device\n",
+  "cant init portaudio\n"
+};

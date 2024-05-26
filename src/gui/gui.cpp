@@ -284,10 +284,12 @@ int GUI::getAudioDeviceSetting() {
 
 void GUI::setAudioDeviceSetting(int d) {
   device = d;
-}
-
-int GUI::getCurrentDeviceId() {
-  return device;
+  for (int i = 0; i < devs.size(); i++) {
+    if (devs[i].dev == device) {
+      deviceNum = i;
+      break;
+    }
+  }
 }
 
 GUI::~GUI() {
