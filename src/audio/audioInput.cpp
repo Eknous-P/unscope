@@ -77,6 +77,7 @@ std::vector<DeviceEntry> AudioInput::enumerateDevs() {
     if (info->maxInputChannels < 1) continue;
     if (info->maxInputChannels > conf.channels) continue;
     if (info->maxOutputChannels > 0) continue;
+    if (info->defaultSampleRate < conf.sampleRate) continue;
     devs.push_back(DeviceEntry(i,
       std::to_string(i) + ": " +
       std::string(Pa_GetHostApiInfo(info->hostApi)->name) + " | " + 

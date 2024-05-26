@@ -35,7 +35,7 @@ class GUI {
     unsigned int oscDataSize;
 
     std::vector<DeviceEntry> devs;
-    int device;
+    int device, deviceNum;
 
     scopeParams sc;
     windowConfig winC;

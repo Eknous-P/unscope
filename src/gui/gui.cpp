@@ -75,6 +75,7 @@ GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, 
   restartAudio = true;
 
   device = 0;
+  deviceNum = 0;
   devs.clear();
   showTrigger = false;
 }
@@ -192,14 +193,15 @@ void GUI::drawGUI() {
     ImGui::TreePop();
   }
 
-  // if (ImGui::BeginCombo("device",devs[device].devName.c_str())) {
-  //   for (int i = 0; i < devs.size(); i++) {
-  //     if (ImGui::Selectable(devs[i].devName.c_str(), device == i)) {
-  //       device = i;
-  //     }
-  //   }
-  //   ImGui::EndCombo();
-  // }
+  if (ImGui::BeginCombo("device",devs[deviceNum].devName.c_str())) {
+    for (int i = 0; i < devs.size(); i++) {
+      if (ImGui::Selectable(devs[i].devName.c_str(), deviceNum == i)) {
+        deviceNum = i;
+        device = devs[i].dev;
+      }
+    }
+    ImGui::EndCombo();
+  }
 
   if (ImGui::Button("restart audio")) restartAudio = true;
 
