@@ -6,6 +6,7 @@ AudioProcess::AudioProcess(unsigned int bufferSizeDef, unsigned char chans) {
   // alignRamp = new float[bufferSizeDef];
 
   dataSize = bufferSizeDef;
+  dataIn = new float*[channels];
   dataOut = new float*[channels];
   alignRamp = new float*[channels];
   for (i = 0; i < channels; i++) {
@@ -16,10 +17,30 @@ AudioProcess::AudioProcess(unsigned int bufferSizeDef, unsigned char chans) {
 }
 
 AudioProcess::~AudioProcess() {
-  delete[] dataOut;
-  delete[] alignRamp;
-  dataIn = NULL; dataOut = NULL;
-  alignRamp = NULL;
+  if (dataOut) {
+    for (unsigned char i = 0; i < channels; i++) {
+      if (dataOut[i]) {
+        delete[] dataOut[i];
+        dataOut[i] = NULL;
+      }
+    }
+    delete[] dataOut;
+    dataIn = NULL;
+  }
+  if (alignRamp) {
+    for (unsigned char i = 0; i < channels; i++) {
+      if (alignRamp[i]) {
+        delete[] alignRamp[i];
+        alignRamp[i] = NULL;
+      }
+    }
+    delete[] alignRamp;
+    alignRamp = NULL;
+  }
+  if (dataOut) {
+    delete[] dataIn;
+    dataOut = NULL;
+  }
 }
 
 void AudioProcess::writeDataIn(float *d, unsigned char chan) {

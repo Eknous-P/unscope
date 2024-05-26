@@ -16,7 +16,7 @@ enum AudioErrors {
   NOGOOD
 };
 
-enum unscopeParamFlagss {
+enum unscopeParamFlags {
   UPARAM_HELP = 'h',
   UPARAM_BUFFERSIZE = 'b',
   UPARAM_FRAMESIZE = 'f',

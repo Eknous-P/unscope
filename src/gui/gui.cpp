@@ -64,6 +64,11 @@ GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, 
   for (unsigned char i = 0; i < channels; i++) {
     oscData[i] = new float[oscDataSize];
     oscAuxData[i] = new float[oscDataSize];
+    oscAlign[i] = new float[oscDataSize];
+
+    memset(oscData[i],0,oscDataSize*sizeof(float));
+    memset(oscAuxData[i],0,oscDataSize*sizeof(float));
+    memset(oscAlign[i],0,oscDataSize*sizeof(float));
   }
   running = false;
   updateOsc = true;
@@ -209,19 +214,19 @@ void GUI::drawGUI() {
 }
 
 void GUI::drawMainScope() {
-  unsigned char i = 0;
   ImGui::Begin("Scope");
   if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail())) {
-    for (i = 0; i < channels; i++) {
+    for (unsigned char i = 0; i < channels; i++) {
       ImPlot::SetupAxis(ImAxis(i),"t",ImPlotAxisFlags_NoDecorations);
       ImPlot::SetupAxis(ImAxis(i+3),"v",ImPlotAxisFlags_NoDecorations);
       ImPlot::SetupAxisLimits(ImAxis(i),-1, 1);
       ImPlot::SetupAxisLimits(ImAxis(i+3),-1.0f/sc.yScale,1.0f/sc.yScale);
     }
       ImPlot::SetupAxis(ImAxis_Y1,"##v",0);
-    for (i = 0; i < channels; i++) {
+    for (unsigned char i = 0; i < channels; i++) {
       ImPlot::SetNextLineStyle(ImVec4(sc.color[i][0],sc.color[i][1],sc.color[i][2],sc.color[i][3]),0.25f);
-      ImPlot::PlotLine("##scopeplot", oscAlign[i], oscData[i], oscDataSize,ImPlotFlags_NoLegend, 0);
+      if (oscAlign[i] && oscData[i] && oscDataSize)
+        ImPlot::PlotLine("##scopeplot", oscAlign[i], oscData[i], oscDataSize,ImPlotFlags_NoLegend);
     }
     // ImPlot::DragLineY(-1,(double*)&sc.trigger,ImVec4(1,0,0,1),1,ImPlotDragToolFlags_NoFit);
     if (showTrigger) ImPlot::TagY(sc.trigger,ImVec4(1,0,0,1),"trig");
@@ -246,7 +251,7 @@ void GUI::drawAuxScope() {
 
 void GUI::writeOscData(unsigned char chan, float* datax, float* datay) {
   if (!updateOsc) return;
-  oscAlign[chan] = datax;
+  memcpy(oscAlign[chan],datax,oscDataSize*sizeof(float));
   memcpy(oscData[chan],datay,oscDataSize*sizeof(float));
 }
 
@@ -293,11 +298,33 @@ GUI::~GUI() {
   SDL_Quit();
 
   if (oscData) {
+    for (unsigned char i = 0; i < channels; i++) {
+      if (oscData[i]) {
+        delete[] oscData[i];
+        oscData[i] = NULL;
+      }
+    }
     delete[] oscData;
     oscData = NULL;
   }
   if (oscAuxData) {
+    for (unsigned char i = 0; i < channels; i++) {
+      if (oscAuxData[i]) {
+        delete[] oscAuxData[i];
+        oscAuxData[i] = NULL;
+      }
+    }
     delete[] oscAuxData;
     oscAuxData = NULL;
+  }
+  if (oscAlign) {
+    for (unsigned char i = 0; i < channels; i++) {
+      if (oscAlign[i]) {
+        delete[] oscAlign[i];
+        oscAlign[i] = NULL;
+      }
+    }
+    delete[] oscAlign;
+    oscAlign = NULL;
   }
 }
