@@ -54,6 +54,7 @@ class GUI {
   
     void drawMainScope();
     void drawAuxScope();
+    void drawXYScope();
   
     unsigned long int getTraceSize();
     float getTrigger();

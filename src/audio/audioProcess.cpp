@@ -76,7 +76,7 @@ float *AudioProcess::alignWave(unsigned char chan, float trigger, unsigned long 
   memset(alignRamp[chan],0.0f,sizeof(float)*dataSize);
   // i = dataSize - waveLen + offset;
   // i = waveLen;
-  // while ((dataIn[i] < trigger) == (edge == 0)) {
+  // while ((dataIn[chan][i] < trigger) == (edge == 0)) {
   //   i--;
   // }
   // alignRamp[i] = (float)(65536-i+offset)/waveLen;

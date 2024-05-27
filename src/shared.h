@@ -17,6 +17,15 @@
           flagStartIndex = 2; \
         } \
         flagStartIndex = 1; \
+        switch (argv[i][flagStartIndex]) { \
+          case UPARAM_HELP: \
+            printf("%s%s",verMsg,helpMsg); \
+            return 0; \
+          case UPARAM_VERSION: \
+            printf("%s",verMsg); \
+            return 0; \
+          default: break; \
+        } \
         if (i + 1 == argc) { \
           printf("no value for argument %s given\n", argv[i]); \
           continue; \
@@ -28,9 +37,6 @@
           continue; \
         } \
         switch (argv[i][flagStartIndex]) { \
-          case UPARAM_HELP: \
-            printf("%s%s",verMsg,helpMsg); \
-            return 0; \
           case UPARAM_BUFFERSIZE: \
             p.audioBufferSize = value; \
             break; \
@@ -43,9 +49,7 @@
           case UPARAM_SAMPLERATE: \
             p.sampleRate = value; \
             break; \
-          case UPARAM_VERSION: \
-            printf("%s",verMsg); \
-            return 0; \
+          default: break; \
         } \
       } else { \
         printf("cannot parse argument %s\n",argv[i]); \

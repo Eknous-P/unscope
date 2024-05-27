@@ -26,11 +26,11 @@ GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, 
   sc.color[2][3] = 0.95f;
 
   winC.w = 1000;
-  winC.h = 360;
+  winC.h = 430;
   winC.layout = 
 "[Window][DockSpaceViewport_11111111]\n"
 "Pos=0,0\n"
-"Size=1280,720\n"
+"Size=1000,421\n"
 "Collapsed=0\n"
 "\n"
 "[Window][Debug##Default]\n"
@@ -39,21 +39,30 @@ GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, 
 "Collapsed=0\n"
 "\n"
 "[Window][Controls]\n"
-"Pos=1000,0\n"
-"Size=275,720\n"
+"Pos=725,0\n"
+"Size=275,167\n"
 "Collapsed=0\n"
-"DockId=0x00000002,0\n"
+"DockId=0x00000003,0\n"
 "\n"
 "[Window][Scope]\n"
 "Pos=0,0\n"
-"Size=1000,720\n"
+"Size=723,421\n"
 "Collapsed=0\n"
 "DockId=0x00000001,0\n"
 "\n"
+"[Window][Scope (XY)]\n"
+"Pos=725,169\n"
+"Size=275,252\n"
+"Collapsed=0\n"
+"DockId=0x00000004,0\n"
+"\n"
 "[Docking][Data]\n"
-"DockSpace   ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,0 Size=1280,720 Split=X Selected=0x7C3EDFF1\n"
-"  DockNode  ID=0x00000001 Parent=0x8B93E3BD SizeRef=578,371 CentralNode=1 HiddenTabBar=1 Selected=0x7C3EDFF1\n"
-"  DockNode  ID=0x00000002 Parent=0x8B93E3BD SizeRef=275,371 HiddenTabBar=1 Selected=0x67284010\n";
+"DockSpace     ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,0 Size=1000,421 Split=X Selected=0x7C3EDFF1\n"
+"  DockNode    ID=0x00000001 Parent=0x8B93E3BD SizeRef=578,371 CentralNode=1 HiddenTabBar=1 Selected=0x7C3EDFF1\n"
+"  DockNode    ID=0x00000002 Parent=0x8B93E3BD SizeRef=275,371 Split=Y Selected=0x67284010\n"
+"    DockNode  ID=0x00000003 Parent=0x00000002 SizeRef=275,167 HiddenTabBar=1 Selected=0x67284010\n"
+"    DockNode  ID=0x00000004 Parent=0x00000002 SizeRef=275,252 HiddenTabBar=1 Selected=0x5D48DF31\n";
+
 
   channels = chanCount;
   oscDataSize = dataSize;
@@ -211,6 +220,7 @@ void GUI::drawGUI() {
   ImPlot::CreateContext();
     GUI::drawMainScope();
     // GUI::drawAuxScope();
+    GUI::drawXYScope();
   ImPlot::DestroyContext();
   // ImGui::Begin("Trigger");
   // ImGui::PlotLines("##trigger",oscAlign,65536,0,"",-1,1,ImGui::GetContentRegionAvail());
@@ -242,11 +252,25 @@ void GUI::drawMainScope() {
 
 void GUI::drawAuxScope() {
   ImGui::Begin("Scope (Auxiliary)");
-  if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail())) {
+  if (ImPlot::BeginPlot("##scopeaux", ImGui::GetContentRegionAvail())) {
     ImPlot::SetupAxes("t","##v",ImPlotAxisFlags_NoDecorations,0);
     ImPlot::SetupAxisLimits(ImAxis_X1,(float)(oscDataSize - sc.traceSize)/oscDataSize, 1);
     ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/sc.yScale,1.0f/sc.yScale);
     ImPlot::PlotLine("##scopeplot", oscAlign[0], oscAuxData[0], oscDataSize,ImPlotFlags_NoLegend, 0);
+    ImPlot::EndPlot();
+  }
+  ImGui::End();
+}
+
+void GUI::drawXYScope() {
+  if (channels < 2) return;
+  ImGui::Begin("Scope (XY)");
+  if (ImPlot::BeginPlot("##scopexy", ImGui::GetContentRegionAvail())) {
+    ImPlot::SetupAxes("##x","##y",0,0);
+    ImPlot::SetupAxisLimits(ImAxis_X1,-1.0f/sc.yScale,1.0f/sc.yScale);
+    ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/sc.yScale,1.0f/sc.yScale);
+    ImPlot::SetNextLineStyle(ImVec4(sc.color[0][0],sc.color[0][1],sc.color[0][2],sc.color[0][3]),0.25f);
+    ImPlot::PlotLine("##scopeplot", oscData[0] + (oscDataSize - sc.traceSize), oscData[1] + (oscDataSize - sc.traceSize), sc.traceSize,ImPlotFlags_NoLegend);
     ImPlot::EndPlot();
   }
   ImGui::End();
