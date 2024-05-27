@@ -71,6 +71,7 @@ int AudioInput::bufferGetCallback(
 
 std::vector<DeviceEntry> AudioInput::enumerateDevs() {
   devs.clear();
+  devs.push_back(DeviceEntry(Pa_GetDefaultInputDevice(),"Default device"));
   for (int i = 0; i < Pa_GetDeviceCount(); i++) {
     const PaDeviceInfo *info = Pa_GetDeviceInfo(i);
     if (info == NULL) continue;

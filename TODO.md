@@ -2,7 +2,7 @@
 
 - [x] basic scope
 - [x] stereo
-- [ ] device selector
+- [x] device selector
 - [ ] triggering
 
 

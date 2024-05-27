@@ -62,9 +62,9 @@ int main(int argc, char** argv) {
   int e;
 
   params.audioDevice = Pa_GetDefaultInputDevice();
-  g.setAudioDeviceSetting(params.audioDevice);
 
   g.getDevices(i.enumerateDevs());
+  g.setAudioDeviceSetting(params.audioDevice);
 
   AudioProcess p(params.audioBufferSize,params.channels);
 
