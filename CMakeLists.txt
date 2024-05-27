@@ -6,7 +6,6 @@ set(imgui_path ./submodules/imgui)
 set(implot_path ./submodules/implot)
 set(srcs_path ./src/)
 
-
 set(cpl_opts "")
 set(lnk_libs "")
 
@@ -36,7 +35,7 @@ ${imgui_path}/backends/imgui_impl_opengl3.cpp)
 add_subdirectory(submodules/SDL EXCLUDE_FROM_ALL)
 list(APPEND lnk_libs SDL2)
 
-pkg_check_modules(OPENGL opengl)
+pkg_check_modules(OPENGL opengl REQUIRED)
 list(APPEND cpl_opts ${OPENGL_CFLAGS_OTHER})
 list(APPEND lnk_libs ${OPENGL_LIBRARIES})
 # SOURCES
