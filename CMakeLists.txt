@@ -33,9 +33,6 @@ list(APPEND gui_srcs
 ${imgui_path}/backends/imgui_impl_sdl2.cpp
 ${imgui_path}/backends/imgui_impl_opengl3.cpp)
 
-# pkg_check_modules(SDL2 sdl2)
-# list(APPEND cpl_opts ${SDL2_CFLAGS_OTHER})
-# list(APPEND lnk_libs ${SDL2_LIBRARIES})
 add_subdirectory(submodules/SDL EXCLUDE_FROM_ALL)
 list(APPEND lnk_libs SDL2)
 
@@ -54,10 +51,9 @@ ${srcs_path}/audio/audioProcess.cpp
 ${srcs_path}/gui/gui.cpp
 
 ${srcs_path}/main.cpp
-# submodules/portaudio/examples/pa_devs.c
 )
 
-project(unscope VERSION 0) #temporary name
+project(unscope VERSION 0)
 
 add_executable(unscope ${unscope_srcs})
 
