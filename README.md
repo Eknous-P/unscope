@@ -24,7 +24,7 @@ to get the submodules.
 
 ### Getting the libraries
 
-Currently unscope requires the ALSA and Pulseaudio[CONFIRM] development libraries to be installed
+Currently unscope requires the ALSA and Pulseaudio development libraries to be installed
 
 [TODO: PER-DISTRO INSTRUCTIONS]
 
