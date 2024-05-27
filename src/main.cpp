@@ -15,7 +15,7 @@ struct unscopeParams {
   float trigger;
   unscopeParams():
     audioBufferSize(65536),
-    audioFrameSize(128),
+    audioFrameSize(512),
     channels(2),
     sampleRate(48000),
     audioDevice(0),

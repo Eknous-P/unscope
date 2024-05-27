@@ -269,7 +269,7 @@ void GUI::drawXYScope() {
     ImPlot::SetupAxes("##x","##y",0,0);
     ImPlot::SetupAxisLimits(ImAxis_X1,-1.0f/sc.yScale,1.0f/sc.yScale);
     ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/sc.yScale,1.0f/sc.yScale);
-    ImPlot::SetNextLineStyle(ImVec4(sc.color[0][0],sc.color[0][1],sc.color[0][2],sc.color[0][3]),0.25f);
+    ImPlot::SetNextLineStyle(ImVec4(sc.color[0][0],sc.color[0][1],sc.color[0][2],sc.color[0][3]),0.125f);
     ImPlot::PlotLine("##scopeplot", oscData[0] + (oscDataSize - sc.traceSize), oscData[1] + (oscDataSize - sc.traceSize), sc.traceSize,ImPlotFlags_NoLegend);
     ImPlot::EndPlot();
   }
