@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
     if (g.doRestartAudio()) {
       e = i.stop();
       params.audioDevice = g.getAudioDeviceSetting();
-      printf("opening device %d...\n",params.audioDevice);
+      printf("opening device %d: %s ...\n",params.audioDevice,Pa_GetDeviceInfo(params.audioDevice)->name);
       e = i.init(params.audioDevice);
       if (e != paNoError) {
         printf("%d:%s", e, getErrorMsg(e).c_str());

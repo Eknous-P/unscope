@@ -83,6 +83,7 @@ std::vector<DeviceEntry> AudioInput::enumerateDevs() {
       std::string(Pa_GetHostApiInfo(info->hostApi)->name) + " | " + 
       std::string(info->name)));
   }
+  printf("%lu devices found\n", devs.size());
   return devs;
 }
 

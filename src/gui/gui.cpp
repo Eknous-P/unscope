@@ -193,14 +193,16 @@ void GUI::drawGUI() {
     ImGui::TreePop();
   }
 
-  if (ImGui::BeginCombo("device",devs[deviceNum].devName.c_str())) {
-    for (int i = 0; i < devs.size(); i++) {
-      if (ImGui::Selectable(devs[i].devName.c_str(), deviceNum == i)) {
-        deviceNum = i;
-        device = devs[i].dev;
+  if (devs.size() > 0) {
+    if (ImGui::BeginCombo("device",devs[deviceNum].devName.c_str())) {
+      for (int i = 0; i < devs.size(); i++) {
+        if (ImGui::Selectable(devs[i].devName.c_str(), deviceNum == i)) {
+          deviceNum = i;
+          device = devs[i].dev;
+        }
       }
+      ImGui::EndCombo();
     }
-    ImGui::EndCombo();
   }
 
   if (ImGui::Button("restart audio")) restartAudio = true;
