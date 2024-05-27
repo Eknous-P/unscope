@@ -24,9 +24,12 @@ to get the submodules.
 
 ### Getting the libraries
 
-Currently unscope requires the ALSA and Pulseaudio development libraries to be installed
+Currently unscope requires the OpenGL, ALSA and PulseAudio development libraries to be installed
 
-[TODO: PER-DISTRO INSTRUCTIONS]
+#### Ubuntu and Ubuntu-based
+```
+sudo apt install libasound2-dev libpulse-dev libopengl-dev libxext-dev
+```
 
 ### Building
 
