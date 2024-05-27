@@ -33,9 +33,11 @@ list(APPEND gui_srcs
 ${imgui_path}/backends/imgui_impl_sdl2.cpp
 ${imgui_path}/backends/imgui_impl_opengl3.cpp)
 
-pkg_check_modules(SDL2 sdl2)
-list(APPEND cpl_opts ${SDL2_CFLAGS_OTHER})
-list(APPEND lnk_libs ${SDL2_LIBRARIES})
+# pkg_check_modules(SDL2 sdl2)
+# list(APPEND cpl_opts ${SDL2_CFLAGS_OTHER})
+# list(APPEND lnk_libs ${SDL2_LIBRARIES})
+add_subdirectory(submodules/SDL EXCLUDE_FROM_ALL)
+list(APPEND lnk_libs SDL2)
 
 pkg_check_modules(OPENGL opengl)
 list(APPEND cpl_opts ${OPENGL_CFLAGS_OTHER})

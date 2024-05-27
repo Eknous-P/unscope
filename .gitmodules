@@ -8,3 +8,7 @@
 [submodule "submodules/implot"]
 	path = submodules/implot
 	url = https://github.com/epezent/implot.git
+[submodule "submodules/SDL"]
+	path = submodules/SDL
+	url = https://github.com/libsdl-org/SDL.git
+	branch = release-2.28.x
