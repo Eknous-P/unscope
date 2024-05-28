@@ -20,6 +20,7 @@ class GUI {
       float yScale;
       float trigger;
       float color[3][4];
+      bool triggerEdge;
     };
 
     struct windowConfig {

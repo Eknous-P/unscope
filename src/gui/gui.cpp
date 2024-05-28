@@ -11,6 +11,7 @@ GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, 
   sc.traceOffset = 0;
   sc.yScale = yScaleDef;
   sc.trigger = 0;
+  sc.triggerEdge = true;
 
   sc.color[0][0] = 0.13f;
   sc.color[0][1] = 0.97f;
@@ -181,7 +182,7 @@ void GUI::doFrame() {
   for (unsigned char j = 0; j < channels; j++) {
     ap->writeDataIn(ai->getData(j),j);
     writeOscData(j,
-      ap->alignWave(0,sc.trigger,sc.traceSize,0,0),
+      ap->alignWave(0,sc.trigger,sc.traceSize,sc.traceOffset,sc.triggerEdge),
       ai->getData(j));
   }
 
@@ -217,6 +218,10 @@ void GUI::drawGUI() {
   ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize, "%d");
   ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%f");
   ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%f");
+  // ImGui::SliderInt("offset", &sc.traceOffset, -(oscDataSize/16), (oscDataSize/16), "%d");
+  ImGui::Text("trigger edge:");
+  ImGui::SameLine();
+  if (ImGui::Button(sc.triggerEdge?"Rising":"Falling")) sc.triggerEdge = !sc.triggerEdge;
   showTrigger = ImGui::IsItemActive();
   showTrigger |= ap->didTrigger();
 
@@ -272,9 +277,6 @@ void GUI::drawGUI() {
     // GUI::drawAuxScope();
     GUI::drawXYScope();
   ImPlot::DestroyContext();
-  ImGui::Begin("Trigger");
-  ImGui::PlotLines("##trigger",oscAlign,65536,0,"",-1.5f,1.5f,ImGui::GetContentRegionAvail());
-  ImGui::End();
 }
 
 void GUI::drawMainScope() {

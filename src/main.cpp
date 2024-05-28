@@ -70,6 +70,24 @@ int main(int argc, char** argv) {
   AudioProcess p(params.audioBufferSize,params.channels);
   g.attachAudioProcess(&p);
 
+  printf("opening device %d: %s ...\n",params.audioDevice,Pa_GetDeviceInfo(params.audioDevice)->name);
+  e = i.init(params.audioDevice);
+  if (e != paNoError) {
+    printf("%d:%s", e, getErrorMsg(e).c_str());
+    // try again
+    if (e != paInvalidDevice) {
+      printf("%d:%s", e, getErrorMsg(e).c_str());
+      return e;
+    }
+    printf("trying default device...\n");
+    params.audioDevice = Pa_GetDefaultInputDevice();
+    e = i.init(params.audioDevice);
+    if (e != paNoError) {
+      printf("%d:%s", e, getErrorMsg(e).c_str());
+      return e;
+    }
+    g.setAudioDeviceSetting(params.audioDevice);
+  }
   while (g.isRunning()) {
     g.doFrame();
   }
