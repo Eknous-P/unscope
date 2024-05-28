@@ -90,6 +90,8 @@ GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, 
   devs.clear();
   showTrigger = false;
 
+  fullscreen = false;
+
   ai = NULL;
   ap = NULL;
 }
@@ -405,4 +407,6 @@ GUI::~GUI() {
     delete[] oscAlign;
     oscAlign = NULL;
   }
+  ai = NULL;
+  ap = NULL;
 }
