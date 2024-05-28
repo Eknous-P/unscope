@@ -101,7 +101,7 @@ const char* helpMsg =
 "Program arguments\n"
 "  -h: print this message\n"
 "  -b: set the audio buffer size (default: 65536)\n"
-"  -f: set the audio frame size (default: 128)\n"
+"  -f: set the audio frame size (default: 512)\n"
 "  -c: set the channel amount (default: 2)\n"
 "  -s: set the sample rate (default: 48000)\n"
 "  -v: print the program version\n";
