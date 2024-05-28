@@ -5,7 +5,7 @@
 #include <string>
 
 #define PROGRAM_NAME "unscope"
-#define PROGRAM_VER "0"
+#define PROGRAM_VER "0.1"
 
 #define parseParams(p, argc, argv) { \
   if (argc > 1) { \

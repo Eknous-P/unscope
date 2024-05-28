@@ -3,7 +3,7 @@
 - [x] basic scope
 - [x] stereo
 - [x] device selector
-- [ ] triggering
+- [x] triggering
 
 
 and test on as many distros as possible!

@@ -8,8 +8,6 @@ Please do! Report them in the *Issues* tab.
 
 ## Building
 
-(No release yet! But I'm getting closer...)
-
 ### Getting the source
 
 Open a terminal and enter these commands to clone this repository (make sure you have git installed!).
