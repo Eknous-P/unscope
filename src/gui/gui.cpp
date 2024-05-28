@@ -234,6 +234,11 @@ void GUI::drawGUI() {
       ImGui::EndCombo();
     }
   }
+  ImGui::SameLine();
+  if (ImGui::Button("R")) getDevices(ai->enumerateDevs());
+  if (ImGui::IsItemHovered()) {
+    ImGui::SetTooltip("refresh audio device list");
+  }
 
   if (ImGui::Button("restart audio")) {
     err = ai->stop();
