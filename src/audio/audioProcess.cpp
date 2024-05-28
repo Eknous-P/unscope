@@ -1,18 +1,24 @@
 #include "audio.h"
 
+inline float clamp(float a) {
+  if (a > 1.0f) return 1.0f;
+  if (a < -1.0f) return -1.0f;
+  return a;
+}
+
 AudioProcess::AudioProcess(unsigned int bufferSizeDef, unsigned char chans) {
   channels = chans;
   dataSize = bufferSizeDef;
 
+  triggered = false;
+
   dataIn = new float*[channels];
   dataOut = new float*[channels];
-  alignRamp = new float*[channels];
+  alignRamp = new float[dataSize];
+  memset(alignRamp, 0, dataSize*sizeof(float));
   for (i = 0; i < channels; i++) {
     dataOut[i] = new float[dataSize];
-    alignRamp[i] = new float[dataSize];
-
     memset(dataOut[i], 0, dataSize*sizeof(float));
-    memset(alignRamp[i], 0, dataSize*sizeof(float));
   }
   i = 0;
 }
@@ -29,12 +35,6 @@ AudioProcess::~AudioProcess() {
     dataIn = NULL;
   }
   if (alignRamp) {
-    for (unsigned char i = 0; i < channels; i++) {
-      if (alignRamp[i]) {
-        delete[] alignRamp[i];
-        alignRamp[i] = NULL;
-      }
-    }
     delete[] alignRamp;
     alignRamp = NULL;
   }
@@ -73,24 +73,45 @@ void AudioProcess::integrate() {
 }
 
 float *AudioProcess::alignWave(unsigned char chan, float trigger, unsigned long int waveLen, long int offset, bool edge=false) {
-  memset(alignRamp[chan],0.0f,sizeof(float)*dataSize);
-  // i = dataSize - waveLen + offset;
-  // i = waveLen;
-  // while ((dataIn[chan][i] < trigger) == (edge == 0)) {
-  //   i--;
-  // }
-  // alignRamp[i] = (float)(65536-i+offset)/waveLen;
-  // for (i++;i<dataSize;i++) {
-  //   alignRamp[i] = alignRamp[i-1] + delta/dataSize;
-  // }
+  memset(alignRamp,-1.0f,sizeof(float)*dataSize);
 
-  float delta = (float)dataSize/((float)waveLen)/(float)dataSize;
-  alignRamp[chan][dataSize-1] = 1.0f;
-  for (i = dataSize-2; i > 0; i--) {
-    alignRamp[chan][i] = alignRamp[chan][i+1] - 2*delta;
+  unsigned int triggerPoint = 0;
+  bool triggerLow = false, triggerHigh = false;
+  i = dataSize - waveLen;
+  while (i != 0) {
+    triggered = (triggerLow && triggerHigh);
+    i--;
+    if (dataIn[chan][i] < trigger) {
+      triggerLow = true;
+      if (triggered && edge) break;
+    }
+    if (dataIn[chan][i] > trigger) {
+      triggerHigh = true;
+      if (triggered && !edge) break;
+    }
   }
-  alignRamp[chan][0] = -1.0f;
+  triggerPoint = i;
+
+  float delta = 0;
+
+  if (triggered) {
+    delta = 2.0f/(float)(waveLen);
+    for (;i < dataSize; i++) {
+      alignRamp[i+offset] = -1.0f + delta*(i - triggerPoint);
+    }
+  } else {
+    delta = ((float)dataSize/((float)waveLen))/(float)dataSize;
+    alignRamp[dataSize-1] = 1.0f;
+    for (i = dataSize-2; i > 0; i--) {
+      alignRamp[i+offset] = clamp(alignRamp[i+1+offset] - 2*delta);
+    }
+    alignRamp[0] = -1.0f;
+  }
 
   i = 0;
-  return alignRamp[chan];
+  return alignRamp;
+}
+
+bool AudioProcess::didTrigger() {
+  return triggered;
 }

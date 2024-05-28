@@ -62,13 +62,16 @@ class AudioProcess {
   private:
     float **dataIn, **dataOut;
     unsigned long int dataSize, i;
-    float **alignRamp;
+    float *alignRamp;
     unsigned char channels;
+    bool triggered;
   public:
     void writeDataIn(float* d, unsigned char chan);
     float *getDataOut(unsigned char chan);
     void derive();
     void integrate();
+
+    bool didTrigger();
 
     float *alignWave(unsigned char chan, float trigger,unsigned long int waveLen, long int offset, bool edge); // true -> falling, false ->rising
 

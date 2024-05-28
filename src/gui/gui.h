@@ -38,7 +38,7 @@ class GUI {
     ImVec4 clear_color;
     bool running, updateOsc, restartAudio;
     unsigned char channels;
-    float **oscData, **oscAuxData, **oscAlign;
+    float **oscData, **oscAuxData, *oscAlign;
     unsigned int oscDataSize;
     AudioInput *ai;
     AudioProcess *ap;

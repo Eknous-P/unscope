@@ -71,16 +71,15 @@ GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, 
 
   oscData = new float*[channels];
   oscAuxData = new float*[channels];
-  oscAlign = new float*[channels];
+  oscAlign = new float[oscDataSize];
   for (unsigned char i = 0; i < channels; i++) {
     oscData[i] = new float[oscDataSize];
     oscAuxData[i] = new float[oscDataSize];
-    oscAlign[i] = new float[oscDataSize];
 
     memset(oscData[i],0,oscDataSize*sizeof(float));
     memset(oscAuxData[i],0,oscDataSize*sizeof(float));
-    memset(oscAlign[i],0,oscDataSize*sizeof(float));
   }
+  memset(oscAlign,0,oscDataSize*sizeof(float));
   running = false;
   updateOsc = true;
   restartAudio = true;
@@ -182,7 +181,7 @@ void GUI::doFrame() {
   for (unsigned char j = 0; j < channels; j++) {
     ap->writeDataIn(ai->getData(j),j);
     writeOscData(j,
-      ap->alignWave(j,sc.trigger,sc.traceSize,0,0),
+      ap->alignWave(0,sc.trigger,sc.traceSize,0,0),
       ai->getData(j));
   }
 
@@ -219,6 +218,7 @@ void GUI::drawGUI() {
   ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%f");
   ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%f");
   showTrigger = ImGui::IsItemActive();
+  showTrigger |= ap->didTrigger();
 
   if (ImGui::TreeNode("colors")) {
     for (unsigned char i = 0; i < channels; i++) {
@@ -272,9 +272,9 @@ void GUI::drawGUI() {
     // GUI::drawAuxScope();
     GUI::drawXYScope();
   ImPlot::DestroyContext();
-  // ImGui::Begin("Trigger");
-  // ImGui::PlotLines("##trigger",oscAlign,65536,0,"",-1,1,ImGui::GetContentRegionAvail());
-  // ImGui::End();
+  ImGui::Begin("Trigger");
+  ImGui::PlotLines("##trigger",oscAlign,65536,0,"",-1.5f,1.5f,ImGui::GetContentRegionAvail());
+  ImGui::End();
 }
 
 void GUI::drawMainScope() {
@@ -290,10 +290,11 @@ void GUI::drawMainScope() {
     for (unsigned char i = 0; i < channels; i++) {
       ImPlot::SetNextLineStyle(ImVec4(sc.color[i][0],sc.color[i][1],sc.color[i][2],sc.color[i][3]),0.25f);
       if (oscAlign[i] && oscData[i] && oscDataSize)
-        ImPlot::PlotLine("##scopeplot", oscAlign[i], oscData[i], oscDataSize,ImPlotFlags_NoLegend);
+        ImPlot::PlotLine("##scopeplot", oscAlign, oscData[i], oscDataSize,ImPlotFlags_NoLegend);
     }
     // ImPlot::DragLineY(-1,(double*)&sc.trigger,ImVec4(1,0,0,1),1,ImPlotDragToolFlags_NoFit);
-    if (showTrigger) ImPlot::TagY(sc.trigger,ImVec4(1,0,0,1),"trig");
+    ImVec4 trigColor = ap->didTrigger()?ImVec4(0,1,0,1):ImVec4(1,0,0,1);
+    if (showTrigger) ImPlot::TagY(sc.trigger,trigColor,"trig");
     // ImPlot::TagYV()
     ImPlot::EndPlot();
   }
@@ -306,7 +307,7 @@ void GUI::drawAuxScope() {
     ImPlot::SetupAxes("t","##v",ImPlotAxisFlags_NoDecorations,0);
     ImPlot::SetupAxisLimits(ImAxis_X1,(float)(oscDataSize - sc.traceSize)/oscDataSize, 1);
     ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/sc.yScale,1.0f/sc.yScale);
-    ImPlot::PlotLine("##scopeplot", oscAlign[0], oscAuxData[0], oscDataSize,ImPlotFlags_NoLegend, 0);
+    ImPlot::PlotLine("##scopeplot", oscAlign, oscAuxData[0], oscDataSize,ImPlotFlags_NoLegend, 0);
     ImPlot::EndPlot();
   }
   ImGui::End();
@@ -329,7 +330,7 @@ void GUI::drawXYScope() {
 
 void GUI::writeOscData(unsigned char chan, float* datax, float* datay) {
   if (!updateOsc) return;
-  memcpy(oscAlign[chan],datax,oscDataSize*sizeof(float));
+  memcpy(oscAlign,datax,oscDataSize*sizeof(float));
   memcpy(oscData[chan],datay,oscDataSize*sizeof(float));
 }
 
@@ -398,12 +399,6 @@ GUI::~GUI() {
     oscAuxData = NULL;
   }
   if (oscAlign) {
-    for (unsigned char i = 0; i < channels; i++) {
-      if (oscAlign[i]) {
-        delete[] oscAlign[i];
-        oscAlign[i] = NULL;
-      }
-    }
     delete[] oscAlign;
     oscAlign = NULL;
   }
