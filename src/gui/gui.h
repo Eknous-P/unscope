@@ -7,6 +7,10 @@
 #include "imgui_stdlib.h"
 
 #include "../shared.h"
+#include "../audio/audio.h"
+
+#ifndef USC_GUI_H
+#define USC_GUI_H
 
 class GUI {
   private:
@@ -23,6 +27,8 @@ class GUI {
       const char *layout;
     };
 
+    int err;
+
     SDL_WindowFlags window_flags;
     SDL_Window* window;
     SDL_GLContext gl_context;
@@ -33,6 +39,7 @@ class GUI {
     unsigned char channels;
     float **oscData, **oscAuxData, **oscAlign;
     unsigned int oscDataSize;
+    AudioInput *ai;
 
     std::vector<DeviceEntry> devs;
     int device, deviceNum;
@@ -43,6 +50,8 @@ class GUI {
     bool showTrigger;
 
   public:
+    void attachAudioInput(AudioInput* i);
+
     void writeOscData(unsigned char chan, float* datax, float* datay);
     void writeOscAuxData(unsigned char chan, float* data);
   
@@ -68,3 +77,5 @@ class GUI {
     GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, float yScaleDef, float triggerDef);
     ~GUI();
 };
+
+#endif

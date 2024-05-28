@@ -5,6 +5,8 @@ bool GUI::isRunning() {
 }
 
 GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, float yScaleDef, float triggerDef) {
+  err = 0;
+
   sc.traceSize = traceSizeDef;
   sc.traceOffset = 0;
   sc.yScale = yScaleDef;
@@ -87,6 +89,12 @@ GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, 
   deviceNum = 0;
   devs.clear();
   showTrigger = false;
+
+  ai = NULL;
+}
+
+void GUI::attachAudioInput(AudioInput *i) {
+  ai = i;
 }
 
 int GUI::init() {
@@ -214,8 +222,24 @@ void GUI::drawGUI() {
     }
   }
 
-  if (ImGui::Button("restart audio")) restartAudio = true;
-
+  if (ImGui::Button("restart audio")) {
+    err = ai->stop();
+    printf("opening device %d: %s ...\n",device,Pa_GetDeviceInfo(device)->name);
+    err = ai->init(device);
+    if (err != paNoError) {
+      printf("%d:%s", err, getErrorMsg(err).c_str());
+      // try again
+      if (err != paInvalidDevice) throw err;
+      printf("trying default device...\n");
+      device = Pa_GetDefaultInputDevice();
+      err = ai->init(device);
+      if (err != paNoError) {
+        printf("%d:%s", err, getErrorMsg(err).c_str());
+        throw err;
+      }
+      setAudioDeviceSetting(device);
+    }
+  }
   ImGui::End();
   ImPlot::CreateContext();
     GUI::drawMainScope();

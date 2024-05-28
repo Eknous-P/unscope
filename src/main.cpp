@@ -60,6 +60,7 @@ int main(int argc, char** argv) {
                params.sampleRate);
 
   int e;
+  g.attachAudioInput(&i);
 
   params.audioDevice = Pa_GetDefaultInputDevice();
 
@@ -69,26 +70,6 @@ int main(int argc, char** argv) {
   AudioProcess p(params.audioBufferSize,params.channels);
 
   while (g.isRunning()) {
-    if (g.doRestartAudio()) {
-      e = i.stop();
-      params.audioDevice = g.getAudioDeviceSetting();
-      printf("opening device %d: %s ...\n",params.audioDevice,Pa_GetDeviceInfo(params.audioDevice)->name);
-      e = i.init(params.audioDevice);
-      if (e != paNoError) {
-        printf("%d:%s", e, getErrorMsg(e).c_str());
-        // try again
-        if (e != paInvalidDevice) return e;
-        printf("trying default device...\n");
-        params.audioDevice = Pa_GetDefaultInputDevice();
-        e = i.init(params.audioDevice);
-        if (e != paNoError) {
-          printf("%d:%s", e, getErrorMsg(e).c_str());
-          return e;
-        }
-      }
-      g.setAudioDeviceSetting(params.audioDevice);
-      g.audioSet();
-    }
     for (unsigned char j = 0; j < params.channels; j++) {
       p.writeDataIn(i.getData(j),j);
       g.writeOscData(j,

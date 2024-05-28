@@ -5,6 +5,9 @@
 
 #include "../shared.h"
 
+#ifndef USC_AUDIO_H
+#define USC_AUDIO_H
+
 class AudioInput {
   private:
 
@@ -72,3 +75,5 @@ class AudioProcess {
     AudioProcess(unsigned int bufferSizeDef, unsigned char chans);
     ~AudioProcess();
 };
+
+#endif

@@ -1,5 +1,5 @@
-#ifndef SHARED_H
-#define SHARED_H
+#ifndef USC_SHARED_H
+#define USC_SHARED_H
 
 #include <vector>
 #include <string>
@@ -86,5 +86,6 @@ struct DeviceEntry {
 };
 
 extern const char *helpMsg, *verMsg, *errMsgs[];
+std::string getErrorMsg(int e);
 
 #endif
