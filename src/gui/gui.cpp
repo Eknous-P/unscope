@@ -206,6 +206,11 @@ void GUI::doFrame() {
 }
 
 void GUI::drawGUI() {
+  if (ImGui::IsKeyPressed(ImGuiKey_F11)) {
+    fullscreen = !fullscreen;
+    SDL_SetWindowFullscreen(window,fullscreen?(SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP):0);
+  }
+
   ImGui::Begin("Controls");
   ImGui::Checkbox("update",&updateOsc);
   ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize, "%d");
