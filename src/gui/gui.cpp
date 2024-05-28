@@ -91,11 +91,17 @@ GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, 
   showTrigger = false;
 
   ai = NULL;
+  ap = NULL;
 }
 
 void GUI::attachAudioInput(AudioInput *i) {
   ai = i;
 }
+
+void GUI::attachAudioProcess(AudioProcess *p) {
+  ap = p;
+}
+
 
 int GUI::init() {
   if (running) return 0;
@@ -171,6 +177,13 @@ void GUI::doFrame() {
   
   ImGui::DockSpaceOverViewport(ImGui::GetWindowViewport(),0);
 
+  for (unsigned char j = 0; j < channels; j++) {
+    ap->writeDataIn(ai->getData(j),j);
+    writeOscData(j,
+      ap->alignWave(j,sc.trigger,sc.traceSize,0,0),
+      ai->getData(j));
+  }
+
   GUI::drawGUI();
 
   ImGui::Render();
@@ -240,6 +253,7 @@ void GUI::drawGUI() {
       setAudioDeviceSetting(device);
     }
   }
+
   ImGui::End();
   ImPlot::CreateContext();
     GUI::drawMainScope();

@@ -68,16 +68,11 @@ int main(int argc, char** argv) {
   g.setAudioDeviceSetting(params.audioDevice);
 
   AudioProcess p(params.audioBufferSize,params.channels);
+  g.attachAudioProcess(&p);
 
   while (g.isRunning()) {
-    for (unsigned char j = 0; j < params.channels; j++) {
-      p.writeDataIn(i.getData(j),j);
-      g.writeOscData(j,
-        p.alignWave(j,g.getTrigger(),g.getTraceSize(),0,0),
-        i.getData(j));
-    }
     g.doFrame();
-    }
+  }
   e = i.stop();
   printf("%s\n", Pa_GetErrorText(e));
   return e!=paNoError;

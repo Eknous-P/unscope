@@ -40,6 +40,7 @@ class GUI {
     float **oscData, **oscAuxData, **oscAlign;
     unsigned int oscDataSize;
     AudioInput *ai;
+    AudioProcess *ap;
 
     std::vector<DeviceEntry> devs;
     int device, deviceNum;
@@ -51,6 +52,7 @@ class GUI {
 
   public:
     void attachAudioInput(AudioInput* i);
+    void attachAudioProcess(AudioProcess* p);
 
     void writeOscData(unsigned char chan, float* datax, float* datay);
     void writeOscAuxData(unsigned char chan, float* data);
