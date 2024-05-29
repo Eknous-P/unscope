@@ -89,6 +89,8 @@ GUI::GUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned c
   updateOsc = true;
   restartAudio = true;
 
+  triggerChan = 0;
+
   device = 0;
   deviceNum = 0;
   devs.clear();
@@ -186,7 +188,7 @@ void GUI::doFrame() {
   for (unsigned char j = 0; j < channels; j++) {
     ap->writeDataIn(ai->getData(j),j);
     writeOscData(j,
-      ap->alignWave(0,sc.trigger,sc.traceSize,sc.traceOffset,sc.triggerEdge),
+      ap->alignWave(triggerChan,sc.trigger,sc.traceSize,sc.traceOffset,sc.triggerEdge),
       ai->getData(j));
   }
 
@@ -243,6 +245,14 @@ void GUI::drawGUI() {
   ImGui::Text("trigger edge:");
   ImGui::SameLine();
   if (ImGui::Button(sc.triggerEdge?"Rising":"Falling")) sc.triggerEdge = !sc.triggerEdge;
+  if (channels > 1) {
+    if (ImGui::BeginCombo("trigger channel",numberStrs[triggerChan],ImGuiComboFlags_WidthFitPreview)) {
+      for (unsigned char i = 0; i < channels; i++) {
+        if (ImGui::Selectable(numberStrs[i],i == triggerChan)) triggerChan = i;
+      }
+      ImGui::EndCombo();
+    }
+  }
 
   if (ImGui::TreeNode("colors")) {
     for (unsigned char i = 0; i < channels; i++) {
@@ -428,3 +438,10 @@ GUI::~GUI() {
   ai = NULL;
   ap = NULL;
 }
+
+const char* numberStrs[16] = {
+  "0","1","2","3",
+  "4","5","6","7",
+  "8","9","10","11",
+  "12","13","14","15"
+};

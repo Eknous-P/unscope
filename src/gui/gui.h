@@ -40,6 +40,7 @@ class GUI {
     ImGuiStyle style;
     ImVec4 clear_color;
     bool running, updateOsc, restartAudio;
+    unsigned char triggerChan;
     unsigned char channels;
     float **oscData, **oscAuxData, *oscAlign;
     unsigned long int oscDataSize, sampleRate;
@@ -83,5 +84,7 @@ class GUI {
     GUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float yScaleDef, float triggerDef);
     ~GUI();
 };
+
+extern const char* numberStrs[16];
 
 #endif
