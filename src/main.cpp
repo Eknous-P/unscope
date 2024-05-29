@@ -14,14 +14,14 @@ struct unscopeParams {
   float scale;
   float trigger;
   unscopeParams():
-    audioBufferSize(65536),
-    audioFrameSize(512),
-    channels(2),
-    sampleRate(48000),
-    audioDevice(0),
-    timebase(20),
-    scale(2.0f),
-    trigger(0.0f) {}
+    audioBufferSize(65536), // N samples
+    audioFrameSize(512),    // N samples
+    channels(2),            // N (1-3)
+    sampleRate(48000),      // N samples (only common values?)
+    audioDevice(0),         // internal ID, gets overwritten anyway
+    timebase(60),           // ms
+    scale(2.0f),            // (no unit)
+    trigger(0.0f) {}        // (no unit)
 };
 
 std::string getErrorMsg(int e) {

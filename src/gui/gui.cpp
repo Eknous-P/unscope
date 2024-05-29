@@ -237,6 +237,7 @@ void GUI::drawGUI() {
     sc.traceOffset = ((sc.trigOffset + 1.0f)/2) * sc.traceSize;
   }
   if (sc.traceOffset + sc.traceSize > oscDataSize) sc.traceOffset = oscDataSize - sc.traceSize;
+  ImGui::AlignTextToFramePadding();
   ImGui::Text("trigger edge:");
   ImGui::SameLine();
   if (ImGui::Button(sc.triggerEdge?"Rising":"Falling")) sc.triggerEdge = !sc.triggerEdge;
