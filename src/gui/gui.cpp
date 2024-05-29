@@ -218,12 +218,12 @@ void GUI::drawGUI() {
   ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize, "%d");
   ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%f");
   ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%f");
+  showTrigger = ImGui::IsItemActive();
+  showTrigger |= ap->didTrigger();
   // ImGui::SliderInt("offset", &sc.traceOffset, -(oscDataSize/16), (oscDataSize/16), "%d");
   ImGui::Text("trigger edge:");
   ImGui::SameLine();
   if (ImGui::Button(sc.triggerEdge?"Rising":"Falling")) sc.triggerEdge = !sc.triggerEdge;
-  showTrigger = ImGui::IsItemActive();
-  showTrigger |= ap->didTrigger();
 
   if (ImGui::TreeNode("colors")) {
     for (unsigned char i = 0; i < channels; i++) {
@@ -294,10 +294,12 @@ void GUI::drawMainScope() {
       if (oscAlign[i] && oscData[i] && oscDataSize)
         ImPlot::PlotLine("##scopeplot", oscAlign, oscData[i], oscDataSize,ImPlotFlags_NoLegend);
     }
-    // ImPlot::DragLineY(-1,(double*)&sc.trigger,ImVec4(1,0,0,1),1,ImPlotDragToolFlags_NoFit);
-    ImVec4 trigColor = ap->didTrigger()?ImVec4(0,1,0,1):ImVec4(1,0,0,1);
-    if (showTrigger) ImPlot::TagY(sc.trigger,trigColor,"trig");
-    // ImPlot::TagYV()
+    ImVec4 trigColor = ap->didTrigger()?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
+    if (showTrigger) {
+      ImPlot::TagY(sc.trigger,trigColor,"trig");
+      double trigDouble = sc.trigger;
+      if (ImPlot::DragLineY(0,&trigDouble,trigColor)) sc.trigger = trigDouble;
+    }
     ImPlot::EndPlot();
   }
   ImGui::End();
