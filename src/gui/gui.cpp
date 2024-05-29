@@ -6,6 +6,8 @@ bool GUI::isRunning() {
 
 GUI::GUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float yScaleDef, float triggerDef) {
   err = 0;
+  sc.plotFlags = ImPlotFlags_NoLegend|ImPlotFlags_NoMenus;
+  sc.scopeFlags = ImPlotAxisFlags_AutoFit|ImPlotAxisFlags_Lock|ImPlotAxisFlags_NoMenus|ImPlotAxisFlags_Foreground;
 
   sampleRate = sampleRateDef;
   sc.timebase = timebaseDef;
@@ -298,14 +300,14 @@ void GUI::drawGUI() {
 
 void GUI::drawMainScope() {
   ImGui::Begin("Scope");
-  if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail())) {
+  if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
     for (unsigned char i = 0; i < channels; i++) {
-      ImPlot::SetupAxis(ImAxis(i),"t",ImPlotAxisFlags_NoDecorations);
-      ImPlot::SetupAxis(ImAxis(i+3),"v",ImPlotAxisFlags_NoDecorations);
+      ImPlot::SetupAxis(ImAxis(i),"t",ImPlotAxisFlags_NoDecorations|sc.scopeFlags);
+      ImPlot::SetupAxis(ImAxis(i+3),"v",ImPlotAxisFlags_NoDecorations|sc.scopeFlags);
       ImPlot::SetupAxisLimits(ImAxis(i),-1, 1);
       ImPlot::SetupAxisLimits(ImAxis(i+3),-1.0f/sc.yScale,1.0f/sc.yScale);
     }
-      ImPlot::SetupAxis(ImAxis_Y1,"##v",0);
+      ImPlot::SetupAxis(ImAxis_Y1,"##v",sc.scopeFlags);
     for (unsigned char i = 0; i < channels; i++) {
       ImPlot::SetNextLineStyle(ImVec4(sc.color[i][0],sc.color[i][1],sc.color[i][2],sc.color[i][3]),0.25f);
       if (oscAlign[i] && oscData[i] && oscDataSize)
@@ -324,8 +326,8 @@ void GUI::drawMainScope() {
 
 void GUI::drawAuxScope() {
   ImGui::Begin("Scope (Auxiliary)");
-  if (ImPlot::BeginPlot("##scopeaux", ImGui::GetContentRegionAvail())) {
-    ImPlot::SetupAxes("t","##v",ImPlotAxisFlags_NoDecorations,0);
+  if (ImPlot::BeginPlot("##scopeaux", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
+    ImPlot::SetupAxes("t","##v",sc.scopeFlags,0);
     ImPlot::SetupAxisLimits(ImAxis_X1,(float)(oscDataSize - sc.traceSize)/oscDataSize, 1);
     ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/sc.yScale,1.0f/sc.yScale);
     ImPlot::PlotLine("##scopeplot", oscAlign, oscAuxData[0], oscDataSize,ImPlotFlags_NoLegend, 0);
@@ -337,8 +339,8 @@ void GUI::drawAuxScope() {
 void GUI::drawXYScope() {
   if (channels < 2) return;
   ImGui::Begin("Scope (XY)");
-  if (ImPlot::BeginPlot("##scopexy", ImGui::GetContentRegionAvail())) {
-    ImPlot::SetupAxes("##x","##y",0,0);
+  if (ImPlot::BeginPlot("##scopexy", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
+    ImPlot::SetupAxes("##x","##y",ImPlotAxisFlags_AutoFit,sc.scopeFlags);
     ImPlot::SetupAxisLimits(ImAxis_X1,-1.0f/sc.yScale,1.0f/sc.yScale);
     ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/sc.yScale,1.0f/sc.yScale);
     ImPlot::SetNextLineStyle(ImVec4(sc.color[0][0],sc.color[0][1],sc.color[0][2],sc.color[0][3]),0.125f);

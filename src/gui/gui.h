@@ -15,6 +15,8 @@
 class GUI {
   private:
     struct scopeParams {
+      int plotFlags;
+      int scopeFlags;
       int traceSize; float timebase;
       int traceOffset; float trigOffset;
       float yScale;
