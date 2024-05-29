@@ -4,11 +4,13 @@ bool GUI::isRunning() {
   return running;
 }
 
-GUI::GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, float yScaleDef, float triggerDef) {
+GUI::GUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float yScaleDef, float triggerDef) {
   err = 0;
 
-  sc.traceSize = traceSizeDef;
-  sc.traceOffset = 0;
+  sampleRate = sampleRateDef;
+  sc.timebase = timebaseDef;
+  sc.traceSize = sampleRate*sc.timebase/1000;
+  sc.traceOffset = sc.traceSize/2;
   sc.yScale = yScaleDef;
   sc.trigger = 0;
   sc.triggerEdge = true;
@@ -215,12 +217,26 @@ void GUI::drawGUI() {
 
   ImGui::Begin("Controls");
   ImGui::Checkbox("update",&updateOsc);
-  ImGui::SliderInt("size", &sc.traceSize, 0, oscDataSize, "%d");
-  ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%f");
-  ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%f");
+  sc.timebase = sc.traceSize * 1000 / sampleRate;
+  if (ImGui::SliderFloat("timebase", &sc.timebase, 0, (float)oscDataSize/(float)sampleRate*1000, "%g ms")) {
+    sc.traceSize = sampleRate * sc.timebase / 1000;
+    sc.traceOffset = ((sc.trigOffset + 1.0f)/2) * sc.traceSize;
+    if (sc.traceOffset + sc.traceSize > oscDataSize) sc.traceOffset = oscDataSize - sc.traceSize;
+  }
+  ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%g");
+  ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%g");
   showTrigger = ImGui::IsItemActive();
   showTrigger |= ap->didTrigger();
-  // ImGui::SliderInt("offset", &sc.traceOffset, -(oscDataSize/16), (oscDataSize/16), "%d");
+  if (sc.traceSize != 0) {
+    sc.trigOffset = 2*((float)sc.traceOffset/(float)sc.traceSize)-1.0f;
+  } else {
+    sc.trigOffset = 0;
+  }
+  ImGui::SliderFloat("offset", &sc.trigOffset, -1.0f, 1.0f, "%g");
+  if (ImGui::IsItemActive()) {
+    sc.traceOffset = ((sc.trigOffset + 1.0f)/2) * sc.traceSize;
+  }
+  if (sc.traceOffset + sc.traceSize > oscDataSize) sc.traceOffset = oscDataSize - sc.traceSize;
   ImGui::Text("trigger edge:");
   ImGui::SameLine();
   if (ImGui::Button(sc.triggerEdge?"Rising":"Falling")) sc.triggerEdge = !sc.triggerEdge;
@@ -294,12 +310,12 @@ void GUI::drawMainScope() {
       if (oscAlign[i] && oscData[i] && oscDataSize)
         ImPlot::PlotLine("##scopeplot", oscAlign, oscData[i], oscDataSize,ImPlotFlags_NoLegend);
     }
+
     ImVec4 trigColor = ap->didTrigger()?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
-    if (showTrigger) {
-      ImPlot::TagY(sc.trigger,trigColor,"trig");
-      double trigDouble = sc.trigger;
-      if (ImPlot::DragLineY(0,&trigDouble,trigColor)) sc.trigger = trigDouble;
-    }
+    if (showTrigger) ImPlot::TagY(sc.trigger,trigColor,"trig");
+    double trigDouble = sc.trigger;
+    if (ImPlot::DragLineY(0,&trigDouble,trigColor)) sc.trigger = trigDouble;
+
     ImPlot::EndPlot();
   }
   ImGui::End();

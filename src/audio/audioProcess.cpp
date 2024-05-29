@@ -78,7 +78,7 @@ float *AudioProcess::alignWave(unsigned char chan, float trigger, unsigned long 
   unsigned int triggerPoint = 0;
   bool triggerLow = false, triggerHigh = false;
   i = dataSize - waveLen;
-  while (i != 0) {
+  while (i != 0 && i > (dataSize - 2*waveLen)) {
     triggered = (triggerLow && triggerHigh);
     i--;
     if (dataIn[chan][i] < trigger) {
@@ -97,13 +97,13 @@ float *AudioProcess::alignWave(unsigned char chan, float trigger, unsigned long 
   if (triggered) {
     delta = 2.0f/(float)(waveLen);
     for (;i < dataSize; i++) {
-      alignRamp[i+offset] = -1.0f + delta*(i - triggerPoint);
+      alignRamp[i-offset] = -1.0f + delta*(i - triggerPoint);
     }
   } else {
     delta = ((float)dataSize/((float)waveLen))/(float)dataSize;
     alignRamp[dataSize-1] = 1.0f;
     for (i = dataSize-2; i > 0; i--) {
-      alignRamp[i+offset] = clamp(alignRamp[i+1+offset] - 2*delta);
+      alignRamp[i] = clamp(alignRamp[i+1] - 2*delta);
     }
     alignRamp[0] = -1.0f;
   }

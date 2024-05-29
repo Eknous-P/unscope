@@ -10,7 +10,7 @@ struct unscopeParams {
   int audioDevice;
 
   // gui ...
-  unsigned int bufferSize;
+  float timebase;
   float scale;
   float trigger;
   unscopeParams():
@@ -19,7 +19,7 @@ struct unscopeParams {
     channels(2),
     sampleRate(48000),
     audioDevice(0),
-    bufferSize(1600),
+    timebase(20),
     scale(2.0f),
     trigger(0.0f) {}
 };
@@ -46,9 +46,10 @@ int main(int argc, char** argv) {
   unscopeParams params;
   parseParams(params, argc, argv);
 
-  GUI g(params.audioBufferSize,
+  GUI g(params.sampleRate,
+        params.audioBufferSize,
         params.channels,
-        params.bufferSize,
+        params.timebase,
         params.scale,
         params.trigger);
 

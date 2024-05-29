@@ -15,8 +15,8 @@
 class GUI {
   private:
     struct scopeParams {
-      int traceSize;
-      int traceOffset;
+      int traceSize; float timebase;
+      int traceOffset; float trigOffset;
       float yScale;
       float trigger;
       float color[3][4];
@@ -40,7 +40,7 @@ class GUI {
     bool running, updateOsc, restartAudio;
     unsigned char channels;
     float **oscData, **oscAuxData, *oscAlign;
-    unsigned int oscDataSize;
+    unsigned long int oscDataSize, sampleRate;
     AudioInput *ai;
     AudioProcess *ap;
 
@@ -78,7 +78,7 @@ class GUI {
     int getAudioDeviceSetting();
     void setAudioDeviceSetting(int d);
   
-    GUI(unsigned long int dataSize, unsigned char chanCount, int traceSizeDef, float yScaleDef, float triggerDef);
+    GUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float yScaleDef, float triggerDef);
     ~GUI();
 };
 
