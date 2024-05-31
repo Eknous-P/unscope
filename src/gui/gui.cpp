@@ -186,9 +186,8 @@ void GUI::doFrame() {
   ImGui::DockSpaceOverViewport(ImGui::GetWindowViewport(),0);
 
   for (unsigned char j = 0; j < channels; j++) {
-    ap->writeDataIn(ai->getData(j),j);
     writeOscData(j,
-      ap->alignWave(triggerChan,sc.trigger,sc.traceSize,sc.traceOffset,sc.triggerEdge),
+      ai->getAlignRamp(triggerChan,sc.trigger,sc.traceSize,sc.traceOffset,sc.triggerEdge),
       ai->getData(j));
   }
 
@@ -230,7 +229,7 @@ void GUI::drawGUI() {
   ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%g");
   ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%g");
   showTrigger = ImGui::IsItemActive();
-  showTrigger |= ap->didTrigger();
+  showTrigger |= ai->didTrigger();
   if (sc.traceSize != 0) {
     sc.trigOffset = 2*((float)sc.traceOffset/(float)sc.traceSize)-1.0f;
   } else {
@@ -324,7 +323,7 @@ void GUI::drawMainScope() {
         ImPlot::PlotLine("##scopeplot", oscAlign, oscData[i], oscDataSize,ImPlotFlags_NoLegend);
     }
 
-    ImVec4 trigColor = ap->didTrigger()?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
+    ImVec4 trigColor = ai->didTrigger()?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
     if (showTrigger) ImPlot::TagY(sc.trigger,trigColor,"trig");
     double trigDouble = sc.trigger;
     if (ImPlot::DragLineY(0,&trigDouble,trigColor)) sc.trigger = trigDouble;
