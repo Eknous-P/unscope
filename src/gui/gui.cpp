@@ -298,22 +298,17 @@ void GUI::drawGUI() {
   }
 
   ImGui::End();
-  ImGui::ShowDemoWindow();
-  // ImGui::Begin("TEST",NULL,ImGuiWindowFlags_NoTitleBar);
-  // GUI::startCRT(0xee444444, 10);
-  // GUI::drawCRTLine(oscData[0]+(oscDataSize-sc.traceSize),oscData[1]+(oscDataSize-sc.traceSize),sc.traceSize,0xee00ff00,1.0f,0,0,1.0f);
-  // ImGui::End();
+  // ImGui::ShowDemoWindow();
     GUI::drawMainScope();
-    // GUI::drawAuxScope();
     GUI::drawXYScope();
 }
 
-void GUI::startCRT(ImU32 gridColor, unsigned char gridSub) {
+void GUI::startCRT(ImU32 gridColor, unsigned char gridSub, float triggerLine, ImU32 triggerColor) {
   ImDrawList* dl = ImGui::GetWindowDrawList();
   ImVec2 winSize = ImGui::GetWindowSize();
   ImVec2 origin = ImGui::GetWindowPos();
   unsigned int i = 0;
-  float gridOffset = 0;
+  float gridOffset = 0, triggerNormalized = origin.y+winSize.y*((1.0f-triggerLine)/2);
   dl->AddRectFilled(origin, ImVec2(origin.x+winSize.x, origin.y+winSize.y),ImU32(0xee111111));
   for (i = 0; i < gridSub+1; i++) {
     gridOffset = winSize.x/gridSub;
@@ -321,6 +316,7 @@ void GUI::startCRT(ImU32 gridColor, unsigned char gridSub) {
     gridOffset = winSize.y/gridSub;
     dl->AddLine(ImVec2(origin.x,gridOffset*i+origin.y),ImVec2(origin.x+winSize.x,origin.y+gridOffset*i),gridColor,.5f);
   }
+  dl->AddLine(ImVec2(origin.x,triggerNormalized),ImVec2(origin.x+winSize.x,triggerNormalized),triggerColor,1.0f);
 }
 
 void GUI::drawCRTLine(float* Xdata, float* Ydata, unsigned long int length, ImU32 lineColor, float intensity, float xOffset, float yOffset, float xscale, float yscale, unsigned long int visibleLen) {
@@ -342,14 +338,12 @@ void GUI::drawCRTLine(float* Xdata, float* Ydata, unsigned long int length, ImU3
 
 void GUI::drawMainScope() {
   ImGui::Begin("Scope");
-    GUI::startCRT(0xee444444, 8);
+    ImU32 trigColor = ai->didTrigger()?0xff00ff00:0xff0000ff;
+    GUI::startCRT(0xee444444, 8, sc.trigger*sc.yScale, trigColor);
     for (unsigned char i = 0; i < channels; i++) {
       if (oscAlign[i] && oscData[i] && oscDataSize)
         GUI::drawCRTLine(oscAlign,oscData[i],oscDataSize,ImGui::ColorConvertFloat4ToU32(ImVec4(sc.color[i][0],sc.color[i][1],sc.color[i][2],sc.color[i][3])),1.0f,0,0,1.0f,sc.yScale,sc.traceSize);
     }
-
-    ImVec4 trigColor = ai->didTrigger()?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
-    double trigDouble = sc.trigger;
 
   ImGui::End();
 }
@@ -362,7 +356,7 @@ void GUI::drawAuxScope() {
 void GUI::drawXYScope() {
   if (channels < 2) return;
   ImGui::Begin("Scope (XY)");
-    GUI::startCRT(0xee444444, 8);
+    GUI::startCRT(0xee444444, 8,0,0);
     GUI::drawCRTLine(oscData[0]+(oscDataSize-sc.traceSize),oscData[1]+(oscDataSize-sc.traceSize),sc.traceSize,ImGui::ColorConvertFloat4ToU32(ImVec4(sc.color[0][0],sc.color[0][1],sc.color[0][2],sc.color[0][3])),.125f,0,0,sc.yScale,sc.yScale,sc.traceSize);
 
   ImGui::End();

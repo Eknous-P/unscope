@@ -66,7 +66,7 @@ class GUI {
     void doFrame();
     void drawGUI();
 
-    void startCRT(ImU32 gridColor, unsigned char gridSub);
+    void startCRT(ImU32 gridColor, unsigned char gridSub, float triggerLine, ImU32 triggerColor);
     void drawCRTLine(float* Xdata, float* Ydata, unsigned long int length, ImU32 lineColor, float intensity, float xOffset, float yOffset, float xscale, float yscale, unsigned long int visibleLen);
 
     void drawMainScope();
