@@ -1,7 +1,6 @@
 #include <imgui.h>
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
-#include <implot.h>
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include "imgui_stdlib.h"
@@ -15,8 +14,6 @@
 class GUI {
   private:
     struct scopeParams {
-      int plotFlags;
-      int scopeFlags;
       int traceSize; float timebase;
       int traceOffset; float trigOffset;
       float yScale;

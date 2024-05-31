@@ -6,8 +6,6 @@ bool GUI::isRunning() {
 
 GUI::GUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float yScaleDef, float triggerDef) {
   err = 0;
-  sc.plotFlags = ImPlotFlags_NoLegend|ImPlotFlags_NoMenus;
-  sc.scopeFlags = ImPlotAxisFlags_AutoFit|ImPlotAxisFlags_Lock|ImPlotAxisFlags_NoMenus|ImPlotAxisFlags_Foreground|ImPlotAxisFlags_NoTickLabels|ImPlotAxisFlags_NoTickLabels|ImPlotAxisFlags_NoLabel|ImPlotAxisFlags_RangeFit;
 
   sampleRate = sampleRateDef;
   sc.timebase = timebaseDef;
@@ -226,7 +224,7 @@ void GUI::drawGUI() {
     sc.traceOffset = ((sc.trigOffset + 1.0f)/2) * sc.traceSize;
     if (sc.traceOffset + sc.traceSize > oscDataSize) sc.traceOffset = oscDataSize - sc.traceSize;
   }
-  ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 1.0f, "%g");
+  ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 2.0f, "%g");
   ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%g");
   showTrigger = ImGui::IsItemActive();
   showTrigger |= ai->didTrigger();
@@ -305,11 +303,9 @@ void GUI::drawGUI() {
   // GUI::startCRT(0xee444444, 10);
   // GUI::drawCRTLine(oscData[0]+(oscDataSize-sc.traceSize),oscData[1]+(oscDataSize-sc.traceSize),sc.traceSize,0xee00ff00,1.0f,0,0,1.0f);
   // ImGui::End();
-  // ImPlot::CreateContext();
     GUI::drawMainScope();
     // GUI::drawAuxScope();
     GUI::drawXYScope();
-  // ImPlot::DestroyContext();
 }
 
 void GUI::startCRT(ImU32 gridColor, unsigned char gridSub) {
@@ -332,10 +328,12 @@ void GUI::drawCRTLine(float* Xdata, float* Ydata, unsigned long int length, ImU3
   ImVec2 winSize = ImGui::GetWindowSize();
   ImVec2 center = ImVec2(winSize.x/2,winSize.y/2);
   ImVec2 origin = ImGui::GetWindowPos();
-  unsigned int i = 0, step = 2*(visibleLen/(unsigned long int)winSize.x);
-  step = 4;
-  if (step < 1) step = 1;
-  for (i = step; i < length; i+=step) {
+  unsigned int i = 0, step = 4;
+  long int dataOffset = length - 2*visibleLen;
+  if (dataOffset < 0) dataOffset = 0;
+  if (oscDataSize/(visibleLen+1)>160) step = 2;
+  if (oscDataSize/(visibleLen+1)>320) step = 1;
+  for (i = step+dataOffset; i < length; i+=step) {
     dl->AddLine(ImVec2(clampF(center.x+origin.x+xscale*center.x*Xdata[i-step]+xOffset, origin.x, origin.x+winSize.x),clampF(center.y+origin.y-yscale*center.y*Ydata[i-step]+yOffset, origin.y, origin.y+winSize.y)),
                 ImVec2(clampF(center.x+origin.x+xscale*center.x*Xdata[i]+xOffset, origin.x, origin.x+winSize.x),clampF(center.y+origin.y-yscale*center.y*Ydata[i]+yOffset, origin.y, origin.y+winSize.y)),
                 lineColor,intensity);
@@ -351,9 +349,7 @@ void GUI::drawMainScope() {
     }
 
     ImVec4 trigColor = ai->didTrigger()?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
-    // if (showTrigger) ImPlot::TagY(sc.trigger,trigColor,"trig");
     double trigDouble = sc.trigger;
-    // if (ImPlot::DragLineY(0,&trigDouble,trigColor)) sc.trigger = trigDouble;
 
   ImGui::End();
 }

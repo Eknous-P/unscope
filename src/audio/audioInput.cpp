@@ -4,7 +4,7 @@ AudioInput::AudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned
   isGood = Pa_Initialize()==paNoError;
   running = false;
   conf.channels = channelsDef;
-  if (conf.channels > 3) conf.channels = 3; // implot limitation...
+  if (conf.channels > 3) conf.channels = 3;
   conf.sampleRate = sampleRateDef;
   conf.frameSize = frameSize;
 
