@@ -67,7 +67,10 @@ class GUI {
     void getDevices(std::vector<DeviceEntry> d);
     void doFrame();
     void drawGUI();
-  
+
+    void startCRT(ImU32 gridColor, unsigned char gridSub);
+    void drawCRTLine(float* Xdata, float* Ydata, unsigned long int length, ImU32 lineColor, float intensity, float xOffset, float yOffset, float scale);
+
     void drawMainScope();
     void drawAuxScope();
     void drawXYScope();

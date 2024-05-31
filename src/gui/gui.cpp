@@ -143,9 +143,9 @@ int GUI::init() {
   ImGui::CreateContext();
   io = ImGui::GetIO();
   ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-  // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+  // ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
   ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
-  // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
+  // ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
   //io.ConfigViewportsNoAutoMerge = true;
   //io.ConfigViewportsNoTaskBarIcon = true;
   // Setup Dear ImGui style
@@ -300,11 +300,43 @@ void GUI::drawGUI() {
   }
 
   ImGui::End();
+  ImGui::Begin("TEST",NULL,ImGuiWindowFlags_NoTitleBar);
+  GUI::startCRT(0xee444444, 10);
+  GUI::drawCRTLine(oscData[0]+(oscDataSize-sc.traceSize),oscData[1]+(oscDataSize-sc.traceSize),sc.traceSize,0xee00ff00,1.0f,0,0,1.0f);
+  ImGui::End();
   ImPlot::CreateContext();
     GUI::drawMainScope();
     // GUI::drawAuxScope();
     GUI::drawXYScope();
   ImPlot::DestroyContext();
+}
+
+void GUI::startCRT(ImU32 gridColor, unsigned char gridSub) {
+  ImDrawList* dl = ImGui::GetForegroundDrawList();
+  ImVec2 winSize = ImGui::GetWindowSize();
+  ImVec2 origin = ImGui::GetWindowPos();
+  unsigned int i = 0;
+  float gridOffset = 0;
+  dl->AddRectFilled(origin, ImVec2(origin.x+winSize.x, origin.y+winSize.y),ImU32(0xee111111));
+  for (i = 0; i < gridSub+1; i++) {
+    gridOffset = winSize.x/gridSub;
+    dl->AddLine(ImVec2(origin.x+gridOffset*i,origin.y),ImVec2(origin.x+gridOffset*i,origin.y+winSize.y),gridColor,.5f);
+    gridOffset = winSize.y/gridSub;
+    dl->AddLine(ImVec2(origin.x,gridOffset*i+origin.y),ImVec2(origin.x+winSize.x,origin.y+gridOffset*i),gridColor,.5f);
+  }
+}
+
+void GUI::drawCRTLine(float* Xdata, float* Ydata, unsigned long int length, ImU32 lineColor, float intensity, float xOffset, float yOffset, float scale) {
+  ImDrawList* dl = ImGui::GetForegroundDrawList();
+  ImVec2 winSize = ImGui::GetWindowSize();
+  ImVec2 center = ImVec2(winSize.x/2,winSize.y/2);
+  ImVec2 origin = ImGui::GetWindowPos();
+  unsigned int i = 0;
+  for (i = 1; i < length; i++) {
+    dl->AddLine(ImVec2(center.x+origin.x+scale*winSize.x*Xdata[i-1]+xOffset,center.y+origin.y-scale*winSize.y*Ydata[i-1]+yOffset),
+                ImVec2(center.x+origin.x+scale*winSize.x*Xdata[i]+xOffset,center.y+origin.y-scale*winSize.y*Ydata[i]+yOffset),
+                lineColor,intensity);
+  }
 }
 
 void GUI::drawMainScope() {
