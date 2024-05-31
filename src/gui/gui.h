@@ -56,6 +56,7 @@ class GUI {
     bool showTrigger;
 
   public:
+
     void attachAudioInput(AudioInput* i);
     void attachAudioProcess(AudioProcess* p);
 
@@ -69,7 +70,7 @@ class GUI {
     void drawGUI();
 
     void startCRT(ImU32 gridColor, unsigned char gridSub);
-    void drawCRTLine(float* Xdata, float* Ydata, unsigned long int length, ImU32 lineColor, float intensity, float xOffset, float yOffset, float scale);
+    void drawCRTLine(float* Xdata, float* Ydata, unsigned long int length, ImU32 lineColor, float intensity, float xOffset, float yOffset, float xscale, float yscale, unsigned long int visibleLen);
 
     void drawMainScope();
     void drawAuxScope();

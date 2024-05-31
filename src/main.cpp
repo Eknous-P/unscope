@@ -19,10 +19,16 @@ struct unscopeParams {
     channels(2),            // N (1-3)
     sampleRate(48000),      // N samples (only common values?)
     audioDevice(0),         // internal ID, gets overwritten anyway
-    timebase(6),           // ms/div, 10 divisions
-    scale(2.0f),            // (no unit)
+    timebase(6),            // ms/div, 8 divisions
+    scale(1.0f),            // (no unit)
     trigger(0.0f) {}        // (no unit)
 };
+
+float clampF(float a, float min, float max) {
+  if (a > max) return max;
+  if (a < min) return min;
+  return a;
+}
 
 std::string getErrorMsg(int e) {
   std::string errm = "cant init audio!\n";

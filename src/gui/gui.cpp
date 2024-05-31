@@ -11,7 +11,7 @@ GUI::GUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned c
 
   sampleRate = sampleRateDef;
   sc.timebase = timebaseDef;
-  sc.traceSize = sampleRate*sc.timebase/100;
+  sc.traceSize = sampleRate*sc.timebase/125;
   sc.traceOffset = sc.traceSize/2;
   sc.yScale = yScaleDef;
   sc.trigger = 0;
@@ -220,13 +220,13 @@ void GUI::drawGUI() {
 
   ImGui::Begin("Controls");
   ImGui::Checkbox("update",&updateOsc);
-  sc.timebase = sc.traceSize * 100 / sampleRate;
-  if (ImGui::SliderFloat("timebase", &sc.timebase, 0, (float)oscDataSize/(float)sampleRate*100, "%g ms/div")) {
-    sc.traceSize = sampleRate * sc.timebase / 100;
+  sc.timebase = sc.traceSize * 125 / sampleRate;
+  if (ImGui::SliderFloat("timebase", &sc.timebase, 0, (float)oscDataSize/(float)sampleRate*125, "%g ms/div")) {
+    sc.traceSize = sampleRate * sc.timebase / 125;
     sc.traceOffset = ((sc.trigOffset + 1.0f)/2) * sc.traceSize;
     if (sc.traceOffset + sc.traceSize > oscDataSize) sc.traceOffset = oscDataSize - sc.traceSize;
   }
-  ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%g");
+  ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 1.0f, "%g");
   ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%g");
   showTrigger = ImGui::IsItemActive();
   showTrigger |= ai->didTrigger();
@@ -300,19 +300,20 @@ void GUI::drawGUI() {
   }
 
   ImGui::End();
-  ImGui::Begin("TEST",NULL,ImGuiWindowFlags_NoTitleBar);
-  GUI::startCRT(0xee444444, 10);
-  GUI::drawCRTLine(oscData[0]+(oscDataSize-sc.traceSize),oscData[1]+(oscDataSize-sc.traceSize),sc.traceSize,0xee00ff00,1.0f,0,0,1.0f);
-  ImGui::End();
-  ImPlot::CreateContext();
+  ImGui::ShowDemoWindow();
+  // ImGui::Begin("TEST",NULL,ImGuiWindowFlags_NoTitleBar);
+  // GUI::startCRT(0xee444444, 10);
+  // GUI::drawCRTLine(oscData[0]+(oscDataSize-sc.traceSize),oscData[1]+(oscDataSize-sc.traceSize),sc.traceSize,0xee00ff00,1.0f,0,0,1.0f);
+  // ImGui::End();
+  // ImPlot::CreateContext();
     GUI::drawMainScope();
     // GUI::drawAuxScope();
     GUI::drawXYScope();
-  ImPlot::DestroyContext();
+  // ImPlot::DestroyContext();
 }
 
 void GUI::startCRT(ImU32 gridColor, unsigned char gridSub) {
-  ImDrawList* dl = ImGui::GetForegroundDrawList();
+  ImDrawList* dl = ImGui::GetWindowDrawList();
   ImVec2 winSize = ImGui::GetWindowSize();
   ImVec2 origin = ImGui::GetWindowPos();
   unsigned int i = 0;
@@ -326,68 +327,48 @@ void GUI::startCRT(ImU32 gridColor, unsigned char gridSub) {
   }
 }
 
-void GUI::drawCRTLine(float* Xdata, float* Ydata, unsigned long int length, ImU32 lineColor, float intensity, float xOffset, float yOffset, float scale) {
-  ImDrawList* dl = ImGui::GetForegroundDrawList();
+void GUI::drawCRTLine(float* Xdata, float* Ydata, unsigned long int length, ImU32 lineColor, float intensity, float xOffset, float yOffset, float xscale, float yscale, unsigned long int visibleLen) {
+  ImDrawList* dl = ImGui::GetWindowDrawList();
   ImVec2 winSize = ImGui::GetWindowSize();
   ImVec2 center = ImVec2(winSize.x/2,winSize.y/2);
   ImVec2 origin = ImGui::GetWindowPos();
-  unsigned int i = 0;
-  for (i = 1; i < length; i++) {
-    dl->AddLine(ImVec2(center.x+origin.x+scale*winSize.x*Xdata[i-1]+xOffset,center.y+origin.y-scale*winSize.y*Ydata[i-1]+yOffset),
-                ImVec2(center.x+origin.x+scale*winSize.x*Xdata[i]+xOffset,center.y+origin.y-scale*winSize.y*Ydata[i]+yOffset),
+  unsigned int i = 0, step = 2*(visibleLen/(unsigned long int)winSize.x);
+  step = 4;
+  if (step < 1) step = 1;
+  for (i = step; i < length; i+=step) {
+    dl->AddLine(ImVec2(clampF(center.x+origin.x+xscale*center.x*Xdata[i-step]+xOffset, origin.x, origin.x+winSize.x),clampF(center.y+origin.y-yscale*center.y*Ydata[i-step]+yOffset, origin.y, origin.y+winSize.y)),
+                ImVec2(clampF(center.x+origin.x+xscale*center.x*Xdata[i]+xOffset, origin.x, origin.x+winSize.x),clampF(center.y+origin.y-yscale*center.y*Ydata[i]+yOffset, origin.y, origin.y+winSize.y)),
                 lineColor,intensity);
   }
 }
 
 void GUI::drawMainScope() {
   ImGui::Begin("Scope");
-  if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
+    GUI::startCRT(0xee444444, 8);
     for (unsigned char i = 0; i < channels; i++) {
-      ImPlot::SetupAxis(ImAxis(i),"t",sc.scopeFlags);
-      ImPlot::SetupAxis(ImAxis(i+3),"v",sc.scopeFlags);
-      ImPlot::SetupAxisLimits(ImAxis(i),-1, 1);
-      ImPlot::SetupAxisLimits(ImAxis(i+3),-1.0f/sc.yScale,1.0f/sc.yScale);
-    }
-      ImPlot::SetupAxis(ImAxis_Y1,"##v",sc.scopeFlags^ImPlotAxisFlags_NoDecorations);
-    for (unsigned char i = 0; i < channels; i++) {
-      ImPlot::SetNextLineStyle(ImVec4(sc.color[i][0],sc.color[i][1],sc.color[i][2],sc.color[i][3]),0.25f);
       if (oscAlign[i] && oscData[i] && oscDataSize)
-        ImPlot::PlotLine("##scopeplot", oscAlign, oscData[i], oscDataSize,ImPlotFlags_NoLegend);
+        GUI::drawCRTLine(oscAlign,oscData[i],oscDataSize,ImGui::ColorConvertFloat4ToU32(ImVec4(sc.color[i][0],sc.color[i][1],sc.color[i][2],sc.color[i][3])),1.0f,0,0,1.0f,sc.yScale,sc.traceSize);
     }
 
     ImVec4 trigColor = ai->didTrigger()?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
-    if (showTrigger) ImPlot::TagY(sc.trigger,trigColor,"trig");
+    // if (showTrigger) ImPlot::TagY(sc.trigger,trigColor,"trig");
     double trigDouble = sc.trigger;
-    if (ImPlot::DragLineY(0,&trigDouble,trigColor)) sc.trigger = trigDouble;
+    // if (ImPlot::DragLineY(0,&trigDouble,trigColor)) sc.trigger = trigDouble;
 
-    ImPlot::EndPlot();
-  }
   ImGui::End();
 }
 
 void GUI::drawAuxScope() {
   ImGui::Begin("Scope (Auxiliary)");
-  if (ImPlot::BeginPlot("##scopeaux", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
-    ImPlot::SetupAxes("t","##v",sc.scopeFlags,0);
-    ImPlot::SetupAxisLimits(ImAxis_X1,(float)(oscDataSize - sc.traceSize)/oscDataSize, 1);
-    ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/sc.yScale,1.0f/sc.yScale);
-    ImPlot::PlotLine("##scopeplot", oscAlign, oscAuxData[0], oscDataSize,ImPlotFlags_NoLegend, 0);
-    ImPlot::EndPlot();
-  }
   ImGui::End();
 }
 
 void GUI::drawXYScope() {
   if (channels < 2) return;
   ImGui::Begin("Scope (XY)");
-  if (ImPlot::BeginPlot("##scopexy", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
-    ImPlot::SetupAxes("##x","##y",sc.scopeFlags,sc.scopeFlags);
-    ImPlot::SetupAxisLimits(ImAxis_X1,-1.0f/sc.yScale,1.0f/sc.yScale);
-    ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/sc.yScale,1.0f/sc.yScale);
-    ImPlot::SetNextLineStyle(ImVec4(sc.color[0][0],sc.color[0][1],sc.color[0][2],sc.color[0][3]),0.125f);
-    ImPlot::PlotLine("##scopeplot", oscData[0] + (oscDataSize - sc.traceSize), oscData[1] + (oscDataSize - sc.traceSize), sc.traceSize,ImPlotFlags_NoLegend);
-    ImPlot::EndPlot();
-  }
+    GUI::startCRT(0xee444444, 8);
+    GUI::drawCRTLine(oscData[0]+(oscDataSize-sc.traceSize),oscData[1]+(oscDataSize-sc.traceSize),sc.traceSize,ImGui::ColorConvertFloat4ToU32(ImVec4(sc.color[0][0],sc.color[0][1],sc.color[0][2],sc.color[0][3])),.125f,0,0,sc.yScale,sc.yScale,sc.traceSize);
+
   ImGui::End();
 }
 

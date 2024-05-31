@@ -131,12 +131,6 @@ int AudioInput::stop() {
   return Pa_CloseStream(stream);
 }
 
-inline float clamp(float a) {
-  if (a > 1.0f) return 1.0f;
-  if (a < -1.0f) return -1.0f;
-  return a;
-}
-
 float *AudioInput::getAlignRamp(unsigned char chan, float trigger, unsigned long int waveLen, long int offset, bool edge=false) {
   memset(buffer.alignRamp,-1.0f,sizeof(float)*buffer.size);
 
@@ -168,7 +162,7 @@ float *AudioInput::getAlignRamp(unsigned char chan, float trigger, unsigned long
     delta = ((float)buffer.size/((float)waveLen))/(float)buffer.size;
     buffer.alignRamp[buffer.size-1] = 1.0f;
     for (i = buffer.size-2; i > 0; i--) {
-      buffer.alignRamp[i] = clamp(buffer.alignRamp[i+1] - 2*delta);
+      buffer.alignRamp[i] = clampF(buffer.alignRamp[i+1] - 2*delta, -1.0f, 1.0f);
     }
     buffer.alignRamp[0] = -1.0f;
   }
