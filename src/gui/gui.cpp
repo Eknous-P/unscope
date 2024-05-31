@@ -7,11 +7,11 @@ bool GUI::isRunning() {
 GUI::GUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float yScaleDef, float triggerDef) {
   err = 0;
   sc.plotFlags = ImPlotFlags_NoLegend|ImPlotFlags_NoMenus;
-  sc.scopeFlags = ImPlotAxisFlags_AutoFit|ImPlotAxisFlags_Lock|ImPlotAxisFlags_NoMenus|ImPlotAxisFlags_Foreground;
+  sc.scopeFlags = ImPlotAxisFlags_AutoFit|ImPlotAxisFlags_Lock|ImPlotAxisFlags_NoMenus|ImPlotAxisFlags_Foreground|ImPlotAxisFlags_NoTickLabels|ImPlotAxisFlags_NoTickLabels|ImPlotAxisFlags_NoLabel|ImPlotAxisFlags_RangeFit;
 
   sampleRate = sampleRateDef;
   sc.timebase = timebaseDef;
-  sc.traceSize = sampleRate*sc.timebase/1000;
+  sc.traceSize = sampleRate*sc.timebase/100;
   sc.traceOffset = sc.traceSize/2;
   sc.yScale = yScaleDef;
   sc.trigger = 0;
@@ -221,9 +221,9 @@ void GUI::drawGUI() {
 
   ImGui::Begin("Controls");
   ImGui::Checkbox("update",&updateOsc);
-  sc.timebase = sc.traceSize * 1000 / sampleRate;
-  if (ImGui::SliderFloat("timebase", &sc.timebase, 0, (float)oscDataSize/(float)sampleRate*1000, "%g ms")) {
-    sc.traceSize = sampleRate * sc.timebase / 1000;
+  sc.timebase = sc.traceSize * 100 / sampleRate;
+  if (ImGui::SliderFloat("timebase", &sc.timebase, 0, (float)oscDataSize/(float)sampleRate*100, "%g ms/div")) {
+    sc.traceSize = sampleRate * sc.timebase / 100;
     sc.traceOffset = ((sc.trigOffset + 1.0f)/2) * sc.traceSize;
     if (sc.traceOffset + sc.traceSize > oscDataSize) sc.traceOffset = oscDataSize - sc.traceSize;
   }
@@ -312,12 +312,12 @@ void GUI::drawMainScope() {
   ImGui::Begin("Scope");
   if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
     for (unsigned char i = 0; i < channels; i++) {
-      ImPlot::SetupAxis(ImAxis(i),"t",ImPlotAxisFlags_NoDecorations|sc.scopeFlags);
-      ImPlot::SetupAxis(ImAxis(i+3),"v",ImPlotAxisFlags_NoDecorations|sc.scopeFlags);
+      ImPlot::SetupAxis(ImAxis(i),"t",sc.scopeFlags);
+      ImPlot::SetupAxis(ImAxis(i+3),"v",sc.scopeFlags);
       ImPlot::SetupAxisLimits(ImAxis(i),-1, 1);
       ImPlot::SetupAxisLimits(ImAxis(i+3),-1.0f/sc.yScale,1.0f/sc.yScale);
     }
-      ImPlot::SetupAxis(ImAxis_Y1,"##v",sc.scopeFlags);
+      ImPlot::SetupAxis(ImAxis_Y1,"##v",sc.scopeFlags^ImPlotAxisFlags_NoDecorations);
     for (unsigned char i = 0; i < channels; i++) {
       ImPlot::SetNextLineStyle(ImVec4(sc.color[i][0],sc.color[i][1],sc.color[i][2],sc.color[i][3]),0.25f);
       if (oscAlign[i] && oscData[i] && oscDataSize)
@@ -350,7 +350,7 @@ void GUI::drawXYScope() {
   if (channels < 2) return;
   ImGui::Begin("Scope (XY)");
   if (ImPlot::BeginPlot("##scopexy", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
-    ImPlot::SetupAxes("##x","##y",ImPlotAxisFlags_AutoFit,sc.scopeFlags);
+    ImPlot::SetupAxes("##x","##y",sc.scopeFlags,sc.scopeFlags);
     ImPlot::SetupAxisLimits(ImAxis_X1,-1.0f/sc.yScale,1.0f/sc.yScale);
     ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/sc.yScale,1.0f/sc.yScale);
     ImPlot::SetNextLineStyle(ImVec4(sc.color[0][0],sc.color[0][1],sc.color[0][2],sc.color[0][3]),0.125f);
