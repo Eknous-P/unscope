@@ -8,7 +8,7 @@
 #ifndef USC_AUDIO_H
 #define USC_AUDIO_H
 
-class AudioInput {
+class AudioInput { // get audio into a buffer and generate "alignment ramp"
   private:
 
     struct AudioConfig{
@@ -20,6 +20,7 @@ class AudioInput {
 
     struct AudioBuffer {
       float **data;
+      float *alignRamp;
       unsigned long int size;
       unsigned long int index;
     };
@@ -33,7 +34,7 @@ class AudioInput {
     PaError err;
     PaStreamParameters streamParams;
 
-    bool isGood, running;
+    bool isGood, running, triggered;
 
     int bufferGetCallback(
       const void *inputBuffer, void *outputBuffer,
@@ -56,24 +57,20 @@ class AudioInput {
     float *getData(unsigned char chan);
     const PaDeviceInfo* getDeviceInfo();
     ~AudioInput();
+    bool didTrigger();
+    float *getAlignRamp(unsigned char chan, float trigger,unsigned long int waveLen, long int offset, bool edge); // true -> falling, false ->rising
 };
 
-class AudioProcess {
+class AudioProcess { // process audio data with various fx
   private:
     float **dataIn, **dataOut;
     unsigned long int dataSize, i;
-    float *alignRamp;
     unsigned char channels;
-    bool triggered;
   public:
     void writeDataIn(float* d, unsigned char chan);
     float *getDataOut(unsigned char chan);
     void derive();
     void integrate();
-
-    bool didTrigger();
-
-    float *alignWave(unsigned char chan, float trigger,unsigned long int waveLen, long int offset, bool edge); // true -> falling, false ->rising
 
     AudioProcess(unsigned int bufferSizeDef, unsigned char chans);
     ~AudioProcess();

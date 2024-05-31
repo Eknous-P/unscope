@@ -12,6 +12,8 @@ AudioInput::AudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned
 
   buffer.size = bufferSize;
   buffer.data = new float*[conf.channels];
+  buffer.alignRamp = new float[buffer.size];
+  memset(buffer.alignRamp, 0, buffer.size*sizeof(float));
   if (!buffer.data) {
     isGood = false;
     return;
@@ -129,6 +131,56 @@ int AudioInput::stop() {
   return Pa_CloseStream(stream);
 }
 
+inline float clamp(float a) {
+  if (a > 1.0f) return 1.0f;
+  if (a < -1.0f) return -1.0f;
+  return a;
+}
+
+float *AudioInput::getAlignRamp(unsigned char chan, float trigger, unsigned long int waveLen, long int offset, bool edge=false) {
+  memset(buffer.alignRamp,-1.0f,sizeof(float)*buffer.size);
+
+  unsigned int triggerPoint = 0;
+  bool triggerLow = false, triggerHigh = false;
+  unsigned long int i = buffer.size - waveLen;
+  while (i != 0 && i > (buffer.size - 2*waveLen)) {
+    triggered = (triggerLow && triggerHigh);
+    i--;
+    if (buffer.data[chan][i] < trigger) {
+      triggerLow = true;
+      if (triggered && edge) break;
+    }
+    if (buffer.data[chan][i] > trigger) {
+      triggerHigh = true;
+      if (triggered && !edge) break;
+    }
+  }
+  triggerPoint = i;
+
+  float delta = 0;
+
+  if (triggered) {
+    delta = 2.0f/(float)(waveLen);
+    for (;i < buffer.size; i++) {
+      buffer.alignRamp[i-offset] = -1.0f + delta*(i - triggerPoint);
+    }
+  } else {
+    delta = ((float)buffer.size/((float)waveLen))/(float)buffer.size;
+    buffer.alignRamp[buffer.size-1] = 1.0f;
+    for (i = buffer.size-2; i > 0; i--) {
+      buffer.alignRamp[i] = clamp(buffer.alignRamp[i+1] - 2*delta);
+    }
+    buffer.alignRamp[0] = -1.0f;
+  }
+
+  i = 0;
+  return buffer.alignRamp;
+}
+
+bool AudioInput::didTrigger() {
+  return triggered;
+}
+
 AudioInput::~AudioInput() {
   if (isGood) Pa_Terminate();
   if (buffer.data) {
@@ -140,6 +192,10 @@ AudioInput::~AudioInput() {
     }
     delete[] buffer.data;
     buffer.data = NULL;
+  }
+  if (buffer.alignRamp) {
+    delete[] buffer.alignRamp;
+    buffer.alignRamp = NULL;
   }
 }
 

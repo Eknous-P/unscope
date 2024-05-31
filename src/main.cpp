@@ -68,9 +68,6 @@ int main(int argc, char** argv) {
   g.getDevices(i.enumerateDevs());
   g.setAudioDeviceSetting(params.audioDevice);
 
-  AudioProcess p(params.audioBufferSize,params.channels);
-  g.attachAudioProcess(&p);
-
   printf("opening device %d: %s ...\n",params.audioDevice,Pa_GetDeviceInfo(params.audioDevice)->name);
   e = i.init(params.audioDevice);
   if (e != paNoError) {
