@@ -43,6 +43,7 @@ int AudioInput::bufferGetCallback(
   const PaStreamCallbackTimeInfo* timeInfo,
   PaStreamCallbackFlags statusFlags) {
     const float *audIn = (const float*)inputBuffer;
+    float *audOut = (float*)outputBuffer;
   
     (void) outputBuffer;
     (void) timeInfo;
@@ -53,6 +54,7 @@ int AudioInput::bufferGetCallback(
     if (inputBuffer==NULL) {
       for (buffer.index = 0; buffer.index < buffer.size*conf.channels; buffer.index++) {
         buffer.data[buffer.index] = 0;
+        if (outputBuffer != NULL) *audOut++ = 0;
       }
     } else {
       // push vaules back
@@ -64,7 +66,9 @@ int AudioInput::bufferGetCallback(
       // get data
       for (buffer.index = 0; buffer.index < framesPerBuffer; buffer.index++) {
         for (j = 0; j < conf.channels; j++) {
-          buffer.data[j][buffer.size - framesPerBuffer + buffer.index] = *audIn++;
+          float dat = *audIn++;
+          buffer.data[j][buffer.size - framesPerBuffer + buffer.index] = dat;
+        if (outputBuffer != NULL) *audOut++ = dat;
         }
       }
     }
@@ -107,7 +111,7 @@ int AudioInput::init(PaDeviceIndex dev) {
   err = Pa_OpenStream(
     &stream,
     &streamParams,
-    NULL,
+    &streamParams,
     conf.sampleRate,
     conf.frameSize,
     paClipOff,
