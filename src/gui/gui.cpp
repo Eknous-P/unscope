@@ -88,6 +88,7 @@ GUI::GUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned c
   running = false;
   updateOsc = true;
   restartAudio = true;
+  audioLoopback = false;
 
   triggerChan = 0;
 
@@ -274,16 +275,20 @@ void GUI::drawGUI() {
       ImGui::EndCombo();
     }
   }
-  ImGui::SameLine();
-  if (ImGui::Button("R")) getDevices(ai->enumerateDevs());
-  if (ImGui::IsItemHovered()) {
-    ImGui::SetTooltip("refresh audio device list");
+  if (devs[device].shouldPassThru) {
+    ImGui::SameLine();
+    ImGui::Checkbox("##lp",&audioLoopback);
+    if (ImGui::IsItemHovered()) {
+      ImGui::SetTooltip("enable audio loopback");
+    }
+  } else {
+    audioLoopback = false;
   }
 
   if (ImGui::Button("restart audio")) {
     err = ai->stop();
     printf("opening device %d: %s ...\n",device,Pa_GetDeviceInfo(device)->name);
-    err = ai->init(device);
+    err = ai->init(device,audioLoopback);
     channels = ai->getChannelCount();
     if (err != paNoError) {
       printf("%d:%s", err, getErrorMsg(err).c_str());
@@ -291,7 +296,8 @@ void GUI::drawGUI() {
       if (err != paInvalidDevice) throw err;
       printf("trying default device...\n");
       device = Pa_GetDefaultInputDevice();
-      err = ai->init(device);
+      err = ai->init(device,0);
+      channels = ai->getChannelCount();
       if (err != paNoError) {
         printf("%d:%s", err, getErrorMsg(err).c_str());
         throw err;

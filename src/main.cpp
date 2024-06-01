@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
   g.setAudioDeviceSetting(params.audioDevice);
 
   printf("opening device %d: %s ...\n",params.audioDevice,Pa_GetDeviceInfo(params.audioDevice)->name);
-  e = i.init(params.audioDevice);
+  e = i.init(params.audioDevice,0);
   if (e != paNoError) {
     printf("%d:%s", e, getErrorMsg(e).c_str());
     // try again
@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
     }
     printf("trying default device...\n");
     params.audioDevice = Pa_GetDefaultInputDevice();
-    e = i.init(params.audioDevice);
+    e = i.init(params.audioDevice,0);
     if (e != paNoError) {
       printf("%d:%s", e, getErrorMsg(e).c_str());
       return e;

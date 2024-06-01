@@ -53,7 +53,7 @@ class AudioInput { // get audio into a buffer and generate "alignment ramp"
   public:
     AudioInput(unsigned int frameSize, unsigned int bufferSize,unsigned char channelsDef, unsigned int sampleRateDef);
     std::vector<DeviceEntry> enumerateDevs();
-    int init(PaDeviceIndex dev);
+    int init(PaDeviceIndex dev, bool loopback);
     int stop();
     unsigned char getChannelCount();
     float *getData(unsigned char chan);

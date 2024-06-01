@@ -39,7 +39,7 @@ class GUI {
     ImGuiIO io;
     ImGuiStyle style;
     ImVec4 clear_color;
-    bool running, updateOsc, restartAudio;
+    bool running, updateOsc, restartAudio, audioLoopback;
     unsigned char triggerChan;
     unsigned char channels;
     float **oscData, **oscAuxData, *oscAlign;

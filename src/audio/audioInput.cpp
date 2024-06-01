@@ -85,7 +85,7 @@ std::vector<DeviceEntry> AudioInput::enumerateDevs() {
     // if (info->maxInputChannels < conf.channels) continue;
     if (info->maxOutputChannels > 0) continue;
     if (info->defaultSampleRate < conf.sampleRate) continue;
-    devs.push_back(DeviceEntry(i, 0,
+    devs.push_back(DeviceEntry(i, info->maxInputChannels == info->maxOutputChannels,
       std::to_string(i) + ": " +
       std::string(Pa_GetHostApiInfo(info->hostApi)->name) + " | " + 
       std::string(info->name)));
@@ -94,7 +94,7 @@ std::vector<DeviceEntry> AudioInput::enumerateDevs() {
   return devs;
 }
 
-int AudioInput::init(PaDeviceIndex dev) {
+int AudioInput::init(PaDeviceIndex dev, bool loopback) {
   if (!isGood) return UAUDIOERR_NOGOOD;
   if (running) return UAUDIOERR_NOERR;
   int nDevs = Pa_GetDeviceCount();
@@ -112,7 +112,7 @@ init:
   err = Pa_OpenStream(
     &stream,
     &streamParams,
-    NULL,// &streamParams,
+    loopback?&streamParams:NULL,
     conf.sampleRate,
     conf.frameSize,
     paClipOff,
