@@ -24,6 +24,12 @@ struct unscopeParams {
     trigger(0.0f) {}        // (no unit)
 };
 
+float clamp(float a) {
+  if (a > 1.0f) return 1.0f;
+  if (a < -1.0f) return -1.0f;
+  return a;
+}
+
 std::string getErrorMsg(int e) {
   std::string errm = "cant init audio!\n";
   switch (e) {

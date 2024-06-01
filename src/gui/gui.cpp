@@ -226,19 +226,24 @@ void GUI::drawGUI() {
     sc.traceSize = sampleRate * sc.timebase / 1000;
     sc.traceOffset = ((sc.trigOffset + 1.0f)/2) * sc.traceSize;
     if (sc.traceOffset + sc.traceSize > oscDataSize) sc.traceOffset = oscDataSize - sc.traceSize;
+    if (sc.traceSize != 0) {
+      sc.trigOffset = 2*((float)sc.traceOffset/(float)sc.traceSize)-1.0f;
+    } else {
+      sc.trigOffset = 0;
+    }
   }
   ImGui::SliderFloat("scale", &sc.yScale, 0.25f, 10.0f, "%g");
   ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%g");
   showTrigger = ImGui::IsItemActive();
   showTrigger |= ai->didTrigger();
-  if (sc.traceSize != 0) {
-    sc.trigOffset = 2*((float)sc.traceOffset/(float)sc.traceSize)-1.0f;
-  } else {
-    sc.trigOffset = 0;
-  }
   ImGui::SliderFloat("offset", &sc.trigOffset, -1.0f, 1.0f, "%g");
   if (ImGui::IsItemActive()) {
     sc.traceOffset = ((sc.trigOffset + 1.0f)/2) * sc.traceSize;
+    if (sc.traceSize != 0) {
+      sc.trigOffset = 2*((float)sc.traceOffset/(float)sc.traceSize)-1.0f;
+    } else {
+      sc.trigOffset = 0;
+    }
   }
   if (sc.traceOffset + sc.traceSize > oscDataSize) sc.traceOffset = oscDataSize - sc.traceSize;
   ImGui::AlignTextToFramePadding();
@@ -320,7 +325,7 @@ void GUI::drawMainScope() {
     for (unsigned char i = 0; i < channels; i++) {
       ImPlot::SetupAxis(ImAxis(i),"t",ImPlotAxisFlags_NoDecorations|sc.scopeFlags);
       ImPlot::SetupAxis(ImAxis(i+3),"v",ImPlotAxisFlags_NoDecorations|sc.scopeFlags);
-      ImPlot::SetupAxisLimits(ImAxis(i),-1, 1);
+      ImPlot::SetupAxisLimits(ImAxis(i),-1.0f, 1.0f);
       ImPlot::SetupAxisLimits(ImAxis(i+3),-1.0f/sc.yScale,1.0f/sc.yScale);
     }
       ImPlot::SetupAxis(ImAxis_Y1,"##v",sc.scopeFlags);
@@ -333,8 +338,17 @@ void GUI::drawMainScope() {
     ImVec4 trigColor = ai->didTrigger()?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
     if (showTrigger) ImPlot::TagY(sc.trigger,trigColor,"trig");
     double trigDouble = sc.trigger;
+    double offsDouble = sc.trigOffset;
     if (ImPlot::DragLineY(0,&trigDouble,trigColor)) sc.trigger = trigDouble;
-
+    if (ImPlot::DragLineX(1,&offsDouble,ImVec4(0,1,0,.5))) {
+      sc.trigOffset = clamp(offsDouble);
+      sc.traceOffset = ((sc.trigOffset + 1.0f)/2) * sc.traceSize;
+      if (sc.traceSize != 0) {
+        sc.trigOffset = 2*((float)sc.traceOffset/(float)sc.traceSize)-1.0f;
+      } else {
+        sc.trigOffset = 0;
+      }
+    }
     ImPlot::EndPlot();
   }
   ImGui::End();

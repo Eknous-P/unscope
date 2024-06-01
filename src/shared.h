@@ -87,6 +87,7 @@ struct DeviceEntry {
   }
 };
 
+float clamp(float a);
 extern const char *helpMsg, *verMsg, *errMsgs[];
 std::string getErrorMsg(int e);
 
