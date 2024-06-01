@@ -284,6 +284,7 @@ void GUI::drawGUI() {
     err = ai->stop();
     printf("opening device %d: %s ...\n",device,Pa_GetDeviceInfo(device)->name);
     err = ai->init(device);
+    channels = ai->getChannelCount();
     if (err != paNoError) {
       printf("%d:%s", err, getErrorMsg(err).c_str());
       // try again

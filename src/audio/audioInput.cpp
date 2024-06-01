@@ -5,6 +5,7 @@ AudioInput::AudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned
   running = false;
   conf.channels = channelsDef;
   if (conf.channels > 3) conf.channels = 3; // implot limitation...
+  conf.channelsDef = channelsDef;
   conf.sampleRate = sampleRateDef;
   conf.frameSize = frameSize;
 
@@ -81,11 +82,10 @@ std::vector<DeviceEntry> AudioInput::enumerateDevs() {
   for (int i = 0; i < Pa_GetDeviceCount(); i++) {
     const PaDeviceInfo *info = Pa_GetDeviceInfo(i);
     if (info == NULL) continue;
-    if (info->maxInputChannels < 1) continue;
-    if (info->maxInputChannels > conf.channels) continue;
+    // if (info->maxInputChannels < conf.channels) continue;
     if (info->maxOutputChannels > 0) continue;
     if (info->defaultSampleRate < conf.sampleRate) continue;
-    devs.push_back(DeviceEntry(i, true,
+    devs.push_back(DeviceEntry(i, 0,
       std::to_string(i) + ": " +
       std::string(Pa_GetHostApiInfo(info->hostApi)->name) + " | " + 
       std::string(info->name)));
@@ -101,17 +101,18 @@ int AudioInput::init(PaDeviceIndex dev) {
   if (nDevs == 0) return UAUDIOERR_NODEVS;
   if (nDevs < 0) return nDevs;
 
+  conf.channels = conf.channelsDef;
   streamParams.device = dev;
   if (streamParams.device == paNoDevice) return UAUDIOERR_NODEV;
   streamParams.channelCount = conf.channels;
   streamParams.sampleFormat = paFloat32;
   streamParams.suggestedLatency = Pa_GetDeviceInfo(streamParams.device)->defaultLowInputLatency;
   streamParams.hostApiSpecificStreamInfo = NULL;
-
+init:
   err = Pa_OpenStream(
     &stream,
     &streamParams,
-    &streamParams,
+    NULL,// &streamParams,
     conf.sampleRate,
     conf.frameSize,
     paClipOff,
@@ -120,9 +121,21 @@ int AudioInput::init(PaDeviceIndex dev) {
   );
   Pa_Sleep(100);
 
+  if (err == paInvalidChannelCount) {
+    if (streamParams.channelCount == Pa_GetDeviceInfo(dev)->maxInputChannels) {
+      running = err==paNoError;
+      return err;
+    }
+    printf("trying with device-preferred channel count...\n");
+    streamParams.channelCount = Pa_GetDeviceInfo(dev)->maxInputChannels;
+    conf.channels = streamParams.channelCount;
+    goto init;
+  }
+
   if (err!=paNoError) return err;
 
   err = Pa_StartStream(stream);
+
   
   conf.device=dev;
   running = err==paNoError;
@@ -209,4 +222,8 @@ float *AudioInput::getData(unsigned char chan) {
 
 const PaDeviceInfo *AudioInput::getDeviceInfo() {
   return Pa_GetDeviceInfo(conf.device);
+}
+
+unsigned char AudioInput::getChannelCount() {
+  return conf.channels;
 }

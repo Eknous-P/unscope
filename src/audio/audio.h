@@ -16,6 +16,7 @@ class AudioInput { // get audio into a buffer and generate "alignment ramp"
       int sampleRate;
       int frameSize;
       unsigned char channels;
+      unsigned char channelsDef;
     };
 
     struct AudioBuffer {
@@ -54,6 +55,7 @@ class AudioInput { // get audio into a buffer and generate "alignment ramp"
     std::vector<DeviceEntry> enumerateDevs();
     int init(PaDeviceIndex dev);
     int stop();
+    unsigned char getChannelCount();
     float *getData(unsigned char chan);
     const PaDeviceInfo* getDeviceInfo();
     ~AudioInput();
