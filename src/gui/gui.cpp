@@ -275,20 +275,20 @@ void GUI::drawGUI() {
       ImGui::EndCombo();
     }
   }
-  if (devs[device].shouldPassThru) {
-    ImGui::SameLine();
-    ImGui::Checkbox("##lp",&audioLoopback);
-    if (ImGui::IsItemHovered()) {
-      ImGui::SetTooltip("enable audio loopback");
-    }
-  } else {
-    audioLoopback = false;
-  }
+  // if (devs[device].shouldPassThru) {
+  //   ImGui::SameLine();
+  //   ImGui::Checkbox("##lp",&audioLoopback);
+  //   if (ImGui::IsItemHovered()) {
+  //     ImGui::SetTooltip("enable audio loopback");
+  //   }
+  // } else {
+  //   audioLoopback = false;
+  // }
 
   if (ImGui::Button("restart audio")) {
     err = ai->stop();
     printf("opening device %d: %s ...\n",device,Pa_GetDeviceInfo(device)->name);
-    err = ai->init(device,audioLoopback);
+    err = ai->init(device,/*audioLoopback*/0);
     channels = ai->getChannelCount();
     if (err != paNoError) {
       printf("%d:%s", err, getErrorMsg(err).c_str());
