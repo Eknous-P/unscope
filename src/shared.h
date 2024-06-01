@@ -78,9 +78,11 @@ enum unscopeArgs {
 
 struct DeviceEntry {
   int dev;
+  bool shouldPassThru;
   std::string devName;
-  DeviceEntry(int d, std::string dn) {
+  DeviceEntry(int d, bool p, std::string dn) {
     dev = d;
+    shouldPassThru = p;
     devName = dn;
   }
 };

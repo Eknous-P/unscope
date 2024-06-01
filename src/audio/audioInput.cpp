@@ -73,7 +73,7 @@ int AudioInput::bufferGetCallback(
 
 std::vector<DeviceEntry> AudioInput::enumerateDevs() {
   devs.clear();
-  devs.push_back(DeviceEntry(Pa_GetDefaultInputDevice(),"Default device"));
+  devs.push_back(DeviceEntry(Pa_GetDefaultInputDevice(),true,"Default device"));
   for (int i = 0; i < Pa_GetDeviceCount(); i++) {
     const PaDeviceInfo *info = Pa_GetDeviceInfo(i);
     if (info == NULL) continue;
@@ -81,7 +81,7 @@ std::vector<DeviceEntry> AudioInput::enumerateDevs() {
     if (info->maxInputChannels > conf.channels) continue;
     if (info->maxOutputChannels > 0) continue;
     if (info->defaultSampleRate < conf.sampleRate) continue;
-    devs.push_back(DeviceEntry(i,
+    devs.push_back(DeviceEntry(i, true,
       std::to_string(i) + ": " +
       std::string(Pa_GetHostApiInfo(info->hostApi)->name) + " | " + 
       std::string(info->name)));
