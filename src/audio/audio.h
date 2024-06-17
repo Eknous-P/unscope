@@ -28,7 +28,7 @@ class AudioInput { // get audio into a buffer and generate "alignment ramp"
 
     AudioConfig conf;
     AudioBuffer buffer;
-    AlignParams alignParams=AlignParams(0,0,0,0,0);
+    AlignParams alignParams[3] = {AlignParams(0,0,0,0,0),AlignParams(0,0,0,0,0),AlignParams(0,0,0,0,0)}; // i hate that i have to init the values in the header but otherwise it doesnt work!! help!!
 
     std::vector<DeviceEntry> devs;
   
@@ -64,7 +64,7 @@ class AudioInput { // get audio into a buffer and generate "alignment ramp"
     const PaDeviceInfo* getDeviceInfo();
     ~AudioInput();
     bool didTrigger();
-    void setAlignParams(AlignParams ap);
+    void setAlignParams(unsigned char chan, AlignParams ap);
     float *getAlignRamp(unsigned char c);
 };
 

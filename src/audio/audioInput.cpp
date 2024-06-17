@@ -31,6 +31,14 @@ AudioInput::AudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned
     memset(buffer.data[i],0,buffer.size*sizeof(float));
     memset(buffer.alignRamp[i], 0, buffer.size*sizeof(float));
   }
+
+  // alignParams = (AlignParams*)malloc(conf.channels*sizeof(AlignParams));
+  // if (!alignParams) {
+  //   isGood = false;
+  //   printf("bru you fucked it up\n");
+  //   return;
+  // }
+  // alignParams = new AlignParams[conf.channels];
 }
 
 int AudioInput::_PaCallback(
@@ -153,49 +161,49 @@ int AudioInput::stop() {
   return Pa_CloseStream(stream);
 }
 
-void AudioInput::setAlignParams(AlignParams ap) {
-  alignParams = ap;
+void AudioInput::setAlignParams(unsigned char chan, AlignParams ap) {
+  alignParams[chan] = ap;
 }
 
 void AudioInput::align(unsigned char chan) {
   unsigned long int i = 0;
   float delta = 0;
-  if (alignParams.holdoff == 0) holdoffTimer = 0;
+  if (alignParams[chan].holdoff == 0) holdoffTimer = 0;
   if (holdoffTimer>0) {
     holdoffTimer--;
-    delta = ((float)buffer.size/((float)alignParams.waveLen))/(float)buffer.size;
+    delta = ((float)buffer.size/((float)alignParams[chan].waveLen))/(float)buffer.size;
     for (;i<buffer.size;i++) {
       buffer.alignRamp[chan][i]-=delta;
     }
     return;
   }
-  holdoffTimer = alignParams.holdoff;
+  holdoffTimer = alignParams[chan].holdoff;
   memset(buffer.alignRamp[chan],-1.0f,sizeof(float)*buffer.size);
 
   unsigned int triggerPoint = 0;
   bool triggerLow = false, triggerHigh = false;
-  i = buffer.size - alignParams.waveLen;
-  while (i != 0 && i > (buffer.size - 2*alignParams.waveLen)) {
+  i = buffer.size - alignParams[chan].waveLen;
+  while (i != 0 && i > (buffer.size - 2*alignParams[chan].waveLen)) {
     triggered = (triggerLow && triggerHigh);
     i--;
-    if (buffer.data[chan][i] < alignParams.trigger) {
+    if (buffer.data[chan][i] < alignParams[chan].trigger) {
       triggerLow = true;
-      if (triggered && alignParams.edge) break;
+      if (triggered && alignParams[chan].edge) break;
     }
-    if (buffer.data[chan][i] > alignParams.trigger) {
+    if (buffer.data[chan][i] > alignParams[chan].trigger) {
       triggerHigh = true;
-      if (triggered && !alignParams.edge) break;
+      if (triggered && !alignParams[chan].edge) break;
     }
   }
   triggerPoint = i;
 
   if (triggered) {
-    delta = 2.0f/(float)(alignParams.waveLen);
+    delta = 2.0f/(float)(alignParams[chan].waveLen);
     for (;i < buffer.size; i++) {
-      buffer.alignRamp[chan][i-alignParams.offset] = -1.0f + delta*(i - triggerPoint);
+      buffer.alignRamp[chan][i-alignParams[chan].offset] = -1.0f + delta*(i - triggerPoint);
     }
   } else {
-    delta = ((float)buffer.size/((float)alignParams.waveLen))/(float)buffer.size;
+    delta = ((float)buffer.size/((float)alignParams[chan].waveLen))/(float)buffer.size;
     buffer.alignRamp[chan][buffer.size-1] = 1.0f;
     for (i = buffer.size-2; i > 0; i--) {
       buffer.alignRamp[chan][i] = clamp(buffer.alignRamp[chan][i+1] - 2*delta);

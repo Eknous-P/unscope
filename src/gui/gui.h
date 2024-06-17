@@ -39,11 +39,6 @@ class GUI {
       float persistence;
     };
 
-    struct windowConfig {
-      unsigned short int w,h;
-      const char *layout;
-    };
-
     int err;
 
     SDL_WindowFlags window_flags;
@@ -55,7 +50,7 @@ class GUI {
     ImVec4 clear_color;
     bool running, updateOsc, restartAudio, audioLoopback;
     unsigned char channels;
-    float **oscData, **oscAuxData, *oscAlign;
+    float **oscData, **oscAuxData, **oscAlign;
     unsigned long int oscDataSize, sampleRate;
     AudioInput *ai;
     AudioProcess *ap;
@@ -66,7 +61,6 @@ class GUI {
     scopeParams sc;
     traceParams *tc;
     xyParams xyp;
-    windowConfig winC;
 
     bool showTrigger;
 
@@ -99,6 +93,6 @@ class GUI {
     ~GUI();
 };
 
-extern const char* numberStrs[16];
+extern const char *windowLayout;
 
 #endif
