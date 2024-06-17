@@ -48,6 +48,8 @@ ${srcs_path}/audio/audioInput.cpp
 ${srcs_path}/audio/audioProcess.cpp
 
 ${srcs_path}/gui/gui.cpp
+${srcs_path}/gui/wins/oscs.cpp
+${srcs_path}/gui/wins/ctrls.cpp
 
 ${srcs_path}/main.cpp
 )

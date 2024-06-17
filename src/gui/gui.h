@@ -17,12 +17,16 @@ class GUI {
     struct scopeParams {
       int plotFlags;
       int scopeFlags;
+    };
+
+    struct traceParams {
+      float yOffset;
+      float yScale;
+      float color[4];
       float trigger;
       int traceSize; float timebase;
       int traceOffset; float trigOffset;
       int trigHoldoff;
-      float yScale;
-      float color[3][4];
       bool triggerEdge;
     };
 
@@ -41,7 +45,6 @@ class GUI {
     ImGuiStyle style;
     ImVec4 clear_color;
     bool running, updateOsc, restartAudio, audioLoopback;
-    unsigned char triggerChan;
     unsigned char channels;
     float **oscData, **oscAuxData, *oscAlign;
     unsigned long int oscDataSize, sampleRate;
@@ -52,6 +55,7 @@ class GUI {
     int device, deviceNum;
 
     scopeParams sc;
+    traceParams *tc;
     windowConfig winC;
 
     bool showTrigger;
@@ -72,9 +76,8 @@ class GUI {
     void drawMainScope();
     void drawAuxScope();
     void drawXYScope();
-  
-    unsigned long int getTraceSize();
-    float getTrigger();
+
+    void drawControls();
   
     void audioSet();
     bool doRestartAudio();
