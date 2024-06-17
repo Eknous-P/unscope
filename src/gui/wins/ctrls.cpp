@@ -56,8 +56,9 @@ void GUI::drawControls() {
     ImGui::SliderFloat("trigger", &tc[i].trigger, -1.0f, 1.0f, "%g");
     showTrigger = ImGui::IsItemActive();
     showTrigger |= ai->didTrigger();
-    ImGui::SliderInt("holdoff", &tc[i].trigHoldoff, 0, 1024, "%d");
-    ImGui::SliderFloat("offset", &tc[i].trigOffset, -1.0f, 1.0f, "%g");
+    // ImGui::SliderInt("holdoff", &tc[i].trigHoldoff, 0, 1024, "%d");
+    ImGui::SliderFloat("y offset", &tc[i].yOffset, -1.0f, 1.0f, "%g");
+    ImGui::SliderFloat("x offset", &tc[i].trigOffset, -1.0f, 1.0f, "%g");
     if (ImGui::IsItemActive()) {
       tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize;
       if (tc[i].traceSize != 0) {
