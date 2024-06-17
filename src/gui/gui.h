@@ -20,6 +20,7 @@ class GUI {
     };
 
     struct traceParams {
+      bool enable;
       float yOffset;
       float yScale;
       float color[4];
@@ -28,6 +29,14 @@ class GUI {
       int traceOffset; float trigOffset;
       int trigHoldoff;
       bool triggerEdge;
+    };
+
+    struct xyParams {
+      float xScale, yScale;
+      float xOffset, yOffset;
+      float color[4];
+      int sampleLen;
+      float persistence;
     };
 
     struct windowConfig {
@@ -56,6 +65,7 @@ class GUI {
 
     scopeParams sc;
     traceParams *tc;
+    xyParams xyp;
     windowConfig winC;
 
     bool showTrigger;

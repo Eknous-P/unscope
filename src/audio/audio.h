@@ -21,14 +21,14 @@ class AudioInput { // get audio into a buffer and generate "alignment ramp"
 
     struct AudioBuffer {
       float **data;
-      float *alignRamp;
+      float **alignRamp;
       unsigned long int size;
       unsigned long int index;
     };
 
     AudioConfig conf;
     AudioBuffer buffer;
-    AlignParams alignParams=AlignParams(0,0,0,0,0,0);
+    AlignParams alignParams=AlignParams(0,0,0,0,0);
 
     std::vector<DeviceEntry> devs;
   
@@ -52,7 +52,7 @@ class AudioInput { // get audio into a buffer and generate "alignment ramp"
       PaStreamCallbackFlags statusFlags,
       void *userData );
 
-      void align();
+      void align(unsigned char chan);
 
   public:
     AudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned char channelsDef, unsigned int sampleRateDef);
@@ -65,7 +65,7 @@ class AudioInput { // get audio into a buffer and generate "alignment ramp"
     ~AudioInput();
     bool didTrigger();
     void setAlignParams(AlignParams ap);
-    float *getAlignRamp();
+    float *getAlignRamp(unsigned char c);
 };
 
 class AudioProcess { // process audio data with various fx

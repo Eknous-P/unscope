@@ -20,7 +20,7 @@ struct unscopeParams {
     sampleRate(48000),      // N samples (only common values?)
     audioDevice(0),         // internal ID, gets overwritten anyway
     timebase(60),           // ms
-    scale(2.0f),            // (no unit)
+    scale(1.5f),            // (no unit)
     trigger(0.0f) {}        // (no unit)
 };
 

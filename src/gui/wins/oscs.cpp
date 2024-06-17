@@ -11,6 +11,7 @@ void GUI::drawMainScope() {
     }
       ImPlot::SetupAxis(ImAxis_Y1,"##v",sc.scopeFlags);
     for (unsigned char i = 0; i < channels; i++) {
+      if (!tc[i].enable) continue;
       ImPlot::SetNextLineStyle(ImVec4(tc[i].color[0],tc[i].color[1],tc[i].color[2],tc[i].color[3]),0.25f);
       if (oscAlign[i] && oscData[i] && oscDataSize)
         ImPlot::PlotLine("##scopeplot", oscAlign, oscData[i], oscDataSize,ImPlotFlags_NoLegend);
@@ -49,12 +50,12 @@ void GUI::drawAuxScope() {
 void GUI::drawXYScope() {
   if (channels < 2) return;
   ImGui::Begin("Scope (XY)");
-  if (ImPlot::BeginPlot("##scopexy", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
+  if (ImPlot::BeginPlot("##scopexy", ImGui::GetContentRegionAvail(),sc.plotFlags|ImPlotFlags_Equal)) {
     ImPlot::SetupAxes("##x","##y",ImPlotAxisFlags_AutoFit,sc.scopeFlags);
-    ImPlot::SetupAxisLimits(ImAxis_X1,-1.0f,1.0f);
-    ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f,1.0f);
-    ImPlot::SetNextLineStyle(ImVec4(tc[0].color[0],tc[0].color[1],tc[0].color[2],tc[0].color[3]),0.125f);
-    ImPlot::PlotLine("##scopeplot", oscData[0] + (oscDataSize - tc[0].traceSize), oscData[1] + (oscDataSize - tc[0].traceSize), tc[0].traceSize,ImPlotFlags_NoLegend);
+    ImPlot::SetupAxisLimits(ImAxis_X1,-1.0f/xyp.xScale+xyp.xOffset,1.0f/xyp.xScale+xyp.xOffset);
+    ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/xyp.yScale+xyp.yOffset,1.0f/xyp.yScale+xyp.yOffset);
+    ImPlot::SetNextLineStyle(ImVec4(xyp.color[0],xyp.color[1],xyp.color[2],xyp.color[3]),0.125f);
+    ImPlot::PlotLine("##scopeplot", oscData[0] + (oscDataSize - xyp.sampleLen), oscData[1] + (oscDataSize - xyp.sampleLen), xyp.sampleLen,ImPlotFlags_NoLegend);
     ImPlot::EndPlot();
   }
   ImGui::End();

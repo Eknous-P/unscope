@@ -40,6 +40,7 @@ void GUI::drawControls() {
     char strbuf[32];
     sprintf(strbuf,"Channel %d Controls",i+1);
     ImGui::Begin(strbuf);
+    ImGui::Checkbox("enable", &tc[i].enable);
     tc[i].timebase = tc[i].traceSize * 1000 / sampleRate;
     if (ImGui::SliderFloat("timebase", &tc[i].timebase, 0, (float)oscDataSize/(float)sampleRate*1000, "%g ms")) {
       tc[i].traceSize = sampleRate * tc[i].timebase / 1000;
@@ -73,6 +74,20 @@ void GUI::drawControls() {
     
     ImGui::ColorEdit4("##color",tc[i].color);
     
+    ImGui::End();
+  }
+
+  if (channels > 1) {
+    ImGui::Begin("XY Scope Controls");
+    ImGui::SliderFloat("X scale",&xyp.xScale,0.5f,4.0f,"%g");
+    ImGui::SliderFloat("Y scale",&xyp.yScale,0.5f,4.0f,"%g");
+    ImGui::SliderFloat("X offset",&xyp.xOffset,-4.0f,4.0f,"%g");
+    ImGui::SliderFloat("Y offset",&xyp.yOffset,-4.0f,4.0f,"%g");
+    xyp.persistence = xyp.sampleLen * 1000 / sampleRate;
+    if (ImGui::SliderFloat("persistence", &xyp.persistence, 0, (float)oscDataSize/(float)sampleRate*1000, "%g ms")) {
+      xyp.sampleLen = sampleRate * xyp.persistence / 1000;
+    }
+    ImGui::ColorEdit4("##color",xyp.color);
     ImGui::End();
   }
 }
