@@ -11,10 +11,11 @@ GUI::GUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned c
 
   sampleRate = sampleRateDef;
   sc.timebase = timebaseDef;
+  sc.trigger = 0;
   sc.traceSize = sampleRate*sc.timebase/1000;
+  sc.trigHoldoff = 0;
   sc.traceOffset = sc.traceSize/2;
   sc.yScale = yScaleDef;
-  sc.trigger = 0;
   sc.triggerEdge = true;
 
   sc.color[0][0] = 0.13f;
@@ -186,9 +187,10 @@ void GUI::doFrame() {
   
   ImGui::DockSpaceOverViewport(ImGui::GetWindowViewport(),0);
 
+  ai->setAlignParams(AlignParams(triggerChan,sc.trigger,sc.traceSize,sc.traceOffset,sc.triggerEdge,sc.trigHoldoff));
   for (unsigned char j = 0; j < channels; j++) {
     writeOscData(j,
-      ai->getAlignRamp(triggerChan,sc.trigger,sc.traceSize,sc.traceOffset,sc.triggerEdge),
+      ai->getAlignRamp(),
       ai->getData(j));
   }
 
@@ -236,6 +238,7 @@ void GUI::drawGUI() {
   ImGui::SliderFloat("trigger", &sc.trigger, -1.0f, 1.0f, "%g");
   showTrigger = ImGui::IsItemActive();
   showTrigger |= ai->didTrigger();
+  ImGui::SliderInt("holdoff", &sc.trigHoldoff, 0, 1024, "%d");
   ImGui::SliderFloat("offset", &sc.trigOffset, -1.0f, 1.0f, "%g");
   if (ImGui::IsItemActive()) {
     sc.traceOffset = ((sc.trigOffset + 1.0f)/2) * sc.traceSize;

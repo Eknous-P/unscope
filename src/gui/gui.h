@@ -17,10 +17,11 @@ class GUI {
     struct scopeParams {
       int plotFlags;
       int scopeFlags;
+      float trigger;
       int traceSize; float timebase;
       int traceOffset; float trigOffset;
+      int trigHoldoff;
       float yScale;
-      float trigger;
       float color[3][4];
       bool triggerEdge;
     };

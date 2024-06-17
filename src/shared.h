@@ -87,6 +87,28 @@ struct DeviceEntry {
   }
 };
 
+struct AlignParams {
+  unsigned char chan;
+  float trigger;
+  unsigned long int waveLen;
+  long int offset;
+  bool edge; // true -> falling, false -> rising
+  unsigned long int holdoff;
+  AlignParams(unsigned char c,
+              float t,
+              unsigned long int wl,
+              long int of,
+              bool e,
+              unsigned long int ho) {
+    chan = c;
+    trigger = t;
+    waveLen = wl;
+    offset = of;
+    edge = e;
+    holdoff = ho;
+  }
+};
+
 float clamp(float a);
 extern const char *helpMsg, *verMsg, *errMsgs[];
 std::string getErrorMsg(int e);
