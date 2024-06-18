@@ -5,12 +5,11 @@ void GUI::drawMainScope() {
   ImGui::Begin("Scope",&wo.mainScopeOpen);
   if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
     for (unsigned char i = 0; i < channels; i++) {
-      ImPlot::SetupAxis(ImAxis(i),"t",ImPlotAxisFlags_NoDecorations|sc.scopeFlags);
-      ImPlot::SetupAxis(ImAxis(i+3),"v",sc.scopeFlags);
+      ImPlot::SetupAxis(ImAxis(i),"t",ImPlotAxisFlags_NoLabel|ImPlotAxisFlags_NoTickLabels|sc.scopeFlags);
+      ImPlot::SetupAxis(ImAxis(i+3),"v",sc.scopeFlags|ImPlotAxisFlags_NoLabel);
       ImPlot::SetupAxisLimits(ImAxis(i),-1.0f, 1.0f);
       ImPlot::SetupAxisLimits(ImAxis(i+3),-1.0f/tc[i].yScale-tc[i].yOffset,1.0f/tc[i].yScale-tc[i].yOffset);
     }
-      ImPlot::SetupAxis(ImAxis_Y1,"##v",sc.scopeFlags);
     for (unsigned char i = 0; i < channels; i++) {
       if (!tc[i].enable) continue;
       ImPlot::SetAxes(i,i+3);
