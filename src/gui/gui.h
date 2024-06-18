@@ -12,6 +12,8 @@
 #ifndef USC_GUI_H
 #define USC_GUI_H
 
+#define INIFILE "unscope.ini"
+
 class GUI {
   private:
     struct scopeParams {

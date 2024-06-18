@@ -132,6 +132,7 @@ int GUI::init() {
   ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
   // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
   ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+  ImGui::GetIO().IniFilename = NULL;
   // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
   //io.ConfigViewportsNoAutoMerge = true;
   //io.ConfigViewportsNoTaskBarIcon = true;
@@ -145,6 +146,7 @@ int GUI::init() {
     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
   }
   ImGui::LoadIniSettingsFromMemory(windowLayout);
+  // ImGui::LoadIniSettingsFromDisk(INIFILE);
   // Setup Platform/Renderer backends
   ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
   ImGui_ImplOpenGL3_Init(glsl_version);
@@ -235,6 +237,7 @@ void GUI::drawGUI() {
   }
   drawGlobalControls();
   drawChanControls();
+  drawXYScopeControls();
   ImPlot::CreateContext();
     drawMainScope();
     // drawAuxScope();
@@ -276,6 +279,7 @@ void GUI::setAudioDeviceSetting(int d) {
 }
 
 GUI::~GUI() {
+  ImGui::SaveIniSettingsToDisk(INIFILE);
   // Cleanup
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplSDL2_Shutdown();
