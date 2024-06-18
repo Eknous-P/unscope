@@ -39,6 +39,15 @@ class GUI {
       float persistence;
     };
 
+    struct windowsOpen {
+      bool mainScopeOpen;
+      bool auxScopeOpen;
+      bool chanControlsOpen[3];
+      bool xyScopeOpen;
+      bool xyScopeControlsOpen;
+      bool globalControlsOpen;
+    };
+
     int err;
 
     SDL_WindowFlags window_flags;
@@ -61,6 +70,7 @@ class GUI {
     scopeParams sc;
     traceParams *tc;
     xyParams xyp;
+    windowsOpen wo;
 
     bool showTrigger;
 
@@ -81,7 +91,9 @@ class GUI {
     void drawAuxScope();
     void drawXYScope();
 
-    void drawControls();
+    void drawGlobalControls();
+    void drawChanControls();
+    void drawXYScopeControls();
   
     void audioSet();
     bool doRestartAudio();

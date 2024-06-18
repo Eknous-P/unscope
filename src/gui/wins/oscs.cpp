@@ -1,7 +1,8 @@
 #include "gui.h"
 
 void GUI::drawMainScope() {
-  ImGui::Begin("Scope");
+  if (!wo.mainScopeOpen) return;
+  ImGui::Begin("Scope",&wo.mainScopeOpen);
   if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
     for (unsigned char i = 0; i < channels; i++) {
       ImPlot::SetupAxis(ImAxis(i),"t",ImPlotAxisFlags_NoDecorations|sc.scopeFlags);
@@ -49,8 +50,9 @@ void GUI::drawAuxScope() {
 }
 
 void GUI::drawXYScope() {
+  if (!wo.xyScopeOpen) return;
   if (channels < 2) return;
-  ImGui::Begin("Scope (XY)");
+  ImGui::Begin("Scope (XY)",&wo.xyScopeOpen);
   if (ImPlot::BeginPlot("##scopexy", ImGui::GetContentRegionAvail(),sc.plotFlags|ImPlotFlags_Equal)) {
     ImPlot::SetupAxes("##x","##y",ImPlotAxisFlags_AutoFit,sc.scopeFlags);
     ImPlot::SetupAxisLimits(ImAxis_X1,-1.0f/xyp.xScale-xyp.xOffset,1.0f/xyp.xScale-xyp.xOffset);

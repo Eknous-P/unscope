@@ -50,6 +50,15 @@ GUI::GUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned c
   xyp.persistence = timebaseDef;
   xyp.sampleLen = sampleRate*xyp.persistence/1000;
 
+  wo.auxScopeOpen = false;
+  wo.mainScopeOpen = true;
+  wo.chanControlsOpen[0] = true;
+  wo.chanControlsOpen[1] = true;
+  wo.chanControlsOpen[2] = true;
+  wo.xyScopeOpen = true;
+  wo.xyScopeControlsOpen = true;
+  wo.globalControlsOpen = true;
+
   oscDataSize = dataSize;
 
   oscData = new float*[channels];
@@ -206,8 +215,26 @@ void GUI::drawGUI() {
   // } else {
   //   audioLoopback = false;
   // }
-
-  drawControls();
+  if (ImGui::BeginMainMenuBar()) {
+    if (ImGui::BeginMenu("Scopes")) {
+      ImGui::MenuItem("Main Scope",NULL,&wo.mainScopeOpen);
+      ImGui::MenuItem("Scope (XY)",NULL,&wo.xyScopeOpen);
+      ImGui::EndMenu();
+    }
+    if (ImGui::BeginMenu("Controls")) {
+      for (unsigned char i = 0; i < channels; i++) {
+        char buf[32];
+        sprintf(buf,"Channel %d Controls",i);
+        ImGui::MenuItem(buf,NULL,&wo.chanControlsOpen[i]);
+      }
+      ImGui::MenuItem("XY Scope Controls",NULL,&wo.xyScopeControlsOpen);
+      ImGui::MenuItem("Global Controls",NULL,&wo.globalControlsOpen);
+      ImGui::EndMenu();
+    }
+    ImGui::EndMainMenuBar();
+  }
+  drawGlobalControls();
+  drawChanControls();
   ImPlot::CreateContext();
     drawMainScope();
     // drawAuxScope();

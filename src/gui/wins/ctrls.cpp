@@ -1,7 +1,8 @@
 #include "gui.h"
 
-void GUI::drawControls() {
-  ImGui::Begin("Global Controls");
+void GUI::drawGlobalControls() {
+  if (!wo.globalControlsOpen) return;
+  ImGui::Begin("Global Controls",&wo.globalControlsOpen);
   ImGui::Checkbox("update",&updateOsc);
   if (devs.size() > 0) {
     if (ImGui::BeginCombo("device",devs[deviceNum].devName.c_str())) {
@@ -35,11 +36,14 @@ void GUI::drawControls() {
     }
   }
   ImGui::End();
+}
 
+void GUI::drawChanControls() {
   for (unsigned char i = 0; i < channels; i++) {
     char strbuf[32];
     sprintf(strbuf,"Channel %d Controls",i+1);
-    ImGui::Begin(strbuf);
+    if (!wo.chanControlsOpen[i]) continue;
+    ImGui::Begin(strbuf,&wo.chanControlsOpen[i]);
     ImGui::Checkbox("enable", &tc[i].enable);
     tc[i].timebase = tc[i].traceSize * 1000 / sampleRate;
     if (ImGui::SliderFloat("timebase", &tc[i].timebase, 0, (float)oscDataSize/(float)sampleRate*1000, "%g ms")) {
@@ -77,9 +81,12 @@ void GUI::drawControls() {
     
     ImGui::End();
   }
+}
 
+void GUI::drawXYScopeControls() {
+  if (!wo.xyScopeControlsOpen) return;
   if (channels > 1) {
-    ImGui::Begin("XY Scope Controls");
+    ImGui::Begin("XY Scope Controls",&wo.xyScopeControlsOpen);
     ImGui::SliderFloat("X scale",&xyp.xScale,0.5f,4.0f,"%g");
     ImGui::SliderFloat("Y scale",&xyp.yScale,0.5f,4.0f,"%g");
     ImGui::SliderFloat("X offset",&xyp.xOffset,-4.0f,4.0f,"%g");
