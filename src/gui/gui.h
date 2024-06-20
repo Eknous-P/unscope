@@ -50,6 +50,10 @@ class USCGUI {
       bool globalControlsOpen;
     };
 
+    struct settings {
+      bool doSetting;
+    };
+
     int err;
 
     SDL_WindowFlags window_flags;
@@ -73,6 +77,7 @@ class USCGUI {
     traceParams *tc;
     xyParams xyp;
     windowsOpen wo;
+    settings st;
 
     bool showTrigger;
 
