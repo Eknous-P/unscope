@@ -36,7 +36,7 @@ class AudioInput { // get audio into a buffer and generate "alignment ramp"
     PaError err;
     PaStreamParameters streamParams;
 
-    bool isGood, running, triggered;
+    bool isGood, running, triggered, doUpdate;
     unsigned long int holdoffTimer;
 
     int bufferGetCallback(
@@ -62,10 +62,11 @@ class AudioInput { // get audio into a buffer and generate "alignment ramp"
     unsigned char getChannelCount();
     float *getData(unsigned char chan);
     const PaDeviceInfo* getDeviceInfo();
-    ~AudioInput();
     bool didTrigger();
+    void setUpdateState(bool u);
     void setAlignParams(unsigned char chan, AlignParams ap);
     float *getAlignRamp(unsigned char c);
+    ~AudioInput();
 };
 
 class AudioProcess { // process audio data with various fx

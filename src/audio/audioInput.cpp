@@ -32,6 +32,8 @@ AudioInput::AudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned
     memset(buffer.alignRamp[i], 0, buffer.size*sizeof(float));
   }
 
+  doUpdate = true;
+
   // alignParams = (AlignParams*)malloc(conf.channels*sizeof(AlignParams));
   // if (!alignParams) {
   //   isGood = false;
@@ -70,18 +72,20 @@ int AudioInput::bufferGetCallback(
         if (outputBuffer != NULL) *audOut++ = 0;
       }
     } else {
-      // push vaules back
-      for (j = 0; j < conf.channels; j++) {
-        memcpy(buffer.data[j],
-        buffer.data[j] + framesPerBuffer,
-        (buffer.size-framesPerBuffer)*sizeof(float));
-      }
-      // get data
-      for (buffer.index = 0; buffer.index < framesPerBuffer; buffer.index++) {
+      if (doUpdate) {
+        // push vaules back
         for (j = 0; j < conf.channels; j++) {
-          float dat = *audIn++;
-          buffer.data[j][buffer.size - framesPerBuffer + buffer.index] = dat;
-        if (outputBuffer != NULL) *audOut++ = dat;
+          memcpy(buffer.data[j],
+          buffer.data[j] + framesPerBuffer,
+          (buffer.size-framesPerBuffer)*sizeof(float));
+        }
+        // get data
+        for (buffer.index = 0; buffer.index < framesPerBuffer; buffer.index++) {
+          for (j = 0; j < conf.channels; j++) {
+            float dat = *audIn++;
+            buffer.data[j][buffer.size - framesPerBuffer + buffer.index] = dat;
+          if (outputBuffer != NULL) *audOut++ = dat;
+          }
         }
       }
       for (j = 0; j < conf.channels; j++) align(j);
@@ -222,6 +226,22 @@ bool AudioInput::didTrigger() {
   return triggered;
 }
 
+void AudioInput::setUpdateState(bool u) {
+  doUpdate = u;
+}
+
+float *AudioInput::getData(unsigned char chan) {
+  return (buffer.data)[chan];
+}
+
+const PaDeviceInfo *AudioInput::getDeviceInfo() {
+  return Pa_GetDeviceInfo(conf.device);
+}
+
+unsigned char AudioInput::getChannelCount() {
+  return conf.channels;
+}
+
 AudioInput::~AudioInput() {
   if (isGood) Pa_Terminate();
   if (buffer.data) {
@@ -244,16 +264,4 @@ AudioInput::~AudioInput() {
     delete[] buffer.alignRamp;
     buffer.alignRamp = NULL;
   }
-}
-
-float *AudioInput::getData(unsigned char chan) {
-  return (buffer.data)[chan];
-}
-
-const PaDeviceInfo *AudioInput::getDeviceInfo() {
-  return Pa_GetDeviceInfo(conf.device);
-}
-
-unsigned char AudioInput::getChannelCount() {
-  return conf.channels;
 }

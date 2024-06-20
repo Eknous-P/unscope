@@ -175,6 +175,7 @@ void GUI::doFrame() {
   ImGui::DockSpaceOverViewport(ImGui::GetWindowViewport(),0);
 
   for (unsigned char j = 0; j < channels; j++) {
+    ai->setUpdateState(updateOsc);
     ai->setAlignParams(j,AlignParams(tc[j].trigger,tc[j].traceSize,tc[j].traceOffset,tc[j].triggerEdge,tc[j].trigHoldoff));
     writeOscData(j,
       ai->getAlignRamp(j),
@@ -246,13 +247,11 @@ void GUI::drawGUI() {
 }
 
 void GUI::writeOscData(unsigned char chan, float* datax, float* datay) {
-  if (!updateOsc) return;
   memcpy(oscAlign[chan],datax,oscDataSize*sizeof(float));
   memcpy(oscData[chan],datay,oscDataSize*sizeof(float));
 }
 
 void GUI::writeOscAuxData(unsigned char chan, float* data) {
-  if (!updateOsc) return;
   memcpy(oscData[chan],data,oscDataSize*sizeof(float));
 }
 

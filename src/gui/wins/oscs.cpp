@@ -53,7 +53,7 @@ void GUI::drawXYScope() {
   if (channels < 2) return;
   ImGui::Begin("Scope (XY)",&wo.xyScopeOpen);
   if (ImPlot::BeginPlot("##scopexy", ImGui::GetContentRegionAvail(),sc.plotFlags|ImPlotFlags_Equal)) {
-    ImPlot::SetupAxes("##x","##y",ImPlotAxisFlags_AutoFit,sc.scopeFlags);
+    ImPlot::SetupAxes("##x","##y",ImPlotAxisFlags_NoTickLabels,sc.scopeFlags|ImPlotAxisFlags_NoTickLabels);
     ImPlot::SetupAxisLimits(ImAxis_X1,-1.0f/xyp.xScale-xyp.xOffset,1.0f/xyp.xScale-xyp.xOffset);
     ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/xyp.yScale-xyp.yOffset,1.0f/xyp.yScale-xyp.yOffset);
     ImPlot::SetNextLineStyle(ImVec4(xyp.color[0],xyp.color[1],xyp.color[2],xyp.color[3]),0.125f);

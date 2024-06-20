@@ -96,6 +96,8 @@ class GUI {
     void drawGlobalControls();
     void drawChanControls();
     void drawXYScopeControls();
+
+    void drawSettings();
   
     void audioSet();
     bool doRestartAudio();
