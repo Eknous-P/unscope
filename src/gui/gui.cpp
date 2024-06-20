@@ -85,6 +85,8 @@ USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsi
 
   fullscreen = false;
 
+  trigColor = ImVec4(0,0,0,0);
+
   ai = NULL;
   ap = NULL;
 }

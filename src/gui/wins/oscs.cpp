@@ -16,7 +16,7 @@ void USCGUI::drawMainScope() {
       ImPlot::SetNextLineStyle(ImVec4(tc[i].color[0],tc[i].color[1],tc[i].color[2],tc[i].color[3]),0.25f);
       if (oscAlign[i] && oscData[i] && oscDataSize)
         ImPlot::PlotLine("##scopeplot", oscAlign[i], oscData[i], oscDataSize,ImPlotFlags_NoLegend);
-      ImVec4 trigColor = ai->didTrigger()?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
+      trigColor = ai->didTrigger()?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
       if (showTrigger) ImPlot::TagY(tc[i].trigger,trigColor,"trig");
       double trigDouble = tc[i].trigger;
       double offsDouble = tc[i].trigOffset;

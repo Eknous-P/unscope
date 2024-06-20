@@ -33,6 +33,7 @@ USCAudioInput::USCAudioInput(unsigned int frameSize, unsigned int bufferSize, un
   }
 
   doUpdate = true;
+  triggered = false;
 
   // alignParams = (AlignParams*)malloc(conf.channels*sizeof(AlignParams));
   // if (!alignParams) {
