@@ -59,7 +59,10 @@ int main(int argc, char** argv) {
         params.scale,
         params.trigger);
 
-  g.init();
+  if (g.init() != 0) {
+    printf("error in initializing GUI!\n");
+    return -1;
+  }
 
    USCAudioInput i(params.audioFrameSize,
                params.audioBufferSize,

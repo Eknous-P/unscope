@@ -63,7 +63,7 @@ class USCGUI {
     ImGuiIO io;
     ImGuiStyle style;
     ImVec4 clear_color, trigColor;
-    bool running, updateOsc, restartAudio, audioLoopback;
+    bool isGood, running, updateOsc, restartAudio, audioLoopback;
     unsigned char channels;
     float **oscData, **oscAuxData, **oscAlign;
     unsigned long int oscDataSize, sampleRate;

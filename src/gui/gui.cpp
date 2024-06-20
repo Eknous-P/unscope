@@ -5,6 +5,7 @@ bool USCGUI::isRunning() {
 }
 
 USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float yScaleDef, float triggerDef) {
+  isGood = false;
   err = 0;
   channels = chanCount;
 
@@ -64,10 +65,17 @@ USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsi
   oscData = new float*[channels];
   oscAuxData = new float*[channels];
   oscAlign = new float*[oscDataSize];
+  if (!oscData || !oscAuxData || !oscAlign) {
+    return;
+  }
   for (unsigned char i = 0; i < channels; i++) {
     oscData[i] = new float[oscDataSize];
     oscAuxData[i] = new float[oscDataSize];
     oscAlign[i] = new float[oscDataSize];
+
+    if (!oscData[i] || !oscAuxData[i] || !oscAlign[i]) {
+      return;
+    }
 
     memset(oscData[i],0,oscDataSize*sizeof(float));
     memset(oscAuxData[i],0,oscDataSize*sizeof(float));
@@ -89,6 +97,7 @@ USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsi
 
   ai = NULL;
   ap = NULL;
+  isGood = true;
 }
 
 void USCGUI::attachAudioInput(USCAudioInput *i) {
@@ -101,6 +110,7 @@ void USCGUI::attachAudioProcess(USCAudioProcess *p) {
 
 
 int USCGUI::init() {
+  if (!isGood) return -1;
   if (running) return 0;
   // Setup SDL
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) {
