@@ -14,7 +14,7 @@
 
 #define INIFILE "unscope.ini"
 
-class GUI {
+class USCGUI {
   private:
     struct scopeParams {
       int plotFlags;
@@ -63,8 +63,8 @@ class GUI {
     unsigned char channels;
     float **oscData, **oscAuxData, **oscAlign;
     unsigned long int oscDataSize, sampleRate;
-    AudioInput *ai;
-    AudioProcess *ap;
+    USCAudioInput *ai;
+    USCAudioProcess *ap;
 
     std::vector<DeviceEntry> devs;
     int device, deviceNum;
@@ -77,8 +77,8 @@ class GUI {
     bool showTrigger;
 
   public:
-    void attachAudioInput(AudioInput* i);
-    void attachAudioProcess(AudioProcess* p);
+    void attachAudioInput(USCAudioInput* i);
+    void attachAudioProcess(USCAudioProcess* p);
 
     void writeOscData(unsigned char chan, float* datax, float* datay);
     void writeOscAuxData(unsigned char chan, float* data);
@@ -105,8 +105,8 @@ class GUI {
     int getAudioDeviceSetting();
     void setAudioDeviceSetting(int d);
   
-    GUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float yScaleDef, float triggerDef);
-    ~GUI();
+    USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float yScaleDef, float triggerDef);
+    ~USCGUI();
 };
 
 extern const char *windowLayout;

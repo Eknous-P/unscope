@@ -1,6 +1,6 @@
 #include "audio.h"
 
-AudioInput::AudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned char channelsDef, unsigned int sampleRateDef) {
+USCAudioInput::USCAudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned char channelsDef, unsigned int sampleRateDef) {
   isGood = Pa_Initialize()==paNoError;
   running = false;
   conf.channels = channelsDef;
@@ -43,16 +43,16 @@ AudioInput::AudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned
   // alignParams = new AlignParams[conf.channels];
 }
 
-int AudioInput::_PaCallback(
+int  USCAudioInput::_PaCallback(
   const void *inputBuffer, void *outputBuffer,
   unsigned long int framesPerBuffer,
   const PaStreamCallbackTimeInfo* timeInfo,
   PaStreamCallbackFlags statusFlags,
   void *userData ) {
-    return ((AudioInput*)userData)->bufferGetCallback(inputBuffer, outputBuffer, framesPerBuffer, timeInfo, statusFlags);
+    return ((USCAudioInput*)userData)->bufferGetCallback(inputBuffer, outputBuffer, framesPerBuffer, timeInfo, statusFlags);
 }
 
-int AudioInput::bufferGetCallback(
+int  USCAudioInput::bufferGetCallback(
   const void *inputBuffer, void *outputBuffer,
   unsigned long int framesPerBuffer,
   const PaStreamCallbackTimeInfo* timeInfo,
@@ -93,7 +93,7 @@ int AudioInput::bufferGetCallback(
     return paContinue;
 }
 
-std::vector<DeviceEntry> AudioInput::enumerateDevs() {
+std::vector<DeviceEntry> USCAudioInput::enumerateDevs() {
   devs.clear();
   devs.push_back(DeviceEntry(Pa_GetDefaultInputDevice(),true,"Default device"));
   for (int i = 0; i < Pa_GetDeviceCount(); i++) {
@@ -111,7 +111,7 @@ std::vector<DeviceEntry> AudioInput::enumerateDevs() {
   return devs;
 }
 
-int AudioInput::init(PaDeviceIndex dev, bool loopback) {
+int  USCAudioInput::init(PaDeviceIndex dev, bool loopback) {
   if (!isGood) return UAUDIOERR_NOGOOD;
   if (running) return UAUDIOERR_NOERR;
   int nDevs = Pa_GetDeviceCount();
@@ -133,7 +133,7 @@ init:
     conf.sampleRate,
     conf.frameSize,
     paClipOff,
-    &AudioInput::_PaCallback,
+    &USCAudioInput::_PaCallback,
     this
   );
   Pa_Sleep(100);
@@ -159,17 +159,17 @@ init:
   return err;
 }
 
-int AudioInput::stop() {
+int USCAudioInput::stop() {
   if (!running) return 0;
   running = false;
   return Pa_CloseStream(stream);
 }
 
-void AudioInput::setAlignParams(unsigned char chan, AlignParams ap) {
+void USCAudioInput::setAlignParams(unsigned char chan, AlignParams ap) {
   alignParams[chan] = ap;
 }
 
-void AudioInput::align(unsigned char chan) {
+void USCAudioInput::align(unsigned char chan) {
   unsigned long int i = 0;
   float delta = 0;
   if (alignParams[chan].holdoff == 0) holdoffTimer = 0;
@@ -218,31 +218,31 @@ void AudioInput::align(unsigned char chan) {
   i = 0;
 }
 
-float *AudioInput::getAlignRamp(unsigned char c) {
+float *USCAudioInput::getAlignRamp(unsigned char c) {
   return buffer.alignRamp[c];
 }
 
-bool AudioInput::didTrigger() {
+bool USCAudioInput::didTrigger() {
   return triggered;
 }
 
-void AudioInput::setUpdateState(bool u) {
+void USCAudioInput::setUpdateState(bool u) {
   doUpdate = u;
 }
 
-float *AudioInput::getData(unsigned char chan) {
+float *USCAudioInput::getData(unsigned char chan) {
   return (buffer.data)[chan];
 }
 
-const PaDeviceInfo *AudioInput::getDeviceInfo() {
+const PaDeviceInfo *USCAudioInput::getDeviceInfo() {
   return Pa_GetDeviceInfo(conf.device);
 }
 
-unsigned char AudioInput::getChannelCount() {
+unsigned char USCAudioInput::getChannelCount() {
   return conf.channels;
 }
 
-AudioInput::~AudioInput() {
+USCAudioInput::~USCAudioInput() {
   if (isGood) Pa_Terminate();
   if (buffer.data) {
     for (unsigned char i = 0; i < conf.channels; i++) {

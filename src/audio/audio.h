@@ -8,7 +8,7 @@
 #ifndef USC_AUDIO_H
 #define USC_AUDIO_H
 
-class AudioInput { // get audio into a buffer and generate "alignment ramp"
+class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
   private:
 
     struct AudioConfig{
@@ -55,7 +55,7 @@ class AudioInput { // get audio into a buffer and generate "alignment ramp"
       void align(unsigned char chan);
 
   public:
-    AudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned char channelsDef, unsigned int sampleRateDef);
+    USCAudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned char channelsDef, unsigned int sampleRateDef);
     std::vector<DeviceEntry> enumerateDevs();
     int init(PaDeviceIndex dev, bool loopback);
     int stop();
@@ -66,10 +66,10 @@ class AudioInput { // get audio into a buffer and generate "alignment ramp"
     void setUpdateState(bool u);
     void setAlignParams(unsigned char chan, AlignParams ap);
     float *getAlignRamp(unsigned char c);
-    ~AudioInput();
+    ~USCAudioInput();
 };
 
-class AudioProcess { // process audio data with various fx
+class USCAudioProcess { // process audio data with various fx
   private:
     float **dataIn, **dataOut;
     unsigned long int dataSize, i;
@@ -80,8 +80,8 @@ class AudioProcess { // process audio data with various fx
     void derive();
     void integrate();
 
-    AudioProcess(unsigned int bufferSizeDef, unsigned char chans);
-    ~AudioProcess();
+    USCAudioProcess(unsigned int bufferSizeDef, unsigned char chans);
+    ~USCAudioProcess();
 };
 
 #endif

@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
   unscopeParams params;
   parseParams(params, argc, argv);
 
-  GUI g(params.sampleRate,
+  USCGUI g(params.sampleRate,
         params.audioBufferSize,
         params.channels,
         params.timebase,
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 
   g.init();
 
-  AudioInput i(params.audioFrameSize,
+   USCAudioInput i(params.audioFrameSize,
                params.audioBufferSize,
                params.channels,
                params.sampleRate);

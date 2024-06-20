@@ -1,6 +1,6 @@
 #include "gui.h"
 
-void GUI::drawMainScope() {
+void USCGUI::drawMainScope() {
   if (!wo.mainScopeOpen) return;
   ImGui::Begin("Scope",&wo.mainScopeOpen);
   if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
@@ -36,7 +36,7 @@ void GUI::drawMainScope() {
   ImGui::End();
 }
 
-void GUI::drawAuxScope() {
+void USCGUI::drawAuxScope() {
   // ImGui::Begin("Scope (Auxiliary)");
   // if (ImPlot::BeginPlot("##scopeaux", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
   //   ImPlot::SetupAxes("t","##v",sc.scopeFlags,0);
@@ -48,7 +48,7 @@ void GUI::drawAuxScope() {
   // ImGui::End();
 }
 
-void GUI::drawXYScope() {
+void USCGUI::drawXYScope() {
   if (!wo.xyScopeOpen) return;
   if (channels < 2) return;
   ImGui::Begin("Scope (XY)",&wo.xyScopeOpen);

@@ -1,10 +1,10 @@
 #include "gui.h"
 
-bool GUI::isRunning() {
+bool USCGUI::isRunning() {
   return running;
 }
 
-GUI::GUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float yScaleDef, float triggerDef) {
+USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float yScaleDef, float triggerDef) {
   err = 0;
   channels = chanCount;
 
@@ -89,16 +89,16 @@ GUI::GUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned c
   ap = NULL;
 }
 
-void GUI::attachAudioInput(AudioInput *i) {
+void USCGUI::attachAudioInput(USCAudioInput *i) {
   ai = i;
 }
 
-void GUI::attachAudioProcess(AudioProcess *p) {
+void USCGUI::attachAudioProcess(USCAudioProcess *p) {
   ap = p;
 }
 
 
-int GUI::init() {
+int USCGUI::init() {
   if (running) return 0;
   // Setup SDL
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0) {
@@ -155,11 +155,11 @@ int GUI::init() {
   return 0;
 }
 
-void GUI::getDevices(std::vector<DeviceEntry> d) {
+void USCGUI::getDevices(std::vector<DeviceEntry> d) {
   devs = d;
 }
 
-void GUI::doFrame() {
+void USCGUI::doFrame() {
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     ImGui_ImplSDL2_ProcessEvent(&event);
@@ -182,7 +182,7 @@ void GUI::doFrame() {
       ai->getData(j));
   }
 
-  GUI::drawGUI();
+  USCGUI::drawGUI();
 
   ImGui::Render();
   glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
@@ -203,7 +203,7 @@ void GUI::doFrame() {
   SDL_GL_SwapWindow(window);
 }
 
-void GUI::drawGUI() {
+void USCGUI::drawGUI() {
   if (ImGui::IsKeyPressed(ImGuiKey_F11)) {
     fullscreen = !fullscreen;
     SDL_SetWindowFullscreen(window,fullscreen?(SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP):0);
@@ -246,28 +246,28 @@ void GUI::drawGUI() {
   ImPlot::DestroyContext();
 }
 
-void GUI::writeOscData(unsigned char chan, float* datax, float* datay) {
+void USCGUI::writeOscData(unsigned char chan, float* datax, float* datay) {
   memcpy(oscAlign[chan],datax,oscDataSize*sizeof(float));
   memcpy(oscData[chan],datay,oscDataSize*sizeof(float));
 }
 
-void GUI::writeOscAuxData(unsigned char chan, float* data) {
+void USCGUI::writeOscAuxData(unsigned char chan, float* data) {
   memcpy(oscData[chan],data,oscDataSize*sizeof(float));
 }
 
-void GUI::audioSet() {
+void USCGUI::audioSet() {
   restartAudio = false;
 }
 
-bool GUI::doRestartAudio() {
+bool USCGUI::doRestartAudio() {
   return restartAudio;
 }
 
-int GUI::getAudioDeviceSetting() {
+int USCGUI::getAudioDeviceSetting() {
   return device;
 }
 
-void GUI::setAudioDeviceSetting(int d) {
+void USCGUI::setAudioDeviceSetting(int d) {
   device = d;
   for (int i = 0; i < devs.size(); i++) {
     if (devs[i].dev == device) {
@@ -277,7 +277,7 @@ void GUI::setAudioDeviceSetting(int d) {
   }
 }
 
-GUI::~GUI() {
+USCGUI::~USCGUI() {
   ImGui::SaveIniSettingsToDisk(INIFILE);
   // Cleanup
   ImGui_ImplOpenGL3_Shutdown();

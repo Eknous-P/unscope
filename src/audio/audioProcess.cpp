@@ -1,6 +1,6 @@
 #include "audio.h"
 
-AudioProcess::AudioProcess(unsigned int bufferSizeDef, unsigned char chans) {
+USCAudioProcess::USCAudioProcess(unsigned int bufferSizeDef, unsigned char chans) {
   channels = chans;
   dataSize = bufferSizeDef;
 
@@ -13,7 +13,7 @@ AudioProcess::AudioProcess(unsigned int bufferSizeDef, unsigned char chans) {
   i = 0;
 }
 
-AudioProcess::~AudioProcess() {
+USCAudioProcess::~USCAudioProcess() {
   if (dataOut) {
     for (unsigned char i = 0; i < channels; i++) {
       if (dataOut[i]) {
@@ -30,15 +30,15 @@ AudioProcess::~AudioProcess() {
   }
 }
 
-void AudioProcess::writeDataIn(float *d, unsigned char chan) {
+void USCAudioProcess::writeDataIn(float *d, unsigned char chan) {
   dataIn[chan] = d;
 }
 
-float *AudioProcess::getDataOut(unsigned char chan) {
+float *USCAudioProcess::getDataOut(unsigned char chan) {
   return dataOut[chan];
 }
 
-void AudioProcess::derive() {
+void USCAudioProcess::derive() {
   dataOut[i] = 0;
   for (unsigned char j = 0; j < channels; j++) {
     for (i = 1; i < dataSize; i++) {
@@ -48,7 +48,7 @@ void AudioProcess::derive() {
   i = 0;
 }
 
-void AudioProcess::integrate() {
+void USCAudioProcess::integrate() {
   dataOut[0] = dataIn[0];
   for (unsigned char j = 0; j < channels; j++) {
     for (i = 1; i < dataSize; i++) {

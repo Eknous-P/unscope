@@ -1,6 +1,6 @@
 #include "gui.h"
 
-void GUI::drawGlobalControls() {
+void USCGUI::drawGlobalControls() {
   if (!wo.globalControlsOpen) return;
   ImGui::Begin("Global Controls",&wo.globalControlsOpen);
   ImGui::Checkbox("update",&updateOsc);
@@ -38,7 +38,7 @@ void GUI::drawGlobalControls() {
   ImGui::End();
 }
 
-void GUI::drawChanControls() {
+void USCGUI::drawChanControls() {
   for (unsigned char i = 0; i < channels; i++) {
     char strbuf[32];
     sprintf(strbuf,"Channel %d Controls",i+1);
@@ -83,7 +83,7 @@ void GUI::drawChanControls() {
   }
 }
 
-void GUI::drawXYScopeControls() {
+void USCGUI::drawXYScopeControls() {
   if (!wo.xyScopeControlsOpen) return;
   if (channels > 1) {
     ImGui::Begin("XY Scope Controls",&wo.xyScopeControlsOpen);
