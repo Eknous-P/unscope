@@ -1,6 +1,7 @@
 # unscope
 
 Audio oscilloscope for Linux
+![screenshot](assets/scr1.png)
 
 ## Reporting issues
 
