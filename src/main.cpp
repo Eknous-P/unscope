@@ -43,6 +43,10 @@ std::string getErrorMsg(int e) {
       return errm + errMsgs[2];
     case UAUDIOERR_NOGOOD:
       return errm + errMsgs[3];
+    case UGUIERROR_SETUPFAIL:
+      return errm + errMsgs[4];
+    case UGUIERROR_INITFAIL:
+      return errm + errMsgs[5];
     default: 
       return errm + Pa_GetErrorText(e) + '\n';
   }
@@ -58,9 +62,11 @@ int main(int argc, char** argv) {
         params.timebase,
         params.scale,
         params.trigger);
+  int e;
 
-  if (g.init() != 0) {
-    printf("error in initializing GUI!\n");
+  e = g.init();
+  if (e != 0) {
+    printf("error in initializing GUI! %s\n",getErrorMsg(e).c_str());
     return -1;
   }
 
@@ -69,7 +75,6 @@ int main(int argc, char** argv) {
                params.channels,
                params.sampleRate);
 
-  int e;
   g.attachAudioInput(&i);
 
   params.audioDevice = Pa_GetDefaultInputDevice();
@@ -116,5 +121,7 @@ const char* errMsgs[] = {
   "no devices found\n",
   "cant open device\n",
   "cant start device\n",
-  "cant init portaudio\n"
+  "cant init portaudio\n",
+  "cant setup gui renderer\n",
+  "cant init gui renderer\n"
 };

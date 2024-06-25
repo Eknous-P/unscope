@@ -1,18 +1,31 @@
+#ifndef USC_GUI_H
+#define USC_GUI_H
+
 #include <imgui.h>
-#include "imgui_impl_sdl2.h"
-#include "imgui_impl_opengl3.h"
 #include <implot.h>
-#include <SDL.h>
-#include <SDL_opengl.h>
 #include "imgui_stdlib.h"
 
 #include "../shared.h"
 #include "../audio/audio.h"
 
-#ifndef USC_GUI_H
-#define USC_GUI_H
-
 #define INIFILE "unscope.ini"
+
+enum USCRenderers {
+  USC_REND_OGL_SDL
+};
+
+class USCRender {
+  public:
+    virtual int setup();
+    virtual int init();
+    virtual bool beginFrame();
+    virtual void endFrame(ImGuiIO io, ImVec4 col);
+    virtual void deinit();
+    virtual void doFullscreen(bool f);
+};
+
+// renderers
+#include "render/render_opengl_sdl.h"
 
 class USCGUI {
   private:
@@ -56,9 +69,6 @@ class USCGUI {
 
     int err;
 
-    SDL_WindowFlags window_flags;
-    SDL_Window* window;
-    SDL_GLContext gl_context;
     bool fullscreen;
     ImGuiIO io;
     ImGuiStyle style;
@@ -67,6 +77,7 @@ class USCGUI {
     unsigned char channels;
     float **oscData, **oscAuxData, **oscAlign;
     unsigned long int oscDataSize, sampleRate;
+    USCRender *rd;
     USCAudioInput *ai;
     USCAudioProcess *ap;
 
@@ -82,6 +93,8 @@ class USCGUI {
     bool showTrigger;
 
   public:
+    void setupRenderer(USCRenderers r);
+
     void attachAudioInput(USCAudioInput* i);
     void attachAudioProcess(USCAudioProcess* p);
 
