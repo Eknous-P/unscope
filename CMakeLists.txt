@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 3.0)
 
-find_package(PkgConfig REQUIRED)
+if(WIN32)
+  set(USE_OPENGL FALSE)
+  set(USE_DIRECTX TRUE)
+  add_compile_definitions(USE_DIRECTX)
+else()
+  find_package(PkgConfig REQUIRED)
+  set(USE_OPENGL TRUE)
+  set(USE_DIRECTX FALSE)
+  add_compile_definitions(USE_OPENGL)
+endif()
 
 set(imgui_path ./submodules/imgui)
 set(implot_path ./submodules/implot)
@@ -35,9 +44,15 @@ ${imgui_path}/backends/imgui_impl_opengl3.cpp)
 add_subdirectory(submodules/SDL EXCLUDE_FROM_ALL)
 list(APPEND lnk_libs SDL2)
 
-pkg_check_modules(OPENGL opengl REQUIRED)
-list(APPEND cpl_opts ${OPENGL_CFLAGS_OTHER})
-list(APPEND lnk_libs ${OPENGL_LIBRARIES})
+if(USE_DIRECTX)
+
+endif()
+
+if(USE_OPENGL)
+  pkg_check_modules(OPENGL opengl REQUIRED)
+  list(APPEND cpl_opts ${OPENGL_CFLAGS_OTHER})
+  list(APPEND lnk_libs ${OPENGL_LIBRARIES})
+endif()
 # SOURCES
 
 set(unscope_srcs)
@@ -48,8 +63,16 @@ ${srcs_path}/audio/audioInput.cpp
 ${srcs_path}/audio/audioProcess.cpp
 
 ${srcs_path}/gui/render/abstract.cpp
-${srcs_path}/gui/render/render_opengl_sdl.cpp
+)
 
+if (USE_OPENGL)
+  list(APPEND unscope_srcs ${srcs_path}/gui/render/render_opengl_sdl.cpp)
+endif()
+if (USE_DIRECTX)
+  list(APPEND unscope_srcs ${srcs_path}/gui/render/render_opengl_sdl.cpp)
+endif()
+
+list(APPEND unscope_srcs 
 ${srcs_path}/gui/gui.cpp
 ${srcs_path}/gui/consts.cpp
 ${srcs_path}/gui/wins/oscs.cpp

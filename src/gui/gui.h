@@ -25,7 +25,13 @@ class USCRender {
 };
 
 // renderers
+#ifdef USE_OPENGL
 #include "render/render_opengl_sdl.h"
+#endif
+#ifdef USE_DIRECTX
+#include "render/render_directx11.h"
+#endif
+
 
 class USCGUI {
   private:
