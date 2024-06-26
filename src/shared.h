@@ -7,6 +7,9 @@
 #define PROGRAM_NAME "unscope"
 #define PROGRAM_VER "0.2"
 
+#define PROGRAM_WIDTH 1280
+#define PROGRAM_HEIGHT 720
+
 #define parseParams(p, argc, argv) { \
   if (argc > 1) { \
     unsigned char flagStartIndex = 1; \

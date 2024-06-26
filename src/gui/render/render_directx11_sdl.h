@@ -10,7 +10,7 @@
 #define USCRENDERER_DIRECTX_SDL
 
 class USCRendDirectX : public USCRender {
-private:
+  private:
     ID3D11Device* g_pd3dDevice;
     ID3D11DeviceContext* g_pd3dDeviceContext;
     IDXGISwapChain* g_pSwapChain;
@@ -25,7 +25,7 @@ private:
     void CleanupDeviceD3D();
     void CreateRenderTarget();
     void CleanupRenderTarget();
-public:
+  public:
     int setup();
     int init();
     bool beginFrame();
