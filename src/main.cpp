@@ -108,6 +108,15 @@ int main(int argc, char** argv) {
   return e!=paNoError;
 }
 
+#ifdef _WIN32
+int APIENTRY WinMain(HINSTANCE hInstance,
+    HINSTANCE hPrevInstance,
+    LPSTR lpCmdLine, int nCmdShow)
+{
+    return main(__argc, __argv);
+}
+#endif
+
 const char* verMsg = PROGRAM_NAME " (version " PROGRAM_VER ")\n";
 const char* helpMsg =
 "Program arguments\n"

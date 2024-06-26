@@ -11,7 +11,8 @@
 #define INIFILE "unscope.ini"
 
 enum USCRenderers {
-  USC_REND_OGL_SDL
+  USC_REND_OGL_SDL,
+  USC_REND_DIRECTX11_SDL
 };
 
 class USCRender {
@@ -29,7 +30,7 @@ class USCRender {
 #include "render/render_opengl_sdl.h"
 #endif
 #ifdef USE_DIRECTX
-#include "render/render_directx11.h"
+#include "render/render_directx11_sdl.h"
 #endif
 
 

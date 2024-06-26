@@ -109,16 +109,23 @@ void USCGUI::attachAudioProcess(USCAudioProcess *p) {
 
 void USCGUI::setupRenderer(USCRenderers r) {
   switch (r) {
+#ifdef USE_OPENGL
     case USC_REND_OGL_SDL:
       rd = new USCRendOGL_SDL;
       break;
+#endif
+#ifdef USE_DIRECTX
+    case USC_REND_DIRECTX11_SDL:
+        rd = new USCRendDirectX;
+        break;
+#endif
     default: break;
   }
 }
 
 
 int USCGUI::init() {
-  setupRenderer(USC_REND_OGL_SDL);
+  setupRenderer(USC_REND_DIRECTX11_SDL);
   isGood = true;
   if (!isGood) return -1;
   if (running) return 0;
@@ -158,6 +165,7 @@ void USCGUI::getDevices(std::vector<DeviceEntry> d) {
 
 void USCGUI::doFrame() {
   running = rd->beginFrame();
+  if (!running) return;
   ImGui::NewFrame();
   
   ImGui::DockSpaceOverViewport(ImGui::GetWindowViewport(),0);
@@ -250,7 +258,7 @@ void USCGUI::setAudioDeviceSetting(int d) {
 }
 
 USCGUI::~USCGUI() {
-  ImGui::SaveIniSettingsToDisk(INIFILE);
+  // ImGui::SaveIniSettingsToDisk(INIFILE);
   // Cleanup
   if (isGood) rd->deinit();
   delete rd;

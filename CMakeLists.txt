@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 
-if(WIN32)
+if(WIN32) # windows shall use directx
   set(USE_OPENGL FALSE)
   set(USE_DIRECTX TRUE)
   add_compile_definitions(USE_DIRECTX)
-else()
+else() # linux shall use opengl
   find_package(PkgConfig REQUIRED)
   set(USE_OPENGL TRUE)
   set(USE_DIRECTX FALSE)
@@ -19,7 +19,6 @@ set(cpl_opts "")
 set(lnk_libs "")
 
 # AUDIO LIBRARY
-# definitely not stolen from somewhere
 set(PA_BUILD_SHARED_LIBS OFF CACHE BOOL "Build dynamic library" FORCE)
 add_subdirectory(submodules/portaudio EXCLUDE_FROM_ALL)
 list(APPEND lnk_libs PortAudio)
@@ -37,25 +36,41 @@ ${implot_path}/implot.cpp
 ${implot_path}/implot_demo.cpp
 ${implot_path}/implot_items.cpp)
 
-list(APPEND gui_srcs
-${imgui_path}/backends/imgui_impl_sdl2.cpp
-${imgui_path}/backends/imgui_impl_opengl3.cpp)
-
-add_subdirectory(submodules/SDL EXCLUDE_FROM_ALL)
-list(APPEND lnk_libs SDL2)
-
-if(USE_DIRECTX)
-
-endif()
-
 if(USE_OPENGL)
   pkg_check_modules(OPENGL opengl REQUIRED)
   list(APPEND cpl_opts ${OPENGL_CFLAGS_OTHER})
   list(APPEND lnk_libs ${OPENGL_LIBRARIES})
+  set(SDL_OPENGL ON)
+else()
+  set(SDL_OPENGL OFF)
 endif()
+if(USE_DIRECTX)
+  set(SDL_DIRECTX ON)
+  list(APPEND lnk_libs "d3d11.lib")
+else()
+  set(SDL_DIRECTX OFF)
+endif()
+
+add_subdirectory(submodules/SDL EXCLUDE_FROM_ALL)
+list(APPEND lnk_libs SDL2)
+
+
 # SOURCES
 
 set(unscope_srcs)
+
+if(USE_OPENGL)
+  list(APPEND unscope_srcs ${srcs_path}/gui/render/render_opengl_sdl.cpp)
+  list(APPEND gui_srcs
+  ${imgui_path}/backends/imgui_impl_sdl2.cpp
+  ${imgui_path}/backends/imgui_impl_opengl3.cpp)
+endif()
+if(USE_DIRECTX)
+  list(APPEND unscope_srcs ${srcs_path}/gui/render/render_directx11_sdl.cpp)
+  list(APPEND gui_srcs
+  ${imgui_path}/backends/imgui_impl_dx11.cpp
+  ${imgui_path}/backends/imgui_impl_sdl2.cpp)
+endif()
 
 list(APPEND unscope_srcs ${aud_srcs} ${gui_srcs})
 list(APPEND unscope_srcs 
@@ -64,13 +79,6 @@ ${srcs_path}/audio/audioProcess.cpp
 
 ${srcs_path}/gui/render/abstract.cpp
 )
-
-if (USE_OPENGL)
-  list(APPEND unscope_srcs ${srcs_path}/gui/render/render_opengl_sdl.cpp)
-endif()
-if (USE_DIRECTX)
-  list(APPEND unscope_srcs ${srcs_path}/gui/render/render_opengl_sdl.cpp)
-endif()
 
 list(APPEND unscope_srcs 
 ${srcs_path}/gui/gui.cpp
@@ -85,7 +93,11 @@ project(unscope)
 set(CMAKE_PROJECT_VERSION_MAJOR 0)
 set(CMAKE_PROJECT_VERSION_MINOR 2)
 
-add_executable(unscope ${unscope_srcs})
+if (NOT WIN32)
+  add_executable(unscope ${unscope_srcs})
+else()
+  add_executable(unscope WIN32 ${unscope_srcs})
+endif()
 
 target_include_directories(unscope SYSTEM PRIVATE
 ${SDL2_INCLUDE_DIRS}
