@@ -11,6 +11,8 @@ else() # linux shall use opengl
   add_compile_definitions(USE_OPENGL)
 endif()
 
+set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
 set(imgui_path ./submodules/imgui)
 set(implot_path ./submodules/implot)
 set(srcs_path ./src/)
@@ -112,3 +114,7 @@ ${srcs_path}/gui)
 target_compile_options(unscope PRIVATE ${cpl_opts})
 target_link_libraries(unscope PRIVATE ${lnk_libs})
 
+add_custom_command(TARGET unscope POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_BINARY_DIR}/submodules/SDL/SDL2d.dll"
+        ${CMAKE_BINARY_DIR})

@@ -1,13 +1,13 @@
 # unscope
 
-Audio oscilloscope for Linux
+Audio oscilloscope for Linux and Windows
 ![screenshot](assets/scr1.png)
 
 ## Reporting issues
 
 Please do! Report them in the *Issues* tab.
 
-## Building
+## Building (Linux)
 
 ### Getting the source
 
@@ -38,3 +38,7 @@ cd build
 cmake ..
 make
 ```
+
+## Building (Windows)
+
+Currently I use Visual Studio 2022 and its fancy features to build.
