@@ -125,7 +125,11 @@ void USCGUI::setupRenderer(USCRenderers r) {
 
 
 int USCGUI::init() {
+#ifdef USE_DIRECTX
   setupRenderer(USC_REND_DIRECTX11_SDL);
+#elif USE_OPENGL
+  setupRenderer(USC_REND_OPENGL_SDL);
+#endif
   isGood = true;
   if (!isGood) return -1;
   if (running) return 0;
