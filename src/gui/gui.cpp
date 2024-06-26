@@ -110,7 +110,7 @@ void USCGUI::attachAudioProcess(USCAudioProcess *p) {
 void USCGUI::setupRenderer(USCRenderers r) {
   switch (r) {
 #ifdef USE_OPENGL
-    case USC_REND_OGL_SDL:
+    case USC_REND_OPENGL_SDL:
       rd = new USCRendOGL_SDL;
       break;
 #endif

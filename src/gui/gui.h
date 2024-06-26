@@ -11,7 +11,7 @@
 #define INIFILE "unscope.ini"
 
 enum USCRenderers {
-  USC_REND_OGL_SDL,
+  USC_REND_OPENGL_SDL,
   USC_REND_DIRECTX11_SDL
 };
 
