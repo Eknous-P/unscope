@@ -10,11 +10,6 @@
 
 #define INIFILE "unscope.ini"
 
-enum USCRenderers {
-  USC_REND_OPENGL_SDL,
-  USC_REND_DIRECTX11_SDL
-};
-
 class USCRender {
   public:
     virtual int setup();
@@ -82,6 +77,8 @@ class USCGUI {
     ImVec4 clear_color, trigColor;
     bool isGood, running, updateOsc, restartAudio, audioLoopback;
     unsigned char channels;
+    USCRenderers renderer;
+  
     float **oscData, **oscAuxData, **oscAlign;
     unsigned long int oscDataSize, sampleRate;
     USCRender *rd;
@@ -130,7 +127,7 @@ class USCGUI {
     int getAudioDeviceSetting();
     void setAudioDeviceSetting(int d);
   
-    USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float yScaleDef, float triggerDef);
+    USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float yScaleDef, float triggerDef, int rendererDef);
     ~USCGUI();
 };
 

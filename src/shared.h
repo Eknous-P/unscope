@@ -81,6 +81,11 @@ enum unscopeArgs {
   UPARAM_VERSION = 'v'
 };
 
+enum USCRenderers {
+  USC_REND_OPENGL_SDL=0,
+  USC_REND_DIRECTX11_SDL
+};
+
 struct DeviceEntry {
   int dev;
   bool shouldPassThru;
@@ -112,7 +117,7 @@ struct AlignParams {
 };
 
 float clamp(float a);
-extern const char *helpMsg, *verMsg, *errMsgs[];
+extern const char *helpMsg, *verMsg, *errMsgs[], *renderers[];
 std::string getErrorMsg(int e);
 
 #endif

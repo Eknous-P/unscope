@@ -4,7 +4,8 @@ bool USCGUI::isRunning() {
   return running;
 }
 
-USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float yScaleDef, float triggerDef) {
+USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float yScaleDef, float triggerDef, int rendererDef) {
+  renderer = (USCRenderers)rendererDef;
   isGood = false;
   err = 0;
   channels = chanCount;
@@ -125,11 +126,7 @@ void USCGUI::setupRenderer(USCRenderers r) {
 
 
 int USCGUI::init() {
-#ifdef USE_DIRECTX
-  setupRenderer(USC_REND_DIRECTX11_SDL);
-#elif USE_OPENGL
-  setupRenderer(USC_REND_OPENGL_SDL);
-#endif
+  setupRenderer(renderer);
   isGood = true;
   if (!isGood) return -1;
   if (running) return 0;
