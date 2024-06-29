@@ -44,7 +44,7 @@ USCAudioInput::USCAudioInput(unsigned int frameSize, unsigned int bufferSize, un
   // alignParams = new AlignParams[conf.channels];
 }
 
-int  USCAudioInput::_PaCallback(
+int USCAudioInput::_PaCallback(
   const void *inputBuffer, void *outputBuffer,
   unsigned long int framesPerBuffer,
   const PaStreamCallbackTimeInfo* timeInfo,
@@ -53,7 +53,7 @@ int  USCAudioInput::_PaCallback(
     return ((USCAudioInput*)userData)->bufferGetCallback(inputBuffer, outputBuffer, framesPerBuffer, timeInfo, statusFlags);
 }
 
-int  USCAudioInput::bufferGetCallback(
+int USCAudioInput::bufferGetCallback(
   const void *inputBuffer, void *outputBuffer,
   unsigned long int framesPerBuffer,
   const PaStreamCallbackTimeInfo* timeInfo,
@@ -112,7 +112,7 @@ std::vector<DeviceEntry> USCAudioInput::enumerateDevs() {
   return devs;
 }
 
-int  USCAudioInput::init(PaDeviceIndex dev, bool loopback) {
+int USCAudioInput::init(PaDeviceIndex dev, bool loopback) {
   if (!isGood) return UAUDIOERR_NOGOOD;
   if (running) return UAUDIOERR_NOERR;
   int nDevs = Pa_GetDeviceCount();
