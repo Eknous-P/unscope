@@ -55,10 +55,10 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
       void align(unsigned char chan);
 
   public:
-    USCAudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned char channelsDef, unsigned int sampleRateDef);
     std::vector<DeviceEntry> enumerateDevs();
     int init(PaDeviceIndex dev, bool loopback);
     int stop();
+
     unsigned char getChannelCount();
     float *getData(unsigned char chan);
     const PaDeviceInfo* getDeviceInfo();
@@ -66,6 +66,8 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
     void setUpdateState(bool u);
     void setAlignParams(unsigned char chan, AlignParams ap);
     float *getAlignRamp(unsigned char c);
+
+    USCAudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned char channelsDef, unsigned int sampleRateDef);
     ~USCAudioInput();
 };
 

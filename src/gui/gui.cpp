@@ -155,7 +155,7 @@ int USCGUI::init() {
   // ImGui::LoadIniSettingsFromDisk(INIFILE);
   // Setup Platform/Renderer backends
   if (rd->init()!=0) return UGUIERROR_INITFAIL;
-  clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+  bgColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
   running = true;
   return 0;
 }
@@ -182,7 +182,7 @@ void USCGUI::doFrame() {
   USCGUI::drawGUI();
 
   ImGui::Render();
-  rd->endFrame(io,clear_color);
+  rd->endFrame(io,bgColor);
 }
 
 void USCGUI::drawGUI() {

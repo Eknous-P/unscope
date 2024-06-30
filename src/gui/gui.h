@@ -12,8 +12,8 @@
 
 class USCRender {
   public:
-    virtual int setup();
-    virtual int init();
+    virtual int  setup();
+    virtual int  init();
     virtual bool beginFrame();
     virtual void endFrame(ImGuiIO io, ImVec4 col);
     virtual void deinit();
@@ -37,22 +37,22 @@ class USCGUI {
     };
 
     struct traceParams {
-      bool enable;
+      bool  enable;
       float yOffset;
       float yScale;
       float color[4];
       float trigger;
-      int traceSize; float timebase;
-      int traceOffset; float trigOffset;
-      int trigHoldoff;
-      bool triggerEdge;
+      int   traceSize;   float timebase;
+      int   traceOffset; float trigOffset;
+      int   trigHoldoff;
+      bool  triggerEdge;
     };
 
     struct xyParams {
-      float xScale, yScale;
+      float xScale,  yScale;
       float xOffset, yOffset;
       float color[4];
-      int sampleLen;
+      int   sampleLen;
       float persistence;
     };
 
@@ -74,7 +74,7 @@ class USCGUI {
     bool fullscreen;
     ImGuiIO io;
     ImGuiStyle style;
-    ImVec4 clear_color, trigColor;
+    ImVec4 bgColor, trigColor;
     bool isGood, running, updateOsc, restartAudio, audioLoopback;
     unsigned char channels;
     USCRenderers renderer;
@@ -90,9 +90,9 @@ class USCGUI {
 
     scopeParams sc;
     traceParams *tc;
-    xyParams xyp;
+    xyParams    xyp;
     windowsOpen wo;
-    settings st;
+    settings    st;
 
     bool showTrigger;
 
@@ -106,7 +106,7 @@ class USCGUI {
     void writeOscAuxData(unsigned char chan, float* data);
   
     bool isRunning();
-    int init();
+    int  init();
     void getDevices(std::vector<DeviceEntry> d);
     void doFrame();
     void drawGUI();
@@ -124,7 +124,7 @@ class USCGUI {
     void audioSet();
     bool doRestartAudio();
 
-    int getAudioDeviceSetting();
+    int  getAudioDeviceSetting();
     void setAudioDeviceSetting(int d);
   
     USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float yScaleDef, float triggerDef, int rendererDef);
