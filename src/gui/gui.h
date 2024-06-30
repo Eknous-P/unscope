@@ -94,7 +94,7 @@ class USCGUI {
     windowsOpen wo;
     settings    st;
 
-    bool showTrigger;
+    bool showTrigger, shareParams;
 
   public:
     void setupRenderer(USCRenderers r);

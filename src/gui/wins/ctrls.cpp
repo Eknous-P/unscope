@@ -3,6 +3,7 @@
 void USCGUI::drawGlobalControls() {
   if (!wo.globalControlsOpen) return;
   ImGui::Begin("Global Controls",&wo.globalControlsOpen);
+  ImGui::Checkbox("share parameters",&shareParams);
   ImGui::Checkbox("update",&updateOsc);
   if (devs.size() > 0) {
     if (ImGui::BeginCombo("device",devs[deviceNum].devName.c_str())) {
@@ -45,6 +46,7 @@ void USCGUI::drawChanControls() {
     if (!wo.chanControlsOpen[i]) continue;
     ImGui::Begin(strbuf,&wo.chanControlsOpen[i]);
     ImGui::Checkbox("enable", &tc[i].enable);
+    if (i != 0) ImGui::BeginDisabled(shareParams);
     tc[i].timebase = tc[i].traceSize * 1000 / sampleRate;
     if (ImGui::SliderFloat("timebase", &tc[i].timebase, 0, (float)oscDataSize/(float)sampleRate*1000, "%g ms")) {
       tc[i].traceSize = sampleRate * tc[i].timebase / 1000;
@@ -56,12 +58,13 @@ void USCGUI::drawChanControls() {
         tc[i].trigOffset = 0;
       }
     }
-    ImGui::SliderFloat("scale", &tc[i].yScale, 0.25f, 10.0f, "%g");
     ImGui::SliderFloat("trigger", &tc[i].trigger, -1.0f, 1.0f, "%g");
     showTrigger = ImGui::IsItemActive();
     showTrigger |= ai->didTrigger();
     // ImGui::SliderInt("holdoff", &tc[i].trigHoldoff, 0, 1024, "%d");
-    ImGui::SliderFloat("y offset", &tc[i].yOffset, -1.0f, 1.0f, "%g");
+    ImGui::SameLine();
+    if (ImGui::Button(tc[i].triggerEdge?"Rising":"Falling")) tc[i].triggerEdge = !tc[i].triggerEdge;
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("trigger edge");
     ImGui::SliderFloat("x offset", &tc[i].trigOffset, -1.0f, 1.0f, "%g");
     if (ImGui::IsItemActive()) {
       tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize;
@@ -72,10 +75,18 @@ void USCGUI::drawChanControls() {
       }
     }
     if (tc[i].traceOffset + tc[i].traceSize > oscDataSize) tc[i].traceOffset = oscDataSize - tc[i].traceSize;
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("trigger edge:");
-    ImGui::SameLine();
-    if (ImGui::Button(tc[i].triggerEdge?"Rising":"Falling")) tc[i].triggerEdge = !tc[i].triggerEdge;
+    if (i != 0) ImGui::EndDisabled();
+    if (i != 0 && shareParams) {
+      tc[i].timebase = tc[0].timebase;
+      tc[i].traceSize = tc[0].traceSize;
+      tc[i].traceOffset = tc[0].traceOffset;
+      tc[i].trigOffset = tc[0].trigOffset;
+      tc[i].trigger = tc[0].trigger;
+      tc[i].trigHoldoff = tc[0].trigHoldoff;
+      tc[i].triggerEdge = tc[0].triggerEdge;
+    }
+    ImGui::SliderFloat("scale", &tc[i].yScale, 0.25f, 10.0f, "%g");
+    ImGui::SliderFloat("y offset", &tc[i].yOffset, -1.0f, 1.0f, "%g");
     
     ImGui::ColorEdit4("##color",tc[i].color);
     

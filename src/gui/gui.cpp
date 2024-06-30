@@ -91,6 +91,7 @@ USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsi
   deviceNum = 0;
   devs.clear();
   showTrigger = false;
+  shareParams = false;
 
   fullscreen = false;
 
