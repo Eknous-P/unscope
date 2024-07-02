@@ -4,6 +4,21 @@ void USCGUI::drawGlobalControls() {
   if (!wo.globalControlsOpen) return;
   ImGui::Begin("Global Controls",&wo.globalControlsOpen);
   ImGui::Checkbox("share parameters",&shareParams);
+
+  bool trigShare = shareTrigger>0;
+  if (ImGui::Checkbox("share trigger",&trigShare)) {
+    shareTrigger=-shareTrigger;
+  }
+  ImGui::BeginDisabled(!trigShare);
+  int trigChan = abs(shareTrigger);
+  if (ImGui::InputInt("channel",&trigChan)) {
+    if (trigChan < 1) trigChan = 1;
+    if (trigChan > channels) trigChan = channels;
+  }
+  shareTrigger = trigChan;
+  if (!trigShare) shareTrigger = -shareTrigger;
+  ImGui::EndDisabled();
+  
   ImGui::Checkbox("update",&updateOsc);
   if (devs.size() > 0) {
     if (ImGui::BeginCombo("device",devs[deviceNum].devName.c_str())) {

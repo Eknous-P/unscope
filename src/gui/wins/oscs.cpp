@@ -14,8 +14,15 @@ void USCGUI::drawMainScope() {
       if (!tc[i].enable) continue;
       ImPlot::SetAxes(i,i+3);
       ImPlot::SetNextLineStyle(ImVec4(tc[i].color[0],tc[i].color[1],tc[i].color[2],tc[i].color[3]),0.25f);
-      if (oscAlign[i] && oscData[i] && oscDataSize)
-        ImPlot::PlotLine("##scopeplot", oscAlign[i], oscData[i], oscDataSize,ImPlotFlags_NoLegend);
+      if (oscAlign[i] && oscData[i] && oscDataSize) {
+        int trigChan;
+        if (shareTrigger > 0) {
+          trigChan = shareTrigger-1;
+        } else {
+          trigChan = i;
+        }
+        ImPlot::PlotLine("##scopeplot", oscAlign[trigChan], oscData[i], oscDataSize,ImPlotFlags_NoLegend);
+      }
       trigColor = ai->didTrigger()?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
       if (showTrigger) ImPlot::TagY(tc[i].trigger,trigColor,"trig");
       double trigDouble = tc[i].trigger;

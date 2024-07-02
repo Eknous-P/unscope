@@ -95,6 +95,7 @@ class USCGUI {
     settings    st;
 
     bool showTrigger, shareParams;
+    int shareTrigger; // abs part - which channel, sign - do/don't
 
   public:
     void setupRenderer(USCRenderers r);
