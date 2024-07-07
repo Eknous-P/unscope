@@ -126,7 +126,6 @@ int USCAudioInput::init(PaDeviceIndex dev, bool loopback) {
   streamParams.sampleFormat = paFloat32;
   streamParams.suggestedLatency = Pa_GetDeviceInfo(streamParams.device)->defaultLowInputLatency;
   streamParams.hostApiSpecificStreamInfo = NULL;
-init:
   err = Pa_OpenStream(
     &stream,
     &streamParams,
@@ -137,7 +136,6 @@ init:
     &USCAudioInput::_PaCallback,
     this
   );
-  Pa_Sleep(100);
 
   if (err == paInvalidChannelCount) {
     if (streamParams.channelCount == Pa_GetDeviceInfo(dev)->maxInputChannels) {
@@ -147,7 +145,25 @@ init:
     printf("trying with device-preferred channel count...\n");
     streamParams.channelCount = Pa_GetDeviceInfo(dev)->maxInputChannels;
     conf.channels = streamParams.channelCount;
-    goto init;
+    err = Pa_OpenStream(
+      &stream,
+      &streamParams,
+      loopback?&streamParams:NULL,
+      conf.sampleRate,
+      conf.frameSize,
+      paClipOff,
+      &USCAudioInput::_PaCallback,
+      this
+    );
+
+    if (err == paInvalidChannelCount) {
+      if (streamParams.channelCount == Pa_GetDeviceInfo(dev)->maxInputChannels) {
+        running = err==paNoError;
+        return err;
+      }
+      printf("retry failed!\n");
+      return err;
+    }
   }
 
   if (err!=paNoError) return err;
