@@ -51,6 +51,8 @@ USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsi
   xyp.yScale = 1.0f;
   xyp.persistence = timebaseDef;
   xyp.sampleLen = sampleRate*xyp.persistence/1000;
+  xyp.xChan = 1;
+  xyp.yChan = 2;
 
   wo.auxScopeOpen = false;
   wo.mainScopeOpen = true;

@@ -54,6 +54,7 @@ class USCGUI {
       float color[4];
       int   sampleLen;
       float persistence;
+      int   xChan,   yChan;
     };
 
     struct windowsOpen {

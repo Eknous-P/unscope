@@ -121,6 +121,14 @@ void USCGUI::drawXYScopeControls() {
     if (ImGui::SliderFloat("persistence", &xyp.persistence, 0, (float)oscDataSize/(float)sampleRate*1000, "%g ms")) {
       xyp.sampleLen = sampleRate * xyp.persistence / 1000;
     }
+    if (ImGui::InputInt("X channel",&xyp.xChan)) {
+      if (xyp.xChan < 1) xyp.xChan = 1;
+      if (xyp.xChan > channels) xyp.xChan = channels;
+    }
+    if (ImGui::InputInt("Y channel",&xyp.yChan)) {
+      if (xyp.yChan < 1) xyp.yChan = 1;
+      if (xyp.yChan > channels) xyp.yChan = channels;
+    }
     ImGui::ColorEdit4("##color",xyp.color);
     ImGui::End();
   }
