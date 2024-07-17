@@ -137,6 +137,6 @@ void USCRendDirectX::deinit() {
   SDL_Quit();
 }
 
-void USCRendOGL_SDL::doFullscreen(bool f) {
+void USCRendDirectX::doFullscreen(bool f) {
   SDL_SetWindowFullscreen(window,f?(SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP):0);
 }
