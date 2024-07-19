@@ -53,6 +53,16 @@ else()
   set(SDL_DIRECTX OFF)
 endif()
 
+set(SDL_AUDIO OFF)
+set(SDL_HAPTIC OFF)
+set(SDL_JOYSTICK OFF)
+set(SDL_HIDAPI OFF)
+set(SDL_POWER OFF)
+set(SDL_FILE OFF)
+set(SDL_FILESYSTEM OFF)
+set(SDL_SENSOR OFF)
+set(SDL_LOCALE OFF)
+
 add_subdirectory(submodules/SDL EXCLUDE_FROM_ALL)
 list(APPEND lnk_libs SDL2)
 
