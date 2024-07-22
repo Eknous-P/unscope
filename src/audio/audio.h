@@ -71,6 +71,28 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
     ~USCAudioInput();
 };
 
+struct ProcessNodeDefines {
+  const char* name;
+  unsigned char inputs;
+};
+
+struct ProcessNodeParam {
+  const char* name;
+  float value;
+};
+
+class ProcessNode {
+    float Xpos, Ypos;
+    ProcessNodeDefines def;
+    ProcessNodeParam params[4];
+    float *input[4], *output;
+  public:
+    void attachTo(float* in);
+    float* getOutput();
+    virtual const char* getName();
+    virtual void process();
+};
+
 class USCAudioProcess { // process audio data with various fx
   private:
     float **dataIn, **dataOut;
