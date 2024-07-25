@@ -54,14 +54,18 @@ USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsi
   xyp.xChan = 1;
   xyp.yChan = 2;
 
-  wo.auxScopeOpen = false;
-  wo.mainScopeOpen = true;
+  wo.auxScopeOpen        = false;
+  wo.mainScopeOpen       = true;
   wo.chanControlsOpen[0] = true;
   wo.chanControlsOpen[1] = true;
   wo.chanControlsOpen[2] = true;
-  wo.xyScopeOpen = true;
+  wo.xyScopeOpen         = true;
   wo.xyScopeControlsOpen = true;
-  wo.globalControlsOpen = true;
+  wo.globalControlsOpen  = true;
+  wo.nodeSpaceOpen       = true; // temporary?
+
+
+  ns.camera = ImVec2(0.0f, 0.0f);
 
   oscDataSize = dataSize;
 
@@ -219,11 +223,16 @@ void USCGUI::drawGUI() {
       ImGui::MenuItem("Global Controls",NULL,&wo.globalControlsOpen);
       ImGui::EndMenu();
     }
+    if (ImGui::BeginMenu("Extra")) {
+      ImGui::MenuItem("node space", NULL, &wo.nodeSpaceOpen);
+      ImGui::EndMenu();
+    }
     ImGui::EndMainMenuBar();
   }
   drawGlobalControls();
   drawChanControls();
   drawXYScopeControls();
+  drawNodeSpace();
   ImPlot::CreateContext();
     drawMainScope();
     // drawAuxScope();

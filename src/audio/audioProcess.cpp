@@ -38,22 +38,22 @@ float *USCAudioProcess::getDataOut(unsigned char chan) {
   return dataOut[chan];
 }
 
-void USCAudioProcess::derive() {
-  dataOut[i] = 0;
-  for (unsigned char j = 0; j < channels; j++) {
-    for (i = 1; i < dataSize; i++) {
-      dataOut[j][i] = dataIn[j][i] - dataIn[j][i-1];
-    }
-  }
-  i = 0;
-}
+// void USCAudioProcess::derive() {
+//   dataOut[i] = 0;
+//   for (unsigned char j = 0; j < channels; j++) {
+//     for (i = 1; i < dataSize; i++) {
+//       dataOut[j][i] = dataIn[j][i] - dataIn[j][i-1];
+//     }
+//   }
+//   i = 0;
+// }
 
-void USCAudioProcess::integrate() {
-  dataOut[0] = dataIn[0];
-  for (unsigned char j = 0; j < channels; j++) {
-    for (i = 1; i < dataSize; i++) {
-      dataOut[j][i] = dataOut[j][i-1] + dataIn[j][i];
-    }
-  }
-  i = 0;
-}
+// void USCAudioProcess::integrate() {
+//   dataOut[0] = dataIn[0];
+//   for (unsigned char j = 0; j < channels; j++) {
+//     for (i = 1; i < dataSize; i++) {
+//       dataOut[j][i] = dataOut[j][i-1] + dataIn[j][i];
+//     }
+//   }
+//   i = 0;
+// }

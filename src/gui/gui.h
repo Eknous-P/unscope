@@ -64,6 +64,23 @@ class USCGUI {
       bool xyScopeOpen;
       bool xyScopeControlsOpen;
       bool globalControlsOpen;
+      bool nodeSpaceOpen;
+    };
+
+    struct node {
+      ProcessNode* node;
+      ImVec2 pos;
+    };
+
+    struct nodeLink {
+      ImVec2 v1, v2;
+      ImVec4 color;
+    };
+
+    struct nodeSpace {
+      ImVec2 camera;
+      node *nodes[256];
+      nodeLink *links[256];
     };
 
     struct settings {
@@ -89,11 +106,12 @@ class USCGUI {
     std::vector<DeviceEntry> devs;
     int device, deviceNum;
 
-    scopeParams sc;
+    scopeParams  sc;
     traceParams *tc;
-    xyParams    xyp;
-    windowsOpen wo;
-    settings    st;
+    xyParams     xyp;
+    windowsOpen  wo;
+    nodeSpace    ns;
+    settings     st;
 
     bool showTrigger, shareParams;
     int shareTrigger; // abs part - which channel, sign - do/don't
@@ -122,6 +140,9 @@ class USCGUI {
     void drawXYScopeControls();
 
     void drawSettings();
+
+    void drawNodeSpace();
+    void drawNode(ProcessNode n);
   
     void audioSet();
     bool doRestartAudio();

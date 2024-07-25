@@ -97,6 +97,7 @@ ${srcs_path}/gui/gui.cpp
 ${srcs_path}/gui/consts.cpp
 ${srcs_path}/gui/wins/oscs.cpp
 ${srcs_path}/gui/wins/ctrls.cpp
+${srcs_path}/gui/wins/nodes.cpp
 
 ${srcs_path}/main.cpp
 )

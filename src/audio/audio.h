@@ -8,6 +8,16 @@
 #ifndef USC_AUDIO_H
 #define USC_AUDIO_H
 
+enum ProcessNodes {
+  PNODE_BLANK,
+  PNODE_MIXER,
+  PNODE_DERIVER,
+  PNODE_INTEGRATOR,
+  PNODE_CLIPPER,
+  PNODE_MULTIPLIER,
+  PNODE_COUNT
+};
+
 class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
   private:
 
@@ -82,7 +92,6 @@ struct ProcessNodeParam {
 };
 
 class ProcessNode {
-    float Xpos, Ypos;
     ProcessNodeDefines def;
     ProcessNodeParam params[4];
     float *input[4], *output;
@@ -98,11 +107,15 @@ class USCAudioProcess { // process audio data with various fx
     float **dataIn, **dataOut;
     unsigned long int dataSize, i;
     unsigned char channels;
+    ProcessNode *nodes[256];
+    unsigned short nodeCount;
   public:
     void writeDataIn(float* d, unsigned char chan);
     float *getDataOut(unsigned char chan);
-    void derive();
-    void integrate();
+    void doProcessing();
+    // void derive();
+    // void integrate();
+    int addNode(ProcessNodes nodeId);
 
     USCAudioProcess(unsigned int bufferSizeDef, unsigned char chans);
     ~USCAudioProcess();
