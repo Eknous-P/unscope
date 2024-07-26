@@ -35,6 +35,8 @@ USCAudioInput::USCAudioInput(unsigned int frameSize, unsigned int bufferSize, un
   doUpdate = true;
   triggered = false;
 
+  ap = NULL;
+
   // alignParams = (AlignParams*)malloc(conf.channels*sizeof(AlignParams));
   // if (!alignParams) {
   //   isGood = false;
@@ -281,4 +283,12 @@ USCAudioInput::~USCAudioInput() {
     delete[] buffer.alignRamp;
     buffer.alignRamp = NULL;
   }
+}
+
+void USCAudioInput::attachAudioProcess(USCAudioProcess* p) {
+  ap = p;
+}
+
+USCAudioProcess* USCAudioInput::getAudioProcess() {
+  return ap;
 }

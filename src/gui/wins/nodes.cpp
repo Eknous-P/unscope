@@ -57,7 +57,7 @@ void USCGUI::drawNodeSpace() {
       // if (ImGui::MenuItem("Remove all", NULL, false, points.Size > 0)) { points.clear(); }
       if (ImGui::BeginMenu("Add node", ns.nodeCount < 256)) {
         for (unsigned short i = 0; i < PNODE_COUNT; i++) {
-          // if (ImGui::MenuItem("",NULL)) 
+          if (ImGui::MenuItem(nodeNames[i],NULL)) addNode((ProcessNodes)i);
         }
         ImGui::EndMenu();
       }
@@ -74,31 +74,38 @@ void USCGUI::drawNodeSpace() {
         draw_list->AddLine(ImVec2(canvas_p0.x, canvas_p0.y + y), ImVec2(canvas_p1.x, canvas_p0.y + y), IM_COL32(200, 200, 200, 40));
     }
     for (unsigned short i = 0; i < ns.nodeCount; i++) {
-      drawNode(ns.nodes[i]);
+      drawNode(draw_list, ns.nodes[i]);
     }
     draw_list->PopClipRect();
 
   ImGui::End();
 }
 
-void USCGUI::drawNode(node* n) {
-  if (ImGui::BeginChild(n->node->getName())) {
-    for (unsigned char i = 0; i < 4; i++) {
-      ImGui::SliderFloat(
-        n->node->params[i].name,
-        &n->node->params[i].value,
-        n->node->params[i].vMin,
-        n->node->params[i].vMax,
-        "%g");
-    }
-    ImGui::EndChild();
-  }
+void USCGUI::drawNode(ImDrawList* dl,node* n) {
+  if (n == NULL) return;
+  ProcessNodeDefines def = n->node->getDefines();
+  // if (ImGui::BeginChild(def.name,ImVec2(-1,-1),ImGuiChildFlags_FrameStyle)) {
+  //   for (unsigned char i = 0; i < def.paramCount; i++) {
+  //     ImGui::SliderFloat(
+  //       n->node->params[i].name,
+  //       &n->node->params[i].value,
+  //       n->node->params[i].vMin,
+  //       n->node->params[i].vMax,
+  //       "%g");
+  //   }
+  //   ImGui::EndChild();
+  // }
+  
 }
 
 void USCGUI::addNode(ProcessNodes p) {
   ns.nodeCount++;
-  ns.nodes[ns.nodeCount] = new node;
-  ns.nodes[ns.nodeCount]->node = ai->getAudioProcess()->addNode(p);
+  ns.nodes[ns.nodeCount-1] = new node;
+  ns.nodes[ns.nodeCount-1]->node = ai->getAudioProcess()->addNode(p);
+  if (ns.nodes[ns.nodeCount-1]->node == NULL) { // oopsie
+    ns.nodes.erase(ns.nodes.begin()+ns.nodeCount-1);
+    ns.nodeCount--;
+  }
 }
 
 void USCGUI::removeNode(unsigned short n) {

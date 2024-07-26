@@ -102,7 +102,6 @@ class USCGUI {
     unsigned long int oscDataSize, sampleRate;
     USCRender *rd;
     USCAudioInput *ai;
-    USCAudioProcess *ap;
 
     std::vector<DeviceEntry> devs;
     int device, deviceNum;
@@ -121,7 +120,6 @@ class USCGUI {
     void setupRenderer(USCRenderers r);
 
     void attachAudioInput(USCAudioInput* i);
-    void attachAudioProcess(USCAudioProcess* p);
 
     void writeOscData(unsigned char chan, float* datax, float* datay);
     void writeOscAuxData(unsigned char chan, float* data);
@@ -143,7 +141,7 @@ class USCGUI {
     void drawSettings();
 
     void drawNodeSpace();
-    void drawNode(node* n);
+    void drawNode(ImDrawList* dl,node* n);
 
     void addNode(ProcessNodes p);
     void removeNode(unsigned short n);
@@ -159,6 +157,6 @@ class USCGUI {
 };
 
 extern const char *windowLayout;
-extern const char *nodeNames;
+extern const char *nodeNames[];
 
 #endif

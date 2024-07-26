@@ -66,9 +66,14 @@ USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsi
 
 
   ns.camera = ImVec2(0.0f, 0.0f);
+  ns.nodeCount = 0;
   ns.nodes.clear();
   for (unsigned short i = 0; i < 256; i++) {
     ns.nodes.push_back(NULL);
+  }
+  ns.links.clear();
+  for (unsigned short i = 0; i < 256; i++) {
+    ns.links.push_back(NULL);
   }
 
   oscDataSize = dataSize;
@@ -109,15 +114,10 @@ USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsi
   trigColor = ImVec4(0,0,0,0);
 
   ai = NULL;
-  ap = NULL;
 }
 
 void USCGUI::attachAudioInput(USCAudioInput *i) {
   ai = i;
-}
-
-void USCGUI::attachAudioProcess(USCAudioProcess *p) {
-  ap = p;
 }
 
 void USCGUI::setupRenderer(USCRenderers r) {
@@ -312,7 +312,6 @@ USCGUI::~USCGUI() {
     oscAlign = NULL;
   }
   ai = NULL;
-  ap = NULL;
 
   if (tc) {
     delete[] tc;

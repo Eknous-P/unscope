@@ -9,12 +9,12 @@
 #define USC_AUDIO_H
 
 enum ProcessNodes {
-  PNODE_BLANK = -1,
+  PNODE_BLANK = 0,
 
   PNODE_INPUTS = 1000,
-  PNODE_OUPUTS = 999,
+  PNODE_OUTPUTS = 999,
 
-  PNODE_MIXER = 0,
+  PNODE_MIXER = 1,
   PNODE_DERIVE,
   PNODE_INTEGRATE,
   PNODE_DISTORTION,
@@ -25,6 +25,12 @@ enum ProcessNodes {
 struct ProcessNodeDefines {
   const char* name;
   unsigned char inputs;
+  unsigned char paramCount;
+  ProcessNodeDefines(const char* n, unsigned char i, unsigned char p) {
+    name = n;
+    inputs = i;
+    paramCount = p;
+  }
 };
 
 struct ProcessNodeParam {
@@ -33,14 +39,16 @@ struct ProcessNodeParam {
   float vMin, vMax;
 };
 
+// WHY DO I HAVE TO DO THIS??!
+ProcessNodeParam PNPInit(const char* n, float v, float mn, float mx);
+
 class ProcessNode {
-    ProcessNodeDefines def;
     float *inputs[4], *output;
   public:
     ProcessNodeParam params[4];
-    void attachTo(float* in, unsigned char input);
+    void attachTo(float* in, unsigned char _input);
     float* getOutput();
-    virtual const char* getName();
+    virtual ProcessNodeDefines getDefines();
     virtual void process();
 };
 

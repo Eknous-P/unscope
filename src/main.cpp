@@ -79,12 +79,17 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-   USCAudioInput i(params.audioFrameSize,
-               params.audioBufferSize,
-               params.channels,
-               params.sampleRate);
+  USCAudioInput i(params.audioFrameSize,
+              params.audioBufferSize,
+              params.channels,
+              params.sampleRate);
 
   g.attachAudioInput(&i);
+
+  USCAudioProcess p(params.audioFrameSize,
+                    params.channels);
+
+  i.attachAudioProcess(&p);
 
   params.audioDevice = Pa_GetDefaultInputDevice();
 

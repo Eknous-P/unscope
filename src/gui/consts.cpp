@@ -67,3 +67,12 @@ const char *windowLayout =
 "        DockNode  ID=0x00000003 Parent=0x00000008 SizeRef=497,207 Selected=0x226655D0\n"
 "        DockNode  ID=0x00000004 Parent=0x00000008 SizeRef=299,207 Selected=0xDFE49EEC\n"
 "  DockNode        ID=0x00000002 Parent=0x8B93E3BD SizeRef=275,371 HiddenTabBar=1 Selected=0x67284010\n";
+
+const char *nodeNames[]={
+  "Blank",
+  "Mixer",
+  "Derive",
+  "Integrate",
+  "Distortion",
+  "Multiplier"
+};

@@ -8,10 +8,10 @@ float* ProcessNode::getOutput() {
   return output;
 }
 
-const char* ProcessNode::getName() {
-  return def.name;
+ProcessNodeDefines ProcessNode::getDefines() {
+  return ProcessNodeDefines(NULL,0,0);
 }
 
 void ProcessNode::process() {
-  
+
 }

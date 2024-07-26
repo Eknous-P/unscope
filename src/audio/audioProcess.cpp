@@ -1,4 +1,5 @@
 #include "audio.h"
+#include "processNodes/blank.h"
 
 USCAudioProcess::USCAudioProcess(unsigned int bufferSizeDef, unsigned char chans) {
   channels = chans;
@@ -44,7 +45,22 @@ float *USCAudioProcess::getDataOut(unsigned char chan) {
 }
 
 ProcessNode* USCAudioProcess::addNode(ProcessNodes nodeId) {
+  ProcessNode* newNode = NULL;
   switch (nodeId) {
-    
+    case PNODE_BLANK:
+      newNode = new PNode_Blank;
+      nodes.push_back(newNode);
+      break;
+    default: break;
   }
+  return newNode;
+}
+
+ProcessNodeParam PNPInit(const char* n, float v, float mn, float mx) {
+  ProcessNodeParam ass;
+  ass.name = n;
+  ass.value = v;
+  ass.vMin = mn;
+  ass.vMax = mx;
+  return ass;
 }

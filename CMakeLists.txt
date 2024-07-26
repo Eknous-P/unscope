@@ -86,10 +86,11 @@ endif()
 
 list(APPEND unscope_srcs ${aud_srcs} ${gui_srcs})
 list(APPEND unscope_srcs 
-${srcs_path}/audio/audioInput.cpp
 ${srcs_path}/audio/audioProcess.cpp
+${srcs_path}/audio/audioInput.cpp
 
 ${srcs_path}/audio/processNodes/abstract.cpp
+${srcs_path}/audio/processNodes/blank.cpp
 )
 
 list(APPEND unscope_srcs 
