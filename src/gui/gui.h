@@ -79,8 +79,9 @@ class USCGUI {
 
     struct nodeSpace {
       ImVec2 camera;
-      node *nodes[256];
-      nodeLink *links[256];
+      std::vector<node*> nodes;
+      std::vector<nodeLink*> links;
+      unsigned short nodeCount;
     };
 
     struct settings {
@@ -142,7 +143,10 @@ class USCGUI {
     void drawSettings();
 
     void drawNodeSpace();
-    void drawNode(ProcessNode n);
+    void drawNode(node* n);
+
+    void addNode(ProcessNodes p);
+    void removeNode(unsigned short n);
   
     void audioSet();
     bool doRestartAudio();
@@ -155,5 +159,6 @@ class USCGUI {
 };
 
 extern const char *windowLayout;
+extern const char *nodeNames;
 
 #endif

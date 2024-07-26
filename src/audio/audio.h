@@ -9,13 +9,56 @@
 #define USC_AUDIO_H
 
 enum ProcessNodes {
-  PNODE_BLANK,
-  PNODE_MIXER,
-  PNODE_DERIVER,
-  PNODE_INTEGRATOR,
-  PNODE_CLIPPER,
+  PNODE_BLANK = -1,
+
+  PNODE_INPUTS = 1000,
+  PNODE_OUPUTS = 999,
+
+  PNODE_MIXER = 0,
+  PNODE_DERIVE,
+  PNODE_INTEGRATE,
+  PNODE_DISTORTION,
   PNODE_MULTIPLIER,
   PNODE_COUNT
+};
+
+struct ProcessNodeDefines {
+  const char* name;
+  unsigned char inputs;
+};
+
+struct ProcessNodeParam {
+  const char* name;
+  float value;
+  float vMin, vMax;
+};
+
+class ProcessNode {
+    ProcessNodeDefines def;
+    float *inputs[4], *output;
+  public:
+    ProcessNodeParam params[4];
+    void attachTo(float* in, unsigned char input);
+    float* getOutput();
+    virtual const char* getName();
+    virtual void process();
+};
+
+class USCAudioProcess { // process audio data with various fx
+  private:
+    float **dataIn, **dataOut;
+    unsigned long int dataSize, i;
+    unsigned char channels;
+    std::vector<ProcessNode *> nodes;
+  public:
+    void writeDataIn(float* d, unsigned char chan);
+    float *getDataOut(unsigned char chan);
+    void doProcessing();
+    // returns a pointer to the new node
+    ProcessNode *addNode(ProcessNodes nodeId);
+
+    USCAudioProcess(unsigned int bufferSizeDef, unsigned char chans);
+    ~USCAudioProcess();
 };
 
 class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
@@ -62,7 +105,9 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
       PaStreamCallbackFlags statusFlags,
       void *userData );
 
-      void align(unsigned char chan);
+    void align(unsigned char chan);
+
+    USCAudioProcess* ap;
 
   public:
     std::vector<DeviceEntry> enumerateDevs();
@@ -77,48 +122,11 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
     void setAlignParams(unsigned char chan, AlignParams ap);
     float *getAlignRamp(unsigned char c);
 
+    void attachAudioProcess(USCAudioProcess* p);
+    USCAudioProcess* getAudioProcess();
+
     USCAudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned char channelsDef, unsigned int sampleRateDef);
     ~USCAudioInput();
-};
-
-struct ProcessNodeDefines {
-  const char* name;
-  unsigned char inputs;
-};
-
-struct ProcessNodeParam {
-  const char* name;
-  float value;
-};
-
-class ProcessNode {
-    ProcessNodeDefines def;
-    ProcessNodeParam params[4];
-    float *input[4], *output;
-  public:
-    void attachTo(float* in);
-    float* getOutput();
-    virtual const char* getName();
-    virtual void process();
-};
-
-class USCAudioProcess { // process audio data with various fx
-  private:
-    float **dataIn, **dataOut;
-    unsigned long int dataSize, i;
-    unsigned char channels;
-    ProcessNode *nodes[256];
-    unsigned short nodeCount;
-  public:
-    void writeDataIn(float* d, unsigned char chan);
-    float *getDataOut(unsigned char chan);
-    void doProcessing();
-    // void derive();
-    // void integrate();
-    int addNode(ProcessNodes nodeId);
-
-    USCAudioProcess(unsigned int bufferSizeDef, unsigned char chans);
-    ~USCAudioProcess();
 };
 
 #endif

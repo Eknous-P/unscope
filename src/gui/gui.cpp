@@ -66,6 +66,10 @@ USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsi
 
 
   ns.camera = ImVec2(0.0f, 0.0f);
+  ns.nodes.clear();
+  for (unsigned short i = 0; i < 256; i++) {
+    ns.nodes.push_back(NULL);
+  }
 
   oscDataSize = dataSize;
 
