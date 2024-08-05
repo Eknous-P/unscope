@@ -84,7 +84,6 @@ class USCGUI {
     unsigned long int oscDataSize, sampleRate;
     USCRender *rd;
     USCAudioInput *ai;
-    USCAudioProcess *ap;
 
     std::vector<DeviceEntry> devs;
     int device, deviceNum;
@@ -102,7 +101,6 @@ class USCGUI {
     void setupRenderer(USCRenderers r);
 
     void attachAudioInput(USCAudioInput* i);
-    void attachAudioProcess(USCAudioProcess* p);
 
     void writeOscData(unsigned char chan, float* datax, float* datay);
     void writeOscAuxData(unsigned char chan, float* data);

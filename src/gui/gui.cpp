@@ -101,15 +101,10 @@ USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsi
   trigColor = ImVec4(0,0,0,0);
 
   ai = NULL;
-  ap = NULL;
 }
 
 void USCGUI::attachAudioInput(USCAudioInput *i) {
   ai = i;
-}
-
-void USCGUI::attachAudioProcess(USCAudioProcess *p) {
-  ap = p;
 }
 
 void USCGUI::setupRenderer(USCRenderers r) {
@@ -299,7 +294,6 @@ USCGUI::~USCGUI() {
     oscAlign = NULL;
   }
   ai = NULL;
-  ap = NULL;
 
   if (tc) {
     delete[] tc;

@@ -71,19 +71,4 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
     ~USCAudioInput();
 };
 
-class USCAudioProcess { // process audio data with various fx
-  private:
-    float **dataIn, **dataOut;
-    unsigned long int dataSize, i;
-    unsigned char channels;
-  public:
-    void writeDataIn(float* d, unsigned char chan);
-    float *getDataOut(unsigned char chan);
-    void derive();
-    void integrate();
-
-    USCAudioProcess(unsigned int bufferSizeDef, unsigned char chans);
-    ~USCAudioProcess();
-};
-
 #endif
