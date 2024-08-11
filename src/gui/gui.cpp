@@ -224,6 +224,9 @@ void USCGUI::drawGUI() {
     // drawAuxScope();
     drawXYScope();
   ImPlot::DestroyContext();
+  // ImGui::Begin("align");
+  // ImGui::PlotLines("align",oscAlign[0],65536,0,NULL,-1.0f,1.0f,ImGui::GetContentRegionAvail());
+  // ImGui::End();
 }
 
 void USCGUI::writeOscData(unsigned char chan, float* datax, float* datay) {

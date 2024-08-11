@@ -33,7 +33,8 @@ USCAudioInput::USCAudioInput(unsigned int frameSize, unsigned int bufferSize, un
   }
 
   doUpdate = true;
-  triggered = false;
+  triggered = new bool[conf.channels];
+  memset(triggered,0,conf.channels*sizeof(bool));
 
   // alignParams = (AlignParams*)malloc(conf.channels*sizeof(AlignParams));
   // if (!alignParams) {
@@ -67,6 +68,17 @@ int USCAudioInput::bufferGetCallback(
 
     unsigned char j = 0;
 
+    memset(triggered,0,conf.channels*sizeof(bool));
+  
+    unsigned int triggerPoint[conf.channels];
+    memset(triggerPoint,0,conf.channels*sizeof(int));
+  
+    bool triggerLow[conf.channels];
+    bool triggerHigh[conf.channels];
+
+    memset(triggerLow,0,conf.channels*sizeof(bool));
+    memset(triggerHigh,0,conf.channels*sizeof(bool));
+
     if (inputBuffer==NULL) {
       for (buffer.index = 0; buffer.index < buffer.size*conf.channels; buffer.index++) {
         buffer.data[buffer.index] = 0;
@@ -85,11 +97,79 @@ int USCAudioInput::bufferGetCallback(
           for (j = 0; j < conf.channels; j++) {
             float dat = *audIn++;
             buffer.data[j][buffer.size - framesPerBuffer + buffer.index] = dat;
-          if (outputBuffer != NULL) *audOut++ = dat;
+            if (outputBuffer != NULL) *audOut++ = dat;
+            // find trigger point
+            // if (!triggered[j]) {
+            //   triggered[j] = (triggerLow[j] && triggerHigh[j]);
+            //   if (dat < alignParams[j].trigger) {
+            //     triggerLow[j] = true;
+            //     if (triggered[j] && alignParams[j].edge) triggerPoint[j] = buffer.index;
+            //   }
+            //   if (dat > alignParams[j].trigger) {
+            //     triggerHigh[j] = true;
+            //     if (triggered[j] && !alignParams[j].edge) triggerPoint[j] = buffer.index;
+            //   }
+            // }
           }
         }
       }
-      for (j = 0; j < conf.channels; j++) align(j);
+      for (j = 0; j < conf.channels; j++) { // trigger
+        unsigned long int i = 0;
+        float delta = 0;
+        if (alignParams[j].holdoff == 0) holdoffTimer = 0;
+        if (holdoffTimer>0) {
+          holdoffTimer--;
+          delta = ((float)buffer.size/((float)alignParams[j].waveLen))/(float)buffer.size;
+          for (;i<buffer.size;i++) {
+            buffer.alignRamp[j][i]-=delta;
+          }
+        }
+        else {
+          holdoffTimer = alignParams[j].holdoff;
+        }
+        memset(buffer.alignRamp[j],-1.0f,sizeof(float)*buffer.size);
+
+        i = buffer.size - alignParams[j].waveLen;
+        if (!triggered[j]) {
+          memset(triggerLow,0,conf.channels*sizeof(bool));
+          memset(triggerHigh,0,conf.channels*sizeof(bool));
+          i -= framesPerBuffer;
+          while (i != 0 && i > (buffer.size - 2*alignParams[j].waveLen)) {
+            triggered[j] = triggerLow[j] && triggerHigh[j];
+            i--;
+            if (buffer.data[j][i] < alignParams[j].trigger) {
+              triggerLow[j] = true;
+              if (triggered[j] && alignParams[j].edge) break;
+            }
+            if (buffer.data[j][i] > alignParams[j].trigger) {
+              triggerHigh[j] = true;
+              if (triggered[j] && !alignParams[j].edge) break;
+            }
+          }
+          triggerPoint[j]  =i;
+        } else {
+          triggerPoint[j] = i  + triggerPoint[j];
+        }
+
+        if (triggered[j]) {
+          delta = 2.0f/(float)(alignParams[j].waveLen);
+          for (;i < buffer.size; i++) {
+            buffer.alignRamp[j][i-alignParams[j].offset] = -1.0f + delta*(i - triggerPoint[j]);
+            if (buffer.alignRamp[j][i-alignParams[j].offset] >= 1.0f) {
+              align(0);
+            }
+          }
+        } else {
+          delta = ((float)buffer.size/((float)alignParams[j].waveLen))/(float)buffer.size;
+          buffer.alignRamp[j][buffer.size-1] = 1.0f;
+          for (i = buffer.size-2; i > 0; i--) {
+            buffer.alignRamp[j][i] = clamp(buffer.alignRamp[j][i+1] - 2*delta);
+          }
+          buffer.alignRamp[j][0] = -1.0f;
+        }
+
+        i = 0;
+      }
     }
     return paContinue;
 }
@@ -187,52 +267,6 @@ void USCAudioInput::setAlignParams(unsigned char chan, AlignParams ap) {
 }
 
 void USCAudioInput::align(unsigned char chan) {
-  unsigned long int i = 0;
-  float delta = 0;
-  if (alignParams[chan].holdoff == 0) holdoffTimer = 0;
-  if (holdoffTimer>0) {
-    holdoffTimer--;
-    delta = ((float)buffer.size/((float)alignParams[chan].waveLen))/(float)buffer.size;
-    for (;i<buffer.size;i++) {
-      buffer.alignRamp[chan][i]-=delta;
-    }
-    return;
-  }
-  holdoffTimer = alignParams[chan].holdoff;
-  memset(buffer.alignRamp[chan],-1.0f,sizeof(float)*buffer.size);
-
-  unsigned int triggerPoint = 0;
-  bool triggerLow = false, triggerHigh = false;
-  i = buffer.size - alignParams[chan].waveLen;
-  while (i != 0 && i > (buffer.size - 2*alignParams[chan].waveLen)) {
-    triggered = (triggerLow && triggerHigh);
-    i--;
-    if (buffer.data[chan][i] < alignParams[chan].trigger) {
-      triggerLow = true;
-      if (triggered && alignParams[chan].edge) break;
-    }
-    if (buffer.data[chan][i] > alignParams[chan].trigger) {
-      triggerHigh = true;
-      if (triggered && !alignParams[chan].edge) break;
-    }
-  }
-  triggerPoint = i;
-
-  if (triggered) {
-    delta = 2.0f/(float)(alignParams[chan].waveLen);
-    for (;i < buffer.size; i++) {
-      buffer.alignRamp[chan][i-alignParams[chan].offset] = -1.0f + delta*(i - triggerPoint);
-    }
-  } else {
-    delta = ((float)buffer.size/((float)alignParams[chan].waveLen))/(float)buffer.size;
-    buffer.alignRamp[chan][buffer.size-1] = 1.0f;
-    for (i = buffer.size-2; i > 0; i--) {
-      buffer.alignRamp[chan][i] = clamp(buffer.alignRamp[chan][i+1] - 2*delta);
-    }
-    buffer.alignRamp[chan][0] = -1.0f;
-  }
-
-  i = 0;
 }
 
 float *USCAudioInput::getAlignRamp(unsigned char c) {
@@ -240,7 +274,7 @@ float *USCAudioInput::getAlignRamp(unsigned char c) {
 }
 
 bool USCAudioInput::didTrigger() {
-  return triggered;
+  return triggered[0];
 }
 
 void USCAudioInput::setUpdateState(bool u) {
@@ -280,5 +314,9 @@ USCAudioInput::~USCAudioInput() {
     }
     delete[] buffer.alignRamp;
     buffer.alignRamp = NULL;
+  }
+  if (triggered) {
+    delete[] triggered;
+    triggered = NULL;
   }
 }
