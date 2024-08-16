@@ -75,7 +75,7 @@ void USCGUI::drawChanControls() {
     }
     ImGui::SliderFloat("trigger", &tc[i].trigger, -1.0f, 1.0f, "%g");
     showTrigger = ImGui::IsItemActive();
-    showTrigger |= ai->didTrigger();
+    showTrigger |= ai->didTrigger(i);
     // ImGui::SliderInt("holdoff", &tc[i].trigHoldoff, 0, 1024, "%d");
     ImGui::SameLine();
     if (ImGui::Button(tc[i].triggerEdge?"Rising":"Falling")) tc[i].triggerEdge = !tc[i].triggerEdge;

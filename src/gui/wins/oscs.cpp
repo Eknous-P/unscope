@@ -23,7 +23,7 @@ void USCGUI::drawMainScope() {
         }
         ImPlot::PlotLine("##scopeplot", oscAlign[trigChan], oscData[i], oscDataSize,ImPlotFlags_NoLegend);
       }
-      trigColor = ai->didTrigger()?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
+      trigColor = ai->didTrigger(i)?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
       if (showTrigger) ImPlot::TagY(tc[i].trigger,trigColor,"trig");
       double trigDouble = tc[i].trigger;
       double offsDouble = tc[i].trigOffset;

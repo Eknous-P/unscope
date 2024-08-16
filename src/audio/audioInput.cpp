@@ -273,8 +273,8 @@ float *USCAudioInput::getAlignRamp(unsigned char c) {
   return buffer.alignRamp[c];
 }
 
-bool USCAudioInput::didTrigger() {
-  return triggered[0];
+bool USCAudioInput::didTrigger(unsigned char chan) {
+  return triggered[chan];
 }
 
 void USCAudioInput::setUpdateState(bool u) {
