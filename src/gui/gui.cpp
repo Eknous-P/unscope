@@ -221,7 +221,6 @@ void USCGUI::drawGUI() {
   drawXYScopeControls();
   ImPlot::CreateContext();
     drawMainScope();
-    // drawAuxScope();
     drawXYScope();
   ImPlot::DestroyContext();
   // ImGui::Begin("align");

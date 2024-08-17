@@ -112,7 +112,6 @@ class USCGUI {
     void drawGUI();
   
     void drawMainScope();
-    void drawAuxScope();
     void drawXYScope();
 
     void drawGlobalControls();

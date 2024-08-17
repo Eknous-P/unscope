@@ -43,18 +43,6 @@ void USCGUI::drawMainScope() {
   ImGui::End();
 }
 
-void USCGUI::drawAuxScope() {
-  // ImGui::Begin("Scope (Auxiliary)");
-  // if (ImPlot::BeginPlot("##scopeaux", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
-  //   ImPlot::SetupAxes("t","##v",sc.scopeFlags,0);
-  //   ImPlot::SetupAxisLimits(ImAxis_X1,(float)(oscDataSize - sc.traceSize)/oscDataSize, 1);
-  //   ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/sc.yScale,1.0f/sc.yScale);
-  //   ImPlot::PlotLine("##scopeplot", oscAlign, oscAuxData[0], oscDataSize,ImPlotFlags_NoLegend, 0);
-  //   ImPlot::EndPlot();
-  // }
-  // ImGui::End();
-}
-
 void USCGUI::drawXYScope() {
   if (!wo.xyScopeOpen) return;
   if (channels < 2) return;
