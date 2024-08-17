@@ -119,8 +119,7 @@ class USCGUI {
     void drawXYScopeControls();
 
     void drawSettings();
-  
-    void audioSet();
+
     bool doRestartAudio();
 
     int  getAudioDeviceSetting();

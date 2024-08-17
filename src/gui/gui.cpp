@@ -133,12 +133,11 @@ int USCGUI::init() {
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  io = ImGui::GetIO();
   ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
   // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
   ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
   ImGui::GetIO().IniFilename = NULL;
-  // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
+  // ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
   //io.ConfigViewportsNoAutoMerge = true;
   //io.ConfigViewportsNoTaskBarIcon = true;
   // Setup Dear ImGui style
@@ -156,6 +155,7 @@ int USCGUI::init() {
   if (rd->init()!=0) return UGUIERROR_INITFAIL;
   bgColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
   running = true;
+  io = ImGui::GetIO();
   return 0;
 }
 
@@ -235,10 +235,6 @@ void USCGUI::writeOscData(unsigned char chan, float* datax, float* datay) {
 
 void USCGUI::writeOscAuxData(unsigned char chan, float* data) {
   memcpy(oscData[chan],data,oscDataSize*sizeof(float));
-}
-
-void USCGUI::audioSet() {
-  restartAudio = false;
 }
 
 bool USCGUI::doRestartAudio() {
