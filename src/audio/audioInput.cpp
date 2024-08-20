@@ -1,5 +1,7 @@
 #include "audio.h"
 
+#define CHECK_TRIGGERED triggered[j]=triggerLow[j]&&triggerHigh[j]
+
 USCAudioInput::USCAudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned char channelsDef, unsigned int sampleRateDef) {
   isGood = Pa_Initialize()==paNoError;
   running = false;
@@ -98,18 +100,6 @@ int USCAudioInput::bufferGetCallback(
             float dat = *audIn++;
             buffer.data[j][buffer.size - framesPerBuffer + buffer.index] = dat;
             if (outputBuffer != NULL) *audOut++ = dat;
-            // find trigger point
-            // if (!triggered[j]) {
-            //   triggered[j] = (triggerLow[j] && triggerHigh[j]);
-            //   if (dat < alignParams[j].trigger) {
-            //     triggerLow[j] = true;
-            //     if (triggered[j] && alignParams[j].edge) triggerPoint[j] = buffer.index;
-            //   }
-            //   if (dat > alignParams[j].trigger) {
-            //     triggerHigh[j] = true;
-            //     if (triggered[j] && !alignParams[j].edge) triggerPoint[j] = buffer.index;
-            //   }
-            // }
           }
         }
       }
@@ -130,33 +120,31 @@ int USCAudioInput::bufferGetCallback(
         memset(buffer.alignRamp[j],-1.0f,sizeof(float)*buffer.size);
 
         i = buffer.size - alignParams[j].waveLen;
-        if (!triggered[j]) {
-          memset(triggerLow,0,conf.channels*sizeof(bool));
-          memset(triggerHigh,0,conf.channels*sizeof(bool));
-          i -= framesPerBuffer;
-          while (i != 0 && i > (buffer.size - 2*alignParams[j].waveLen)) {
-            triggered[j] = triggerLow[j] && triggerHigh[j];
-            i--;
-            if (buffer.data[j][i] < alignParams[j].trigger) {
-              triggerLow[j] = true;
-              if (triggered[j] && alignParams[j].edge) break;
-            }
-            if (buffer.data[j][i] > alignParams[j].trigger) {
-              triggerHigh[j] = true;
-              if (triggered[j] && !alignParams[j].edge) break;
-            }
+        memset(triggerLow,0,conf.channels*sizeof(bool));
+        memset(triggerHigh,0,conf.channels*sizeof(bool));
+        // i -= framesPerBuffer;
+        while (i != 0 && i > (buffer.size - 2*alignParams[j].waveLen)) {
+          i--;
+          if (buffer.data[j][i] < alignParams[j].trigger) {
+            triggerLow[j] = true;
+            CHECK_TRIGGERED;
+            if (triggered[j] && alignParams[j].edge) break;
           }
-          triggerPoint[j]  =i;
-        } else {
-          triggerPoint[j] = i  + triggerPoint[j];
+          if (buffer.data[j][i] > alignParams[j].trigger) {
+            triggerHigh[j] = true;
+            CHECK_TRIGGERED;
+            if (triggered[j] && !alignParams[j].edge) break;
+          }
         }
+        triggerPoint[j] = i;
 
         if (triggered[j]) {
           delta = 2.0f/(float)(alignParams[j].waveLen);
           for (;i < buffer.size; i++) {
             buffer.alignRamp[j][i-alignParams[j].offset] = -1.0f + delta*(i - triggerPoint[j]);
             if (buffer.alignRamp[j][i-alignParams[j].offset] >= 1.0f) {
-              align(0);
+              // align(0);
+              buffer.alignRamp[j][i-alignParams[j].offset] = 1.0f;
             }
           }
         } else {
