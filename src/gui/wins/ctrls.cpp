@@ -96,7 +96,7 @@ void USCGUI::drawChanControls() {
       tc[i].traceSize = tc[0].traceSize;
       tc[i].traceOffset = tc[0].traceOffset;
       tc[i].trigOffset = tc[0].trigOffset;
-      tc[i].trigger = tc[0].trigger;
+      tc[i].trigger = tc[shareTrigger>0?(shareTrigger-1):0].trigger;
       tc[i].trigHoldoff = tc[0].trigHoldoff;
       tc[i].triggerEdge = tc[0].triggerEdge;
     }

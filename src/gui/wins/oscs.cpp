@@ -14,20 +14,17 @@ void USCGUI::drawMainScope() {
       if (!tc[i].enable) continue;
       ImPlot::SetAxes(i,i+3);
       ImPlot::SetNextLineStyle(ImVec4(tc[i].color[0],tc[i].color[1],tc[i].color[2],tc[i].color[3]),0.25f);
+      unsigned char trigChan = (shareTrigger>0)?(shareTrigger-1):i;
       if (oscAlign[i] && oscData[i] && oscDataSize) {
-        int trigChan;
-        if (shareTrigger > 0) {
-          trigChan = shareTrigger-1;
-        } else {
-          trigChan = i;
-        }
         ImPlot::PlotLine("##scopeplot", oscAlign[trigChan], oscData[i], oscDataSize,ImPlotFlags_NoLegend);
       }
-      trigColor = ai->didTrigger(i)?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
-      if (showTrigger) ImPlot::TagY(tc[i].trigger,trigColor,"trig");
-      double trigDouble = tc[i].trigger;
+      trigColor = ai->didTrigger(trigChan)?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
+      double trigDouble = tc[trigChan].trigger;
       double offsDouble = tc[i].trigOffset;
-      if (ImPlot::DragLineY(2*i,&trigDouble,trigColor)) tc[i].trigger = trigDouble;
+      if (i == shareTrigger-1 || shareTrigger < 0) if (ImPlot::DragLineY(2*i,&trigDouble,trigColor)) tc[i].trigger = trigDouble;
+      showTrigger |= ImPlot::IsAxisHovered(i+3);
+      if ((i == shareTrigger-1 || shareTrigger < 0) && showTrigger) ImPlot::TagY(tc[i].trigger,trigColor,"CH %d",i+1);
+
       if (ImPlot::DragLineX(2*i+1,&offsDouble,ImVec4(0,1,0,.5))) {
         tc[i].trigOffset = clamp(offsDouble);
         tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize;
