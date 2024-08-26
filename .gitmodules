@@ -12,3 +12,6 @@
 	path = submodules/SDL
 	url = https://github.com/libsdl-org/SDL.git
 	branch = release-2.28.x
+[submodule "submodules/imgui-knobs"]
+	path = submodules/imgui-knobs
+	url = https://github.com/altschuler/imgui-knobs.git

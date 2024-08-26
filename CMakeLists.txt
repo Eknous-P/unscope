@@ -36,7 +36,9 @@ ${imgui_path}/misc/cpp/imgui_stdlib.cpp
 
 ${implot_path}/implot.cpp
 ${implot_path}/implot_demo.cpp
-${implot_path}/implot_items.cpp)
+${implot_path}/implot_items.cpp
+
+./submodules/imgui-knobs/imgui-knobs.cpp)
 
 if(USE_OPENGL)
   pkg_check_modules(OPENGL opengl REQUIRED)
@@ -116,6 +118,7 @@ ${imgui_path}
 ${imgui_path}/misc/cpp
 ${imgui_path}/backends
 ${implot_path}
+./submodules/imgui-knobs
 ${srcs_path}
 ${srcs_path}/audio
 ${srcs_path}/gui)
