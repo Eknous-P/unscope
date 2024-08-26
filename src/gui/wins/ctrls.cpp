@@ -137,13 +137,13 @@ void USCGUI::drawXYScopeControls() {
 
       ImGui::TableNextColumn();
 
-      ImGuiKnobs::Knob("x scale", &xyp.xScale, 0.5f, 4.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
+      ImGuiKnobs::Knob("x scale", &xyp.xScale, 0.5f, 4.0f, 0.25f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
       if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) xyp.xScale = 1.0f;
       ImGui::SameLine();
       ImGuiKnobs::Knob("x offset", &xyp.xOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
       if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) xyp.xOffset = 0.0f;
-
-      ImGuiKnobs::Knob("y scale", &xyp.yScale, 0.5f, 4.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
+      
+      ImGuiKnobs::Knob("y scale", &xyp.yScale, 0.5f, 4.0f, 0.25f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
       if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) xyp.yScale = 1.0f;
       ImGui::SameLine();
       ImGuiKnobs::Knob("y offset", &xyp.yOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
