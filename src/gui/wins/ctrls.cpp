@@ -65,7 +65,10 @@ void USCGUI::drawChanControls() {
     ImGui::Begin(strbuf,&wo.chanControlsOpen[i]);
     ImGui::Checkbox("enable", &tc[i].enable);
     ImGui::SameLine();
+    if (i != 0) ImGui::BeginDisabled(shareParams);
+    ImGui::AlignTextToFramePadding();
     if (ImGui::Button(tc[i].triggerEdge?"Rising":"Falling")) tc[i].triggerEdge = !tc[i].triggerEdge;
+    if (i != 0) ImGui::EndDisabled();
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("trigger edge");
     if (i != 0) ImGui::BeginDisabled(shareParams);
     tc[i].timebase = tc[i].traceSize * 1000 / sampleRate;
