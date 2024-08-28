@@ -71,12 +71,14 @@ int USCAudioInput::bufferGetCallback(
     unsigned char j = 0;
 
     memset(triggered,0,conf.channels*sizeof(bool));
+
+    const int nChans = conf.channels;
   
-    unsigned int triggerPoint[conf.channels];
+    unsigned int *triggerPoint = new unsigned int[nChans];
     memset(triggerPoint,0,conf.channels*sizeof(int));
   
-    bool triggerLow[conf.channels];
-    bool triggerHigh[conf.channels];
+    bool *triggerLow = new bool[nChans];
+    bool *triggerHigh = new bool[nChans];
 
     memset(triggerLow,0,conf.channels*sizeof(bool));
     memset(triggerHigh,0,conf.channels*sizeof(bool));
@@ -159,6 +161,11 @@ int USCAudioInput::bufferGetCallback(
         i = 0;
       }
     }
+
+    delete[] triggerPoint;
+    delete[] triggerLow;
+    delete[] triggerHigh;
+
     return paContinue;
 }
 
