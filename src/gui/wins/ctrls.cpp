@@ -14,15 +14,23 @@ void USCGUI::drawGlobalControls() {
   }
   ImGui::BeginDisabled(!trigShare);
   int trigChan = abs(shareTrigger);
-  if (ImGui::InputInt("channel",&trigChan)) {
+  if (ImGui::InputInt("trigger channel",&trigChan)) {
     if (trigChan < 1) trigChan = 1;
     if (trigChan > channels) trigChan = channels;
   }
   shareTrigger = trigChan;
   if (!trigShare) shareTrigger = -shareTrigger;
   ImGui::EndDisabled();
+
+  if (ImGui::BeginCombo("trigger mode",triggerModeNames[triggerMode])) {
+    for (unsigned char i = 0; i < 4; i++) {
+      if (ImGui::Selectable(triggerModeNames[i],i == triggerMode)) triggerMode = TriggerModes(i);
+    }
+    ImGui::EndCombo();
+  }
   
   ImGui::Checkbox("update",&updateOsc);
+
   if (devs.size() > 0) {
     if (ImGui::BeginCombo("device",devs[deviceNum].devName.c_str())) {
       for (int i = 0; i < devs.size(); i++) {

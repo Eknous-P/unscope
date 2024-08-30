@@ -10,6 +10,13 @@
 
 #define INIFILE "unscope.ini"
 
+enum TriggerModes : unsigned char {
+  TRIGGER_NONE, // fixed sweep
+  TRIGGER_AUTO, // normal, fixed if not triggering
+  TRIGGER_NORMAL,
+  TRIGGER_SINGLE
+};
+
 class USCRender {
   public:
     virtual int  setup();
@@ -95,7 +102,8 @@ class USCGUI {
     settings    st;
 
     bool showTrigger, shareParams;
-    int shareTrigger; // abs part - which channel, sign - do/don't
+    signed char shareTrigger; // abs part - which channel, sign - do/don't
+    TriggerModes triggerMode;
 
   public:
     void setupRenderer(USCRenderers r);
@@ -130,5 +138,6 @@ class USCGUI {
 };
 
 extern const char *windowLayout;
+extern const char *triggerModeNames[4];
 
 #endif

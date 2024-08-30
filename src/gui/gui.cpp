@@ -89,12 +89,13 @@ USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsi
   restartAudio = true;
   audioLoopback = false;
 
-  device = 0;
+  device    = 0;
   deviceNum = 0;
   devs.clear();
-  showTrigger = false;
-  shareParams = true;
+  showTrigger  = false;
+  shareParams  = true;
   shareTrigger = 1;
+  triggerMode  = TRIGGER_AUTO;
 
   fullscreen = false;
 
@@ -172,7 +173,13 @@ void USCGUI::doFrame() {
 
   for (unsigned char j = 0; j < channels; j++) {
     ai->setUpdateState(updateOsc);
-    ai->setAlignParams(j,AlignParams(tc[j].trigger,tc[j].traceSize,tc[j].traceOffset,tc[j].triggerEdge,tc[j].trigHoldoff));
+    ai->setAlignParams(j,
+      AlignParams((triggerMode==TRIGGER_NONE)?-INFINITY:tc[j].trigger,
+      tc[j].traceSize,
+      tc[j].traceOffset,
+      tc[j].triggerEdge,
+      tc[j].trigHoldoff,
+      triggerMode!=TRIGGER_NORMAL));
     writeOscData(j,
       ai->getAlignRamp(j),
       ai->getData(j));

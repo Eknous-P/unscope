@@ -104,16 +104,19 @@ struct AlignParams {
   long int offset;
   bool edge; // true -> falling, false -> rising
   unsigned long int holdoff;
+  bool fallback; // use fixed sweep if not triggering
   AlignParams(float t,
               unsigned long int wl,
               long int of,
               bool e,
-              unsigned long int ho) {
-    trigger = t;
-    waveLen = wl;
-    offset = of;
-    edge = e;
-    holdoff = ho;
+              unsigned long int ho,
+              bool fb) {
+    trigger  = t;
+    waveLen  = wl;
+    offset   = of;
+    edge     = e;
+    holdoff  = ho;
+    fallback = fb;
   }
 };
 

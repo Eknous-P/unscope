@@ -28,7 +28,9 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
 
     AudioConfig conf;
     AudioBuffer buffer;
-    AlignParams alignParams[3] = {AlignParams(0,0,0,0,0),AlignParams(0,0,0,0,0),AlignParams(0,0,0,0,0)}; // i hate that i have to init the values in the header but otherwise it doesnt work!! help!!
+    AlignParams alignParams[3] = {AlignParams(0.0f,0,0,0,0,false),
+                                  AlignParams(0.0f,0,0,0,0,false),
+                                  AlignParams(0.0f,0,0,0,0,false)}; // i hate that i have to init the values in the header but otherwise it doesnt work!! help!!
 
     std::vector<DeviceEntry> devs;
   

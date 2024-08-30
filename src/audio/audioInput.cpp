@@ -149,7 +149,7 @@ int USCAudioInput::bufferGetCallback(
               buffer.alignRamp[j][i-alignParams[j].offset] = 1.0f;
             }
           }
-        } else {
+        } else if (alignParams[j].fallback) {
           delta = ((float)buffer.size/((float)alignParams[j].waveLen))/(float)buffer.size;
           buffer.alignRamp[j][buffer.size-1] = 1.0f;
           for (i = buffer.size-2; i > 0; i--) {
@@ -269,6 +269,11 @@ float *USCAudioInput::getAlignRamp(unsigned char c) {
 }
 
 bool USCAudioInput::didTrigger(unsigned char chan) {
+  if (chan == 255) {
+    bool ret = false;
+    for (unsigned char i = 0; i < conf.channels; i++) ret |= triggered[i];
+    return ret;
+  }
   return triggered[chan];
 }
 
