@@ -34,7 +34,7 @@ USCAudioInput::USCAudioInput(unsigned int frameSize, unsigned int bufferSize, un
     memset(buffer.alignRamp[i], 0, buffer.size*sizeof(float));
   }
 
-  doUpdate = true;
+  updateAudio = true;
   triggered = new bool[conf.channels];
   memset(triggered,0,conf.channels*sizeof(bool));
 
@@ -89,7 +89,7 @@ int USCAudioInput::bufferGetCallback(
         if (outputBuffer != NULL) *audOut++ = 0;
       }
     } else {
-      if (doUpdate) {
+      if (updateAudio) {
         // push vaules back
         for (j = 0; j < conf.channels; j++) {
           memcpy(buffer.data[j],
@@ -270,15 +270,14 @@ float *USCAudioInput::getAlignRamp(unsigned char c) {
 
 bool USCAudioInput::didTrigger(unsigned char chan) {
   if (chan == 255) {
-    bool ret = false;
-    for (unsigned char i = 0; i < conf.channels; i++) ret |= triggered[i];
-    return ret;
+    for (unsigned char i = 0; i < conf.channels; i++) if (triggered[i]) return true;
+    return false;
   }
   return triggered[chan];
 }
 
 void USCAudioInput::setUpdateState(bool u) {
-  doUpdate = u;
+  updateAudio = u;
 }
 
 float *USCAudioInput::getData(unsigned char chan) {

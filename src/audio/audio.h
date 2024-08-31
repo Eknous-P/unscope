@@ -38,7 +38,7 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
     PaError err;
     PaStreamParameters streamParams;
 
-    bool isGood, running, *triggered, doUpdate;
+    bool isGood, running, *triggered, updateAudio;
     unsigned long int holdoffTimer;
 
     int bufferGetCallback(

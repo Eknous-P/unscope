@@ -21,9 +21,9 @@ void USCGUI::drawMainScope() {
       trigColor = ai->didTrigger(trigChan)?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
       double trigDouble = tc[trigChan].trigger;
       double offsDouble = tc[i].trigOffset;
-      if (i == shareTrigger-1 || shareTrigger < 0) if (ImPlot::DragLineY(2*i,&trigDouble,trigColor)) tc[i].trigger = trigDouble;
+      if ((i == shareTrigger-1 || shareTrigger < 0) && triggerMode != TRIGGER_NONE) if (ImPlot::DragLineY(2*i,&trigDouble,trigColor)) tc[i].trigger = trigDouble;
       showTrigger |= ImPlot::IsAxisHovered(i+3);
-      if ((i == shareTrigger-1 || shareTrigger < 0) && showTrigger) ImPlot::TagY(tc[i].trigger,trigColor,"CH %d",i+1);
+      if ((i == shareTrigger-1 || shareTrigger < 0) && showTrigger && triggerMode != TRIGGER_NONE) ImPlot::TagY(tc[i].trigger,trigColor,"CH %d",i+1);
 
       if (ImPlot::DragLineX(2*i+1,&offsDouble,ImVec4(0,1,0,.5))) {
         tc[i].trigOffset = clamp(offsDouble);

@@ -85,7 +85,8 @@ USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsi
     memset(oscAlign[i],0,oscDataSize*sizeof(float));
   }
   running = false;
-  updateOsc = true;
+  updateAudio = true;
+  doTrigger = true;
   restartAudio = true;
   audioLoopback = false;
 
@@ -172,7 +173,7 @@ void USCGUI::doFrame() {
   ImGui::DockSpaceOverViewport(ImGui::GetWindowViewport(),0);
 
   for (unsigned char j = 0; j < channels; j++) {
-    ai->setUpdateState(updateOsc);
+    ai->setUpdateState(updateAudio);
     ai->setAlignParams(j,
       AlignParams((triggerMode==TRIGGER_NONE)?-INFINITY:tc[j].trigger,
       tc[j].traceSize,
@@ -180,7 +181,7 @@ void USCGUI::doFrame() {
       tc[j].triggerEdge,
       tc[j].trigHoldoff,
       triggerMode!=TRIGGER_NORMAL));
-    writeOscData(j,
+    if (doTrigger) writeOscData(j,
       ai->getAlignRamp(j),
       ai->getData(j));
   }

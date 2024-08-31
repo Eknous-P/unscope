@@ -28,8 +28,14 @@ void USCGUI::drawGlobalControls() {
     }
     ImGui::EndCombo();
   }
+  if (triggerMode==TRIGGER_SINGLE) {
+    if (ai->didTrigger(shareTrigger>0?shareTrigger-1:255)) doTrigger = false;
+    if (ImGui::Button("trigger")) doTrigger = true;
+  } else {
+    doTrigger = true;
+  }
   
-  ImGui::Checkbox("update",&updateOsc);
+  ImGui::Checkbox("update audio",&updateAudio);
 
   if (devs.size() > 0) {
     if (ImGui::BeginCombo("device",devs[deviceNum].devName.c_str())) {
