@@ -171,20 +171,6 @@ void USCGUI::doFrame() {
   
   ImGui::DockSpaceOverViewport(ImGui::GetWindowViewport(),0);
 
-  for (unsigned char j = 0; j < channels; j++) {
-    ai->setUpdateState(updateAudio);
-    ai->setAlignParams(j,
-      AlignParams((triggerMode==TRIGGER_NONE)?-INFINITY:tc[j].trigger,
-      tc[j].traceSize,
-      tc[j].traceOffset,
-      tc[j].triggerEdge,
-      tc[j].trigHoldoff,
-      triggerMode!=TRIGGER_NORMAL));
-    writeOscData(j,
-      ai->getAlignRamp(j),
-      ai->getData(j));
-  }
-
   USCGUI::drawGUI();
 
   ImGui::Render();
@@ -226,6 +212,21 @@ void USCGUI::drawGUI() {
   drawGlobalControls();
   drawChanControls();
   drawXYScopeControls();
+
+  for (unsigned char j = 0; j < channels; j++) {
+    ai->setUpdateState(updateAudio);
+    ai->setAlignParams(j,
+      AlignParams((triggerMode==TRIGGER_NONE)?-INFINITY:tc[j].trigger,
+      tc[j].traceSize,
+      tc[j].traceOffset,
+      tc[j].triggerEdge,
+      tc[j].trigHoldoff,
+      triggerMode!=TRIGGER_NORMAL));
+    writeOscData(j,
+      ai->getAlignRamp(j),
+      ai->getData(j));
+  }
+
   ImPlot::CreateContext();
     drawMainScope();
     drawXYScope();
