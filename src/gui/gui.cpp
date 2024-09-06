@@ -86,7 +86,6 @@ USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsi
   }
   running = false;
   updateAudio = true;
-  doTrigger = true;
   restartAudio = true;
   audioLoopback = false;
 
@@ -181,7 +180,7 @@ void USCGUI::doFrame() {
       tc[j].triggerEdge,
       tc[j].trigHoldoff,
       triggerMode!=TRIGGER_NORMAL));
-    if (doTrigger) writeOscData(j,
+    writeOscData(j,
       ai->getAlignRamp(j),
       ai->getData(j));
   }

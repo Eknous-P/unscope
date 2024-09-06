@@ -6,13 +6,13 @@ void USCGUI::drawMainScope() {
   if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
     for (unsigned char i = 0; i < channels; i++) {
       ImPlot::SetupAxis(ImAxis(i),"t",ImPlotAxisFlags_NoLabel|ImPlotAxisFlags_NoTickLabels|sc.scopeFlags);
-      ImPlot::SetupAxis(ImAxis(i+3),"v",sc.scopeFlags|ImPlotAxisFlags_NoLabel);
+      ImPlot::SetupAxis(ImAxis(i+ImAxis_Y1),"v",sc.scopeFlags|ImPlotAxisFlags_NoLabel);
       ImPlot::SetupAxisLimits(ImAxis(i),-1.0f, 1.0f);
-      ImPlot::SetupAxisLimits(ImAxis(i+3),-1.0f/tc[i].yScale-tc[i].yOffset,1.0f/tc[i].yScale-tc[i].yOffset);
+      ImPlot::SetupAxisLimits(ImAxis(i+ImAxis_Y1),-1.0f/tc[i].yScale-tc[i].yOffset,1.0f/tc[i].yScale-tc[i].yOffset);
     }
     for (unsigned char i = 0; i < channels; i++) {
       if (!tc[i].enable) continue;
-      ImPlot::SetAxes(i,i+3);
+      ImPlot::SetAxes(i,i+ImAxis_Y1);
       ImPlot::SetNextLineStyle(ImVec4(tc[i].color[0],tc[i].color[1],tc[i].color[2],tc[i].color[3]),0.25f);
       unsigned char trigChan = (shareTrigger>0)?(shareTrigger-1):i;
       if (oscAlign[i] && oscData[i] && oscDataSize) {
@@ -22,7 +22,7 @@ void USCGUI::drawMainScope() {
       double trigDouble = tc[trigChan].trigger;
       double offsDouble = tc[i].trigOffset;
       if ((i == shareTrigger-1 || shareTrigger < 0) && triggerMode != TRIGGER_NONE) if (ImPlot::DragLineY(2*i,&trigDouble,trigColor)) tc[i].trigger = trigDouble;
-      showTrigger |= ImPlot::IsAxisHovered(i+3);
+      showTrigger |= ImPlot::IsAxisHovered(i+ImAxis_Y1);
       if ((i == shareTrigger-1 || shareTrigger < 0) && showTrigger && triggerMode != TRIGGER_NONE) ImPlot::TagY(tc[i].trigger,trigColor,"CH %d",i+1);
 
       if (ImPlot::DragLineX(2*i+1,&offsDouble,ImVec4(0,1,0,.5))) {

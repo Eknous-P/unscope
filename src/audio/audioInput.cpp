@@ -15,6 +15,7 @@ USCAudioInput::USCAudioInput(unsigned int frameSize, unsigned int bufferSize, un
 
   buffer.size = bufferSize;
   buffer.data = new float*[conf.channels];
+  buffer.dataCopy = new float*[conf.channels];
   buffer.alignRamp = new float*[buffer.size];
 
   holdoffTimer = 0;
@@ -25,26 +26,20 @@ USCAudioInput::USCAudioInput(unsigned int frameSize, unsigned int bufferSize, un
   }
   for (unsigned char i = 0; i < conf.channels; i++) {
     buffer.data[i] = new float[buffer.size];
+    buffer.dataCopy[i] = new float[buffer.size];
     buffer.alignRamp[i] = new float[buffer.size];
-    if (!buffer.data[i] || !buffer.alignRamp[i]) {
+    if (!buffer.data[i] || !buffer.dataCopy[i] || !buffer.alignRamp[i]) {
       isGood = false;
       return;
     }
-    memset(buffer.data[i],0,buffer.size*sizeof(float));
+    memset(buffer.data[i],      0, buffer.size*sizeof(float));
+    memset(buffer.dataCopy[i],  0, buffer.size*sizeof(float));
     memset(buffer.alignRamp[i], 0, buffer.size*sizeof(float));
   }
 
   updateAudio = true;
   triggered = new bool[conf.channels];
   memset(triggered,0,conf.channels*sizeof(bool));
-
-  // alignParams = (AlignParams*)malloc(conf.channels*sizeof(AlignParams));
-  // if (!alignParams) {
-  //   isGood = false;
-  //   printf("bru you fucked it up\n");
-  //   return;
-  // }
-  // alignParams = new AlignParams[conf.channels];
 }
 
 int USCAudioInput::_PaCallback(
@@ -89,21 +84,22 @@ int USCAudioInput::bufferGetCallback(
         if (outputBuffer != NULL) *audOut++ = 0;
       }
     } else {
-      if (updateAudio) {
-        // push vaules back
+      // push vaules back
+      for (j = 0; j < conf.channels; j++) {
+        memcpy(buffer.data[j],
+        buffer.data[j] + framesPerBuffer,
+        (buffer.size-framesPerBuffer)*sizeof(float));
+      }
+      // get data
+      for (buffer.index = 0; buffer.index < framesPerBuffer; buffer.index++) {
         for (j = 0; j < conf.channels; j++) {
-          memcpy(buffer.data[j],
-          buffer.data[j] + framesPerBuffer,
-          (buffer.size-framesPerBuffer)*sizeof(float));
+          float dat = *audIn++;
+          buffer.data[j][buffer.size - framesPerBuffer + buffer.index] = dat;
+          if (outputBuffer != NULL) *audOut++ = dat;
         }
-        // get data
-        for (buffer.index = 0; buffer.index < framesPerBuffer; buffer.index++) {
-          for (j = 0; j < conf.channels; j++) {
-            float dat = *audIn++;
-            buffer.data[j][buffer.size - framesPerBuffer + buffer.index] = dat;
-            if (outputBuffer != NULL) *audOut++ = dat;
-          }
-        }
+      }
+      if (updateAudio) {
+        for (j = 0; j < conf.channels; j++) memcpy(buffer.dataCopy[j],buffer.data[j],buffer.size*sizeof(float));
       }
       for (j = 0; j < conf.channels; j++) { // trigger
         unsigned long int i = 0;
@@ -127,12 +123,12 @@ int USCAudioInput::bufferGetCallback(
         // i -= framesPerBuffer;
         while (i != 0 && i > (buffer.size - 2*alignParams[j].waveLen)) {
           i--;
-          if (buffer.data[j][i] < alignParams[j].trigger) {
+          if (buffer.dataCopy[j][i] < alignParams[j].trigger) {
             triggerLow[j] = true;
             CHECK_TRIGGERED;
             if (triggered[j] && alignParams[j].edge) break;
           }
-          if (buffer.data[j][i] > alignParams[j].trigger) {
+          if (buffer.dataCopy[j][i] > alignParams[j].trigger) {
             triggerHigh[j] = true;
             CHECK_TRIGGERED;
             if (triggered[j] && !alignParams[j].edge) break;
@@ -281,7 +277,7 @@ void USCAudioInput::setUpdateState(bool u) {
 }
 
 float *USCAudioInput::getData(unsigned char chan) {
-  return (buffer.data)[chan];
+  return buffer.dataCopy[chan];
 }
 
 const PaDeviceInfo *USCAudioInput::getDeviceInfo() {
@@ -303,6 +299,16 @@ USCAudioInput::~USCAudioInput() {
     }
     delete[] buffer.data;
     buffer.data = NULL;
+  }
+  if (buffer.dataCopy) {
+    for (unsigned char i = 0; i < conf.channels; i++) {
+      if (buffer.dataCopy[i]) {
+        delete[] buffer.dataCopy[i];
+        buffer.dataCopy[i] = NULL;
+      }
+    }
+    delete[] buffer.dataCopy;
+    buffer.dataCopy = NULL;
   }
   if (buffer.alignRamp) {
     for (unsigned char i = 0; i < conf.channels; i++) {

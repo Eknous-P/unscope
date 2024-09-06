@@ -20,7 +20,7 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
     };
 
     struct AudioBuffer {
-      float **data;
+      float **data, **dataCopy;
       float **alignRamp;
       unsigned long int size;
       unsigned long int index;

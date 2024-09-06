@@ -83,7 +83,7 @@ class USCGUI {
     ImGuiIO io;
     ImGuiStyle style;
     ImVec4 bgColor, trigColor;
-    bool isGood, running, updateAudio, doTrigger, restartAudio, audioLoopback;
+    bool isGood, running, updateAudio, restartAudio, audioLoopback;
     unsigned char channels;
     USCRenderers renderer;
   

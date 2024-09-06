@@ -29,10 +29,10 @@ void USCGUI::drawGlobalControls() {
     ImGui::EndCombo();
   }
   if (triggerMode==TRIGGER_SINGLE) {
-    if (ai->didTrigger(shareTrigger>0?shareTrigger-1:255)) doTrigger = false;
-    if (ImGui::Button("trigger")) doTrigger = true;
+    if (ai->didTrigger(shareTrigger>0?shareTrigger-1:255)) updateAudio = false;
+    if (ImGui::Button("trigger")) updateAudio = true;
   } else {
-    doTrigger = true;
+    updateAudio = true;
   }
   
   ImGui::Checkbox("update audio",&updateAudio);
@@ -108,7 +108,15 @@ void USCGUI::drawChanControls() {
     showTrigger |= ai->didTrigger(i);
     ImGui::SameLine();
     ImGuiKnobs::Knob("x offset", &tc[i].trigOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
-    if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) tc[i].trigOffset = 0.0f;
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
+      tc[i].trigOffset = 0.0f;
+      tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize;
+      if (tc[i].traceSize != 0) {
+        tc[i].trigOffset = 2*((float)tc[i].traceOffset/(float)tc[i].traceSize)-1.0f;
+      } else {
+        tc[i].trigOffset = 0;
+      }
+    }
     if (ImGui::IsItemActive()) {
       tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize;
       if (tc[i].traceSize != 0) {
