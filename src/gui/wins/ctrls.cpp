@@ -115,7 +115,8 @@ void USCGUI::drawChanControls() {
 
       ImGui::TableNextColumn();
         // trigger knob
-        ImGuiKnobs::Knob("trigger", &tc[shareParams?shareTrigger-1:i].trigger, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
+        ImGui::BeginDisabled(shareTrigger > 0 && shareTrigger-1 != i);
+        ImGuiKnobs::Knob("trigger", &tc[(shareTrigger>0 || shareParams)?shareTrigger-1:i].trigger, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
         if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
           if (shareParams) {
             for (unsigned char j = 1; j < channels; j++) tc[j].trigger = 0.0f;
@@ -124,6 +125,7 @@ void USCGUI::drawChanControls() {
         }
         showTrigger = ImGui::IsItemActive();
         showTrigger |= ai->didTrigger(i);
+        ImGui::EndDisabled();
 
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
