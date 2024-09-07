@@ -84,7 +84,6 @@ void USCGUI::drawChanControls() {
     if (ImGui::Button(tc[i].triggerEdge?"Rising":"Falling")) tc[i].triggerEdge = !tc[i].triggerEdge;
     if (i != 0) ImGui::EndDisabled();
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("trigger edge");
-    if (i != 0) ImGui::BeginDisabled(shareParams);
 
     char buf[15];
     sprintf(buf, "##chan%dctrls", i);
@@ -95,6 +94,7 @@ void USCGUI::drawChanControls() {
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
         // timebase knob
+        if (i != 0) ImGui::BeginDisabled(shareParams);
         tc[i].timebase = tc[i].traceSize * 1000 / sampleRate;
         if (ImGuiKnobs::Knob("timebase", &tc[i].timebase, 0, (float)oscDataSize/(float)sampleRate*1000, 0.0f, "%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
           tc[i].traceSize = sampleRate * tc[i].timebase / 1000;
@@ -108,8 +108,10 @@ void USCGUI::drawChanControls() {
         }
       ImGui::TableNextColumn();
         // y scale knob
+        if (i != 0) ImGui::EndDisabled();
         ImGuiKnobs::Knob("y scale", &tc[i].yScale, 0.25f, 10.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15);
         if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) tc[i].yScale = 1.0f;
+        if (i != 0) ImGui::BeginDisabled(shareParams);
 
       ImGui::TableNextColumn();
         // trigger knob
