@@ -30,21 +30,12 @@ USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsi
     tc[i].triggerEdge = true;
   }
 
-  tc[0].color[0] = 0.13f;
-  tc[0].color[1] = 0.97f;
-  tc[0].color[2] = 0.21f;
-  tc[0].color[3] = 0.95f;
+  tc[0].color = ImVec4(0.13f,0.97f,0.21f,0.95f);
   if (channels > 1) {
-  tc[1].color[0] = 0.93f;
-  tc[1].color[1] = 0.17f;
-  tc[1].color[2] = 0.23f;
-  tc[1].color[3] = 0.95f;
+  tc[1].color = ImVec4(0.93f,0.17f,0.23f,0.95f);
   }
 
-  xyp.color[0] = 0.13f;
-  xyp.color[1] = 0.97f;
-  xyp.color[2] = 0.21f;
-  xyp.color[3] = 0.35f;
+  xyp.color = ImVec4(0.13f,0.97f,0.21f,0.35f);
   xyp.xOffset = 0;
   xyp.yOffset = 0;
   xyp.xScale = 1.0f;
@@ -234,6 +225,7 @@ void USCGUI::drawGUI() {
   // ImGui::Begin("align");
   // ImGui::PlotLines("align",oscAlign[0],65536,0,NULL,-1.0f,1.0f,ImGui::GetContentRegionAvail());
   // ImGui::End();
+  // ImGui::ShowMetricsWindow();
 }
 
 void USCGUI::writeOscData(unsigned char chan, float* datax, float* datay) {

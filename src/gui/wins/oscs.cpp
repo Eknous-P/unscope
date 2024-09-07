@@ -13,7 +13,7 @@ void USCGUI::drawMainScope() {
     for (unsigned char i = 0; i < channels; i++) {
       if (!tc[i].enable) continue;
       ImPlot::SetAxes(i,i+ImAxis_Y1);
-      ImPlot::SetNextLineStyle(ImVec4(tc[i].color[0],tc[i].color[1],tc[i].color[2],tc[i].color[3]),0.25f);
+      ImPlot::SetNextLineStyle(tc[i].color,0.25f);
       unsigned char trigChan = (shareTrigger>0)?(shareTrigger-1):i;
       if (oscAlign[i] && oscData[i] && oscDataSize) {
         ImPlot::PlotLine("##scopeplot", oscAlign[trigChan], oscData[i], oscDataSize,ImPlotFlags_NoLegend);
@@ -48,7 +48,7 @@ void USCGUI::drawXYScope() {
     ImPlot::SetupAxes("##x","##y",ImPlotAxisFlags_NoTickLabels|ImPlotAxisFlags_Lock,sc.scopeFlags|ImPlotAxisFlags_NoTickLabels);
     ImPlot::SetupAxisLimits(ImAxis_X1,-1.0f/xyp.xScale-xyp.xOffset,1.0f/xyp.xScale-xyp.xOffset);
     ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/xyp.yScale-xyp.yOffset,1.0f/xyp.yScale-xyp.yOffset);
-    ImPlot::SetNextLineStyle(ImVec4(xyp.color[0],xyp.color[1],xyp.color[2],xyp.color[3]),0.125f);
+    ImPlot::SetNextLineStyle(xyp.color,0.125f);
     ImPlot::PlotLine("##scopeplot", oscData[xyp.xChan-1] + (oscDataSize - xyp.sampleLen), oscData[xyp.yChan-1] + (oscDataSize - xyp.sampleLen), xyp.sampleLen,ImPlotFlags_NoLegend);
     ImPlot::EndPlot();
   }

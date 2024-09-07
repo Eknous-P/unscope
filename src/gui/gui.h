@@ -47,7 +47,7 @@ class USCGUI {
       bool  enable;
       float yOffset;
       float yScale;
-      float color[4];
+      ImVec4 color;
       float trigger;
       int   traceSize;   float timebase;
       int   traceOffset; float trigOffset;
@@ -58,7 +58,7 @@ class USCGUI {
     struct xyParams {
       float xScale,  yScale;
       float xOffset, yOffset;
-      float color[4];
+      ImVec4 color;
       int   sampleLen;
       float persistence;
       int   xChan,   yChan;
