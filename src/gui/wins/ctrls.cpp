@@ -85,9 +85,8 @@ void USCGUI::drawChanControls() {
     if (i != 0) ImGui::EndDisabled();
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("trigger edge");
 
-    char buf[15];
-    sprintf(buf, "##chan%dctrls", i);
-    if (ImGui::BeginTable(buf, 3)) {
+    sprintf(strbuf, "##chan%dctrls", i);
+    if (ImGui::BeginTable(strbuf, 3)) {
       ImGui::TableSetupColumn("c1",ImGuiTableColumnFlags_WidthFixed);
       ImGui::TableSetupColumn("c2",ImGuiTableColumnFlags_WidthFixed);
       ImGui::TableSetupColumn("c3",ImGuiTableColumnFlags_WidthFixed);
@@ -111,11 +110,18 @@ void USCGUI::drawChanControls() {
         if (i != 0) ImGui::EndDisabled();
         ImGuiKnobs::Knob("y scale", &tc[i].yScale, 0.25f, 10.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15);
         if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) tc[i].yScale = 1.0f;
-        if (i != 0) ImGui::BeginDisabled(shareParams);
 
       ImGui::TableNextColumn();
         // trigger knob
-        ImGui::BeginDisabled(shareTrigger > 0 && shareTrigger-1 != i);
+        bool hideTriggerKnob = false;
+        if (shareParams) {
+          if (shareTrigger > 0) {
+            hideTriggerKnob = (shareTrigger-1) != i;
+          } else {
+            hideTriggerKnob = i != 0;
+          }
+        }
+        ImGui::BeginDisabled(hideTriggerKnob);
         ImGuiKnobs::Knob("trigger", &tc[(shareTrigger>0 || shareParams)?shareTrigger-1:i].trigger, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
         if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
           if (shareParams) {
@@ -126,6 +132,7 @@ void USCGUI::drawChanControls() {
         showTrigger = ImGui::IsItemActive();
         showTrigger |= ai->didTrigger(i);
         ImGui::EndDisabled();
+        if (i != 0) ImGui::BeginDisabled(shareParams);
 
       ImGui::TableNextRow();
       ImGui::TableNextColumn();

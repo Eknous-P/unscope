@@ -1,6 +1,6 @@
 # unscope
 
-Audio oscilloscope for Linux and Windows
+Audio oscilloscope for Linux and Windows*
 ![screenshot](assets/scr1.png)
 
 ## Reporting issues
@@ -42,3 +42,6 @@ make
 ## Building (Windows)
 
 Currently I use Visual Studio 2022 and its fancy features to build.
+
+## Footnotes
+*. Although unscope can be built and run on Windows, I will not build or support Windows versions for releases
