@@ -114,15 +114,17 @@ void USCGUI::drawChanControls() {
       ImGui::TableNextColumn();
         // trigger knob
         bool hideTriggerKnob = false;
+        float* whichTrig = &tc[i].trigger;
         if (shareParams) {
-          if (shareTrigger > 0) {
-            hideTriggerKnob = (shareTrigger-1) != i;
-          } else {
-            hideTriggerKnob = i != 0;
-          }
+          hideTriggerKnob = i!=0;
+          whichTrig = &tc[0].trigger;
+        }
+        if (shareTrigger > 0) {
+          hideTriggerKnob = (shareTrigger - 1)!=i;
+          whichTrig = &tc[shareTrigger - 1].trigger;
         }
         ImGui::BeginDisabled(hideTriggerKnob);
-        ImGuiKnobs::Knob("trigger", &tc[(shareTrigger>0 || shareParams)?shareTrigger-1:i].trigger, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
+        ImGuiKnobs::Knob("trigger", whichTrig, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
         if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
           if (shareParams) {
             for (unsigned char j = 1; j < channels; j++) tc[j].trigger = 0.0f;
