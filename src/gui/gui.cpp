@@ -4,7 +4,7 @@ bool USCGUI::isRunning() {
   return running;
 }
 
-USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float yScaleDef, float triggerDef, int rendererDef) {
+USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float xyPersistDef, float yScaleDef, float triggerDef, int rendererDef) {
   renderer = (USCRenderers)rendererDef;
   isGood = false;
   err = 0;
@@ -40,7 +40,7 @@ USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsi
   xyp.yOffset = 0;
   xyp.xScale = 1.0f;
   xyp.yScale = 1.0f;
-  xyp.persistence = timebaseDef;
+  xyp.persistence = xyPersistDef;
   xyp.sampleLen = sampleRate*xyp.persistence/1000;
   xyp.xChan = 1;
   xyp.yChan = 2;

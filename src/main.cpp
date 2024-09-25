@@ -11,6 +11,7 @@ struct unscopeParams {
 
   // gui ...
   float timebase;
+  float xyPersist;
   float scale;
   float trigger;
 
@@ -22,6 +23,7 @@ struct unscopeParams {
     sampleRate(48000),      // Hz (only common values?)
     audioDevice(0),         // internal ID, gets overwritten anyway
     timebase(60),           // ms
+    xyPersist(40),          // ms
     scale(1.0f),            // (no unit)
     trigger(0.0f),          // (no unit)
 #ifdef _WIN32
@@ -68,6 +70,7 @@ int main(int argc, char** argv) {
         params.audioBufferSize,
         params.channels,
         params.timebase,
+        params.xyPersist,
         params.scale,
         params.trigger,
         params.renderer);
