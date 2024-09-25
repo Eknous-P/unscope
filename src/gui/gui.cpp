@@ -191,7 +191,7 @@ void USCGUI::drawGUI() {
     if (ImGui::BeginMenu("Controls")) {
       for (unsigned char i = 0; i < channels; i++) {
         char buf[32];
-        sprintf(buf,"Channel %d Controls",i);
+        sprintf(buf,"Channel %d Controls",i+1);
         ImGui::MenuItem(buf,NULL,&wo.chanControlsOpen[i]);
       }
       ImGui::MenuItem("XY Scope Controls",NULL,&wo.xyScopeControlsOpen);

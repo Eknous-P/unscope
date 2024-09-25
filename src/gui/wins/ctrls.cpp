@@ -85,7 +85,7 @@ void USCGUI::drawChanControls() {
     if (i != 0) ImGui::EndDisabled();
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("trigger edge");
 
-    sprintf(strbuf, "##chan%dctrls", i);
+    sprintf(strbuf, "##chan%dctrls", i+1);
     if (ImGui::BeginTable(strbuf, 3)) {
       ImGui::TableSetupColumn("c1",ImGuiTableColumnFlags_WidthFixed);
       ImGui::TableSetupColumn("c2",ImGuiTableColumnFlags_WidthFixed);
