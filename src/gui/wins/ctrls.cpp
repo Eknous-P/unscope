@@ -1,5 +1,6 @@
 #include "gui.h"
 #include "imgui-knobs.h"
+#include <imgui.h>
 
 #define KNOBS_SIZE 50.0f
 
@@ -31,11 +32,9 @@ void USCGUI::drawGlobalControls() {
   if (triggerMode==TRIGGER_SINGLE) {
     if (ai->didTrigger(shareTrigger>0?shareTrigger-1:255)) updateAudio = false;
     if (ImGui::Button("trigger")) updateAudio = true;
-  } else {
-    updateAudio = true;
   }
   
-  ImGui::Checkbox("update audio",&updateAudio);
+  if (triggerMode!=TRIGGER_SINGLE) ImGui::Checkbox("update audio",&updateAudio);
 
   if (devs.size() > 0) {
     if (ImGui::BeginCombo("device",devs[deviceNum].devName.c_str())) {
@@ -84,6 +83,9 @@ void USCGUI::drawChanControls() {
     if (ImGui::Button(tc[i].triggerEdge?"Rising":"Falling")) tc[i].triggerEdge = !tc[i].triggerEdge;
     if (i != 0) ImGui::EndDisabled();
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("trigger edge");
+    ImGui::SameLine();
+    drawTriggerLamp(shareTrigger>0?(shareTrigger-1):i);
+    ImGui::NewLine();
 
     sprintf(strbuf, "##chan%dctrls", i+1);
     if (ImGui::BeginTable(strbuf, 3)) {

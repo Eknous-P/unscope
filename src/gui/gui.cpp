@@ -1,4 +1,13 @@
 #include "gui.h"
+#include <imgui.h>
+
+ImVec2 operator+(ImVec2 lhs, ImVec2 rhs) {
+  return ImVec2(lhs.x+rhs.x,lhs.y+rhs.y);
+}
+
+ImVec2 operator+(ImVec2 lhs, float rhs) {
+  return ImVec2(lhs.x+rhs,lhs.y+rhs);
+}
 
 bool USCGUI::isRunning() {
   return running;
@@ -226,6 +235,12 @@ void USCGUI::drawGUI() {
   // ImGui::PlotLines("align",oscAlign[0],65536,0,NULL,-1.0f,1.0f,ImGui::GetContentRegionAvail());
   // ImGui::End();
   // ImGui::ShowMetricsWindow();
+}
+
+void USCGUI::drawTriggerLamp(unsigned char chan) {
+  ImDrawList* dl = ImGui::GetWindowDrawList();
+  dl->AddCircleFilled(ImGui::GetCursorScreenPos()+10.0f, 10.0f, 
+    ai->didTrigger(chan)?0xff00ffff:0xff0000ff);
 }
 
 void USCGUI::writeOscData(unsigned char chan, float* datax, float* datay) {
