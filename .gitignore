@@ -2,6 +2,7 @@
 .github/
 .git/
 .vs/
+.cache/
 build/
 imgui.ini
 unscope.ini
