@@ -37,6 +37,12 @@ USCAudioInput::USCAudioInput(unsigned int frameSize, unsigned int bufferSize, un
     memset(buffer.alignRamp[i], 0, buffer.size*sizeof(float));
   }
 
+  alignParams = new AlignParams[conf.channels];
+  if (!alignParams) {
+    isGood = false;
+    return;
+  }
+
   updateAudio = true;
   triggered = new bool[conf.channels];
   memset(triggered,0,conf.channels*sizeof(bool));
@@ -323,5 +329,9 @@ USCAudioInput::~USCAudioInput() {
   if (triggered) {
     delete[] triggered;
     triggered = NULL;
+  }
+  if (alignParams) {
+    delete[] alignParams;
+    alignParams = NULL;
   }
 }

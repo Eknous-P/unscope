@@ -54,7 +54,7 @@ void USCGUI::drawGlobalControls() {
     err = ai->init(device,/*audioLoopback*/0);
     channels = ai->getChannelCount();
     if (err != paNoError) {
-      printf("%d:%s", err, getErrorMsg(err).c_str());
+      printf("%d:cant init audio!\n%s", err, getErrorMsg(err));
       // try again
       if (err != paInvalidDevice) throw err;
       printf("trying default device...\n");
@@ -62,7 +62,7 @@ void USCGUI::drawGlobalControls() {
       err = ai->init(device,0);
       channels = ai->getChannelCount();
       if (err != paNoError) {
-        printf("%d:%s", err, getErrorMsg(err).c_str());
+        printf("%d:cant init audio!\n%s", err, getErrorMsg(err));
         throw err;
       }
       setAudioDeviceSetting(device);
@@ -94,7 +94,7 @@ void USCGUI::drawChanControls() {
       ImGui::TableNextColumn();
         // timebase knob
         if (i != 0) ImGui::BeginDisabled(shareParams);
-        tc[i].timebase = tc[i].traceSize * 1000 / sampleRate;
+        tc[i].timebase = tc[i].traceSize * 1000.0f / sampleRate;
         if (ImGuiKnobs::Knob("timebase", &tc[i].timebase, 0, (float)oscDataSize/(float)sampleRate*1000, 0.0f, "%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
           tc[i].traceSize = sampleRate * tc[i].timebase / 1000;
           tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize;
@@ -194,7 +194,7 @@ void USCGUI::drawXYScopeControls() {
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
 
-      xyp.persistence = xyp.sampleLen * 1000 / sampleRate;
+      xyp.persistence = xyp.sampleLen * 1000.0f / sampleRate;
       if (ImGuiKnobs::Knob("persistence", &xyp.persistence, 0.0f, (float)oscDataSize/(float)sampleRate*1000, 0.0f,"%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
         xyp.sampleLen = sampleRate * xyp.persistence / 1000;
       }

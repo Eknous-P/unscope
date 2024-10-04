@@ -133,7 +133,7 @@ class USCGUI {
     int  getAudioDeviceSetting();
     void setAudioDeviceSetting(int d);
   
-    USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float xyPersistDef, float yScaleDef, float triggerDef, int rendererDef);
+    USCGUI(unscopeParams params);
     ~USCGUI();
 };
 

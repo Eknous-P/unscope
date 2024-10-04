@@ -4,24 +4,24 @@ bool USCGUI::isRunning() {
   return running;
 }
 
-USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsigned char chanCount, float timebaseDef, float xyPersistDef, float yScaleDef, float triggerDef, int rendererDef) {
-  renderer = (USCRenderers)rendererDef;
+USCGUI::USCGUI(unscopeParams params) {
+  renderer = (USCRenderers)params.renderer;
   isGood = false;
   err = 0;
-  channels = chanCount;
+  channels = params.channels;
 
   sc.plotFlags = ImPlotFlags_NoLegend|ImPlotFlags_NoMenus;
   sc.scopeFlags = ImPlotAxisFlags_AutoFit|ImPlotAxisFlags_Lock|ImPlotAxisFlags_NoMenus|ImPlotAxisFlags_Foreground;
 
-  sampleRate = sampleRateDef;
+  sampleRate = params.sampleRate;
 
   tc = new traceParams[channels];
 
   for (unsigned char i = 0; i < channels; i++) {
     tc[i].enable = true;
-    tc[i].yScale = yScaleDef;
+    tc[i].yScale = params.scale;
     tc[i].yOffset = 0;
-    tc[i].timebase = timebaseDef;
+    tc[i].timebase = params.timebase;
     tc[i].trigger = 0;
     tc[i].traceSize = sampleRate*tc[i].timebase/1000;
     tc[i].trigHoldoff = 0;
@@ -40,7 +40,7 @@ USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsi
   xyp.yOffset = 0;
   xyp.xScale = 1.0f;
   xyp.yScale = 1.0f;
-  xyp.persistence = xyPersistDef;
+  xyp.persistence = params.xyPersist;
   xyp.sampleLen = sampleRate*xyp.persistence/1000;
   xyp.xChan = 1;
   xyp.yChan = 2;
@@ -54,7 +54,7 @@ USCGUI::USCGUI(unsigned long int sampleRateDef, unsigned long int dataSize, unsi
   wo.xyScopeControlsOpen = true;
   wo.globalControlsOpen = true;
 
-  oscDataSize = dataSize;
+  oscDataSize = params.audioBufferSize;
 
   oscData = new float*[channels];
   oscAuxData = new float*[channels];

@@ -10,7 +10,7 @@
 #define PROGRAM_WIDTH 1280
 #define PROGRAM_HEIGHT 720
 
-#define parseParams(p, argc, argv) { \
+#define parseParams(p, argc, argv) \
   if (argc > 1) { \
     unsigned char flagStartIndex = 1; \
     int value = 0; \
@@ -58,8 +58,7 @@
         printf("cannot parse argument %s\n",argv[i]); \
       } \
     } \
-  } \
-}
+  }
 
 enum unscopeErrors {
   UAUDIOERR_NOERR = 0,
@@ -87,6 +86,22 @@ enum USCRenderers {
   USC_REND_DIRECTX11_SDL
 };
 
+struct unscopeParams {
+  unsigned int audioBufferSize;
+  unsigned int audioFrameSize;
+  unsigned char channels;
+  unsigned int sampleRate;
+  int audioDevice;
+
+  // gui ...
+  float timebase;
+  float xyPersist;
+  float scale;
+  float trigger;
+
+  int renderer;
+};
+
 struct DeviceEntry {
   int dev;
   bool shouldPassThru;
@@ -105,6 +120,15 @@ struct AlignParams {
   bool edge; // true -> falling, false -> rising
   unsigned long int holdoff;
   bool fallback; // use fixed sweep if not triggering
+  AlignParams():
+    trigger(0.0f),
+    waveLen(0),
+    offset(0),
+    edge(false),
+    holdoff(0),
+    fallback(false)
+  {}
+  
   AlignParams(float t,
               unsigned long int wl,
               long int of,
@@ -122,6 +146,6 @@ struct AlignParams {
 
 float clamp(float a);
 extern const char *helpMsg, *verMsg, *errMsgs[], *renderers[];
-std::string getErrorMsg(int e);
+const char* getErrorMsg(int e);
 
 #endif
