@@ -97,7 +97,9 @@ void USCGUI::drawChanControls() {
         // timebase knob
         if (i != 0) ImGui::BeginDisabled(shareParams);
         tc[i].timebase = tc[i].traceSize * 1000.0f / sampleRate;
-        if (ImGuiKnobs::Knob("timebase", &tc[i].timebase, 0, (float)oscDataSize/(float)sampleRate*1000, 0.0f, "%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
+        if (ImGuiKnobs::Knob("timebase", &tc[i].timebase, 0, (float)oscDataSize/(float)sampleRate*1000.0f, 0.0f, "%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
+          if (tc[i].timebase < 0.0f) tc[i].timebase = 0.0f;
+          if (tc[i].timebase > (float)oscDataSize/(float)sampleRate*1000.0f) tc[i].timebase = (float)oscDataSize/(float)sampleRate*1000.0f;
           tc[i].traceSize = sampleRate * tc[i].timebase / 1000;
           tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize;
           if (tc[i].traceOffset + tc[i].traceSize > oscDataSize) tc[i].traceOffset = oscDataSize - tc[i].traceSize;
@@ -110,7 +112,9 @@ void USCGUI::drawChanControls() {
       ImGui::TableNextColumn();
         // y scale knob
         if (i != 0) ImGui::EndDisabled();
-        ImGuiKnobs::Knob("y scale", &tc[i].yScale, 0.25f, 10.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15);
+        if (ImGuiKnobs::Knob("y scale", &tc[i].yScale, 0.25f, 10.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
+          if (tc[i].yScale < 0.0f) tc[i].yScale = 0.0f;
+        }
         if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) tc[i].yScale = 1.0f;
 
       ImGui::TableNextColumn();
@@ -141,7 +145,10 @@ void USCGUI::drawChanControls() {
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
         // x offset knob
-        ImGuiKnobs::Knob("x offset", &tc[i].trigOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
+        if (ImGuiKnobs::Knob("x offset", &tc[i].trigOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
+          if (tc[i].trigOffset < -1.0f) tc[i].trigOffset = -1.0f;
+          if (tc[i].trigOffset >  1.0f) tc[i].trigOffset =  1.0f;
+        }
         if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
           tc[i].trigOffset = 0.0f;
           tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize;
@@ -173,7 +180,10 @@ void USCGUI::drawChanControls() {
 
       ImGui::TableNextColumn();
         // y offset knob
-        ImGuiKnobs::Knob("y offset", &tc[i].yOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
+        if (ImGuiKnobs::Knob("y offset", &tc[i].yOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
+          if (tc[i].yOffset < -1.0f) tc[i].yOffset = -1.0f;
+          if (tc[i].yOffset >  1.0f) tc[i].yOffset =  1.0f;
+        }
         if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) tc[i].yOffset = 0.0f;
 
       ImGui::EndTable();
@@ -197,7 +207,7 @@ void USCGUI::drawXYScopeControls() {
       ImGui::TableNextColumn();
 
       xyp.persistence = xyp.sampleLen * 1000.0f / sampleRate;
-      if (ImGuiKnobs::Knob("persistence", &xyp.persistence, 0.0f, (float)oscDataSize/(float)sampleRate*1000, 0.0f,"%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
+      if (ImGuiKnobs::Knob("persistence", &xyp.persistence, 0.0f, 1000.0f, 0.0f,"%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
         xyp.sampleLen = sampleRate * xyp.persistence / 1000;
       }
       ImGui::TableNextColumn();
@@ -210,7 +220,7 @@ void USCGUI::drawXYScopeControls() {
       ImGui::TableNextRow();
 
       ImGui::TableNextColumn();
-      if (ImGui::InputFloat("##xypersist",&xyp.persistence,0.0f,0.0f,"%g ms")) xyp.sampleLen = sampleRate * xyp.persistence / 1000;
+      ImGuiKnobs::Knob("intensity", &xyp.color.w, 0.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
       ImGui::TableNextColumn();
       ImGuiKnobs::Knob("x offset", &xyp.xOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
       if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) xyp.xOffset = 0.0f;
@@ -229,9 +239,9 @@ void USCGUI::drawXYScopeControls() {
       if (xyp.yChan > channels) xyp.yChan = channels;
     }
 
-    float colorFloatArr[4] = {xyp.color.x,xyp.color.y,xyp.color.z,xyp.color.w};
-    if (ImGui::ColorEdit4("##coledit",colorFloatArr)) {
-      xyp.color = ImVec4(colorFloatArr[0],colorFloatArr[1],colorFloatArr[2],colorFloatArr[3]);
+    float colorFloatArr[3] = {xyp.color.x,xyp.color.y,xyp.color.z};
+    if (ImGui::ColorEdit3("##coledit",colorFloatArr)) {
+      xyp.color = ImVec4(colorFloatArr[0],colorFloatArr[1],colorFloatArr[2],xyp.color.w);
     }
     ImGui::End();
   }
