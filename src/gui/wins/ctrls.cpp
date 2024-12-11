@@ -70,6 +70,23 @@ void USCGUI::drawGlobalControls() {
   ImGui::End();
 }
 
+#define UPDATE_TIMEBASE if (tc[i].timebase < 0.0f) tc[i].timebase = 0.0f; \
+          if (tc[i].timebase > (float)oscDataSize/(float)sampleRate*1000.0f) tc[i].timebase = (float)oscDataSize/(float)sampleRate*1000.0f; \
+          tc[i].traceSize = sampleRate * tc[i].timebase / 1000; \
+          tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize; \
+          if (tc[i].traceOffset + tc[i].traceSize > oscDataSize) tc[i].traceOffset = oscDataSize - tc[i].traceSize; \
+          if (tc[i].traceSize != 0) { \
+            tc[i].trigOffset = 2*((float)tc[i].traceOffset/(float)tc[i].traceSize)-1.0f; \
+          } else { \
+            tc[i].trigOffset = 0; \
+          }
+
+#define RIGHTCLICK_EXACT_INPUT(v,d,f) \
+        if (ImGui::BeginPopupContextItem(#v "input")) { \
+          if (ImGui::InputScalar("##" #v "input",d,&v)) f; \
+          ImGui::EndPopup(); \
+        }
+
 void USCGUI::drawChanControls() {
   for (unsigned char i = 0; i < channels; i++) {
     char strbuf[32];
@@ -98,24 +115,17 @@ void USCGUI::drawChanControls() {
         if (i != 0) ImGui::BeginDisabled(shareParams);
         tc[i].timebase = tc[i].traceSize * 1000.0f / sampleRate;
         if (ImGuiKnobs::Knob("timebase", &tc[i].timebase, 0, (float)oscDataSize/(float)sampleRate*1000.0f, 0.0f, "%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
-          if (tc[i].timebase < 0.0f) tc[i].timebase = 0.0f;
-          if (tc[i].timebase > (float)oscDataSize/(float)sampleRate*1000.0f) tc[i].timebase = (float)oscDataSize/(float)sampleRate*1000.0f;
-          tc[i].traceSize = sampleRate * tc[i].timebase / 1000;
-          tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize;
-          if (tc[i].traceOffset + tc[i].traceSize > oscDataSize) tc[i].traceOffset = oscDataSize - tc[i].traceSize;
-          if (tc[i].traceSize != 0) {
-            tc[i].trigOffset = 2*((float)tc[i].traceOffset/(float)tc[i].traceSize)-1.0f;
-          } else {
-            tc[i].trigOffset = 0;
-          }
+          UPDATE_TIMEBASE;
         }
+        RIGHTCLICK_EXACT_INPUT(tc[i].timebase, ImGuiDataType_Float, UPDATE_TIMEBASE);
       ImGui::TableNextColumn();
         // y scale knob
         if (i != 0) ImGui::EndDisabled();
         if (ImGuiKnobs::Knob("y scale", &tc[i].yScale, 0.25f, 10.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
           if (tc[i].yScale < 0.0f) tc[i].yScale = 0.0f;
         }
-        if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) tc[i].yScale = 1.0f;
+        RIGHTCLICK_EXACT_INPUT(tc[i].yScale, ImGuiDataType_Float, {if (tc[i].yScale < 0.0f) tc[i].yScale = 0.0f;});
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) tc[i].yScale = 1.0f;
 
       ImGui::TableNextColumn();
         // trigger knob
@@ -131,7 +141,7 @@ void USCGUI::drawChanControls() {
         }
         ImGui::BeginDisabled(hideTriggerKnob);
         ImGuiKnobs::Knob("trigger", whichTrig, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
-        if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) {
           if (shareParams) {
             for (unsigned char j = 1; j < channels; j++) tc[j].trigger = 0.0f;
           }
@@ -149,7 +159,7 @@ void USCGUI::drawChanControls() {
           if (tc[i].trigOffset < -1.0f) tc[i].trigOffset = -1.0f;
           if (tc[i].trigOffset >  1.0f) tc[i].trigOffset =  1.0f;
         }
-        if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) {
           tc[i].trigOffset = 0.0f;
           tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize;
           if (tc[i].traceSize != 0) {
@@ -184,7 +194,7 @@ void USCGUI::drawChanControls() {
           if (tc[i].yOffset < -1.0f) tc[i].yOffset = -1.0f;
           if (tc[i].yOffset >  1.0f) tc[i].yOffset =  1.0f;
         }
-        if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) tc[i].yOffset = 0.0f;
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) tc[i].yOffset = 0.0f;
 
       ImGui::EndTable();
     }
@@ -210,23 +220,26 @@ void USCGUI::drawXYScopeControls() {
       if (ImGuiKnobs::Knob("persistence", &xyp.persistence, 0.0f, 1000.0f, 0.0f,"%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
         xyp.sampleLen = sampleRate * xyp.persistence / 1000;
       }
+      RIGHTCLICK_EXACT_INPUT(xyp.persistence, ImGuiDataType_Float, {if (xyp.persistence<0.0f) {xyp.persistence=0.0f;} if (xyp.persistence>1000.0f) {xyp.persistence=1000.0f;} xyp.sampleLen = sampleRate * xyp.persistence / 1000;})
       ImGui::TableNextColumn();
 
-      ImGuiKnobs::Knob("x scale", &xyp.xScale, 0.5f, 4.0f, 0.25f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
-      if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) xyp.xScale = 1.0f;
+      ImGuiKnobs::Knob("x scale", &xyp.xScale, 0.5f, 4.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
+      if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.xScale = 1.0f;
+      RIGHTCLICK_EXACT_INPUT(xyp.yScale, ImGuiDataType_Float, {if (xyp.yScale<0.25f) {xyp.yScale=0.25f;} if (xyp.yScale>4.0f) {xyp.yScale=4.0f;}})
       ImGui::TableNextColumn();
-      ImGuiKnobs::Knob("y scale", &xyp.yScale, 0.5f, 4.0f, 0.25f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
-      if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) xyp.yScale = 1.0f;
+      ImGuiKnobs::Knob("y scale", &xyp.yScale, 0.5f, 4.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
+      if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.yScale = 1.0f;
+      RIGHTCLICK_EXACT_INPUT(xyp.xScale, ImGuiDataType_Float, {if (xyp.xScale<0.25f) {xyp.xScale=0.25f;} if (xyp.xScale>4.0f) {xyp.xScale=4.0f;}})
       ImGui::TableNextRow();
 
       ImGui::TableNextColumn();
       ImGuiKnobs::Knob("intensity", &xyp.color.w, 0.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
       ImGui::TableNextColumn();
       ImGuiKnobs::Knob("x offset", &xyp.xOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
-      if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) xyp.xOffset = 0.0f;
+      if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.xOffset = 0.0f;
       ImGui::TableNextColumn();
       ImGuiKnobs::Knob("y offset", &xyp.yOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
-      if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) xyp.yOffset = 0.0f;
+      if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.yOffset = 0.0f;
     ImGui::EndTable();
     }
 
