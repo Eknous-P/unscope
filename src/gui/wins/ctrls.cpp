@@ -1,6 +1,7 @@
 #include "gui.h"
 #include "imgui-knobs.h"
 #include <imgui.h>
+#include <shared.h>
 
 #define KNOBS_SIZE 50.0f
 
@@ -49,19 +50,19 @@ void USCGUI::drawGlobalControls() {
   }
   if (ImGui::Button("restart audio")) {
     err = ai->stop();
-    printf("opening device %d: %s ...\n",device,Pa_GetDeviceInfo(device)->name);
+    printf(INFO_MSG "opening device %d: %s ...\n" MSG_END,device,Pa_GetDeviceInfo(device)->name);
     err = ai->init(device,/*audioLoopback*/0);
     channels = ai->getChannelCount();
     if (err != paNoError) {
-      printf("%d:cant init audio!\n%s", err, getErrorMsg(err));
+      printf(ERROR_MSG "%d:cant init audio!\n%s" MSG_END, err, getErrorMsg(err));
       // try again
       if (err != paInvalidDevice) throw err;
-      printf("trying default device...\n");
+      printf(INFO_MSG "trying default device...\n" MSG_END);
       device = Pa_GetDefaultInputDevice();
       err = ai->init(device,0);
       channels = ai->getChannelCount();
       if (err != paNoError) {
-        printf("%d:cant init audio!\n%s", err, getErrorMsg(err));
+        printf(ERROR_MSG "%d:cant init audio!\n%s" MSG_END, err, getErrorMsg(err));
         throw err;
       }
       setAudioDeviceSetting(device);

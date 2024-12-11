@@ -7,7 +7,7 @@ Audio oscilloscope for Linux and
 
 Please do! Report them in the *Issues* tab.
 
-## Building (Linux)
+## Building
 
 ### Getting the source
 
