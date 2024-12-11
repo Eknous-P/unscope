@@ -117,14 +117,12 @@ void USCGUI::drawChanControls() {
         if (ImGuiKnobs::Knob("timebase", &tc[i].timebase, 0, (float)oscDataSize/(float)sampleRate*1000.0f, 0.0f, "%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
           UPDATE_TIMEBASE;
         }
-        RIGHTCLICK_EXACT_INPUT(tc[i].timebase, ImGuiDataType_Float, UPDATE_TIMEBASE);
       ImGui::TableNextColumn();
         // y scale knob
         if (i != 0) ImGui::EndDisabled();
         if (ImGuiKnobs::Knob("y scale", &tc[i].yScale, 0.25f, 10.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
           if (tc[i].yScale < 0.0f) tc[i].yScale = 0.0f;
         }
-        RIGHTCLICK_EXACT_INPUT(tc[i].yScale, ImGuiDataType_Float, {if (tc[i].yScale < 0.0f) tc[i].yScale = 0.0f;});
         if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) tc[i].yScale = 1.0f;
 
       ImGui::TableNextColumn();
