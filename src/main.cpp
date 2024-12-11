@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 
   e = g.init();
   if (e != 0) {
-    printf("error in initializing GUI! %s\n",getErrorMsg(e));
+    printf(ERROR_MSG "error in initializing GUI! %s\n" MSG_END,getErrorMsg(e));
     return -1;
   }
 
@@ -65,20 +65,20 @@ int main(int argc, char** argv) {
   g.getDevices(i.enumerateDevs());
   g.setAudioDeviceSetting(params.audioDevice);
 
-  printf("opening device %d: %s ...\n",params.audioDevice,Pa_GetDeviceInfo(params.audioDevice)->name);
+  printf(INFO_MSG "opening device %d: %s ...\n" MSG_END,params.audioDevice,Pa_GetDeviceInfo(params.audioDevice)->name);
   e = i.init(params.audioDevice,0);
   if (e != paNoError) {
-    printf("%d:cant init audio!\n%s", e, getErrorMsg(e));
+    printf(ERROR_MSG "%d:cant init audio!\n%s" MSG_END, e, getErrorMsg(e));
     // try again
     if (e != paInvalidDevice) {
-      printf("%d:cant init audio!\n%s", e, getErrorMsg(e));
+      printf(ERROR_MSG "%d:cant init audio!\n%s" MSG_END, e, getErrorMsg(e));
       return e;
     }
-    printf("trying default device...\n");
+    printf(INFO_MSG "trying default device...\n" MSG_END);
     params.audioDevice = Pa_GetDefaultInputDevice();
     e = i.init(params.audioDevice,0);
     if (e != paNoError) {
-      printf("%d:cant init audio!\n%s", e, getErrorMsg(e));
+      printf(ERROR_MSG "%d:cant init audio!\n%s" MSG_END, e, getErrorMsg(e));
       return e;
     }
     g.setAudioDeviceSetting(params.audioDevice);
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
     g.doFrame();
   }
   e = i.stop();
-  printf("%s\n", Pa_GetErrorText(e));
+  printf( "%s%s\n" MSG_END,(e==paNoError)?SUCCESS_MSG:ERROR_MSG, Pa_GetErrorText(e));
   return e!=paNoError;
 }
 

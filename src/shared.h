@@ -60,6 +60,11 @@
     } \
   }
 
+#define ERROR_MSG "\033[31;1m"
+#define INFO_MSG "\033[35;1m"
+#define SUCCESS_MSG "\033[32;1m"
+#define MSG_END "\033[0m"
+
 enum unscopeErrors {
   UAUDIOERR_NOERR = 0,
   UAUDIOERR_NOINIT,
