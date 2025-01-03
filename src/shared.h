@@ -5,64 +5,15 @@
 #include <string>
 
 #define PROGRAM_NAME "unscope"
-#define PROGRAM_VER "0.2"
+#define PROGRAM_VER "0.3rc2"
 
 #define PROGRAM_WIDTH 1280
 #define PROGRAM_HEIGHT 720
 
-#define parseParams(p, argc, argv) \
-  if (argc > 1) { \
-    unsigned char flagStartIndex = 1; \
-    int value = 0; \
-    for (int i = 1; i < argc; i+=2) { \
-      if (argv[i][0] == '-') { \
-        if (argv[i][1] == '-') { \
-          flagStartIndex = 2; \
-        } \
-        flagStartIndex = 1; \
-        switch (argv[i][flagStartIndex]) { \
-          case UPARAM_HELP: \
-            printf("%s%s",verMsg,helpMsg); \
-            return 0; \
-          case UPARAM_VERSION: \
-            printf("%s",verMsg); \
-            return 0; \
-          default: break; \
-        } \
-        if (i + 1 == argc) { \
-          printf("no value for argument %s given\n", argv[i]); \
-          continue; \
-        } \
-        try { \
-          value = std::stoi(argv[i+1]); \
-        } catch (...) { \
-          printf("invalid argument for %s given: %s\n", argv[i], argv[i+1]); \
-          continue; \
-        } \
-        switch (argv[i][flagStartIndex]) { \
-          case UPARAM_BUFFERSIZE: \
-            p.audioBufferSize = value; \
-            break; \
-          case UPARAM_FRAMESIZE: \
-            p.audioFrameSize = value; \
-            break; \
-          case UPARAM_CHANNELCOUNT: \
-            p.channels = value; \
-            break; \
-          case UPARAM_SAMPLERATE: \
-            p.sampleRate = value; \
-            break; \
-          default: break; \
-        } \
-      } else { \
-        printf("cannot parse argument %s\n",argv[i]); \
-      } \
-    } \
-  }
-
 #define ERROR_MSG "\033[31;1m"
 #define INFO_MSG "\033[35;1m"
 #define SUCCESS_MSG "\033[32;1m"
+#define MISC_MSG "\033[34;1m"
 #define MSG_END "\033[0m"
 
 enum unscopeErrors {
@@ -78,11 +29,12 @@ enum unscopeErrors {
 };
 
 enum unscopeArgs {
-  UPARAM_HELP         = 'h',
   UPARAM_BUFFERSIZE   = 'b',
   UPARAM_FRAMESIZE    = 'f',
   UPARAM_CHANNELCOUNT = 'c',
   UPARAM_SAMPLERATE   = 's',
+  UPARAM_ABOUT        = 'a',
+  UPARAM_HELP         = 'h',
   UPARAM_VERSION      = 'v'
 };
 
@@ -150,7 +102,7 @@ struct AlignParams {
 };
 
 float clamp(float a);
-extern const char *helpMsg, *verMsg, *errMsgs[], *renderers[];
+extern const char *helpMsg, *verMsg, *aboutMsg, *errMsgs[], *renderers[];
 const char* getErrorMsg(int e);
 
 #endif

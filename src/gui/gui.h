@@ -66,11 +66,11 @@ class USCGUI {
 
     struct windowsOpen {
       bool mainScopeOpen;
-      bool auxScopeOpen;
       bool chanControlsOpen[3];
       bool xyScopeOpen;
       bool xyScopeControlsOpen;
       bool globalControlsOpen;
+      bool aboutOpen;
     };
 
     struct settings {
@@ -126,6 +126,7 @@ class USCGUI {
     void drawChanControls();
     void drawXYScopeControls();
 
+    void drawAbout();
     void drawSettings();
 
     void drawTriggerLamp(unsigned char chan);

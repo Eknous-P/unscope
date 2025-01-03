@@ -54,7 +54,6 @@ USCGUI::USCGUI(unscopeParams params) {
   xyp.xChan = 1;
   xyp.yChan = 2;
 
-  wo.auxScopeOpen = false;
   wo.mainScopeOpen = true;
   wo.chanControlsOpen[0] = true;
   wo.chanControlsOpen[1] = true;
@@ -62,6 +61,7 @@ USCGUI::USCGUI(unscopeParams params) {
   wo.xyScopeOpen = true;
   wo.xyScopeControlsOpen = true;
   wo.globalControlsOpen = true;
+  wo.aboutOpen=false;
 
   oscDataSize = params.audioBufferSize;
 
@@ -207,11 +207,17 @@ void USCGUI::drawGUI() {
       ImGui::MenuItem("Global Controls",NULL,&wo.globalControlsOpen);
       ImGui::EndMenu();
     }
+    if (ImGui::BeginMenu("About")) {
+      ImGui::MenuItem("About...",NULL,&wo.aboutOpen);
+      ImGui::EndMenu();
+    }
     ImGui::EndMainMenuBar();
   }
   drawGlobalControls();
   drawChanControls();
   drawXYScopeControls();
+
+  drawAbout();
 
   for (unsigned char j = 0; j < channels; j++) {
     ai->setUpdateState(updateAudio);

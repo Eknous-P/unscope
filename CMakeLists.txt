@@ -40,6 +40,10 @@ ${implot_path}/implot_items.cpp
 
 ./submodules/imgui-knobs/imgui-knobs.cpp)
 
+pkg_check_modules(SDL sdl2 REQUIRED)
+list(APPEND cpl_opts ${SDL_CFLAGS_OTHER})
+list(APPEND lnk_libs ${SDL_LIBRARIES})
+
 if(USE_OPENGL)
   pkg_check_modules(OPENGL opengl REQUIRED)
   list(APPEND cpl_opts ${OPENGL_CFLAGS_OTHER})
@@ -64,10 +68,6 @@ set(SDL_FILE OFF)
 set(SDL_FILESYSTEM OFF)
 set(SDL_SENSOR OFF)
 set(SDL_LOCALE OFF)
-
-add_subdirectory(submodules/SDL EXCLUDE_FROM_ALL)
-list(APPEND lnk_libs SDL2)
-
 
 # SOURCES
 
@@ -94,10 +94,11 @@ ${srcs_path}/gui/render/abstract.cpp
 )
 
 list(APPEND unscope_srcs 
-${srcs_path}/gui/gui.cpp
 ${srcs_path}/gui/consts.cpp
-${srcs_path}/gui/wins/oscs.cpp
+${srcs_path}/gui/gui.cpp
+${srcs_path}/gui/wins/about.cpp
 ${srcs_path}/gui/wins/ctrls.cpp
+${srcs_path}/gui/wins/oscs.cpp
 
 ${srcs_path}/main.cpp
 )
@@ -113,7 +114,7 @@ else()
 endif()
 
 target_include_directories(unscope SYSTEM PRIVATE
-${SDL2_INCLUDE_DIRS}
+${SDL_INCLUDE_DIRS}
 ${imgui_path}
 ${imgui_path}/misc/cpp
 ${imgui_path}/backends

@@ -1,6 +1,5 @@
 #include "gui.h"
 #include "imgui-knobs.h"
-#include <imgui.h>
 #include <shared.h>
 
 #define KNOBS_SIZE 50.0f
@@ -197,11 +196,9 @@ void USCGUI::drawChanControls() {
 
       ImGui::EndTable();
     }
-        // color picker
-        float colorFloatArr[4] = {tc[i].color.x,tc[i].color.y,tc[i].color.z,tc[i].color.w};
-        if (ImGui::ColorEdit4("##coledit",colorFloatArr)) {
-          tc[i].color = ImVec4(colorFloatArr[0],colorFloatArr[1],colorFloatArr[2],colorFloatArr[3]);
-        }
+    
+    // color picker
+    ImGui::ColorEdit4("##coledit",(float*)&tc[i].color);
     
     ImGui::End();
   }
@@ -251,10 +248,8 @@ void USCGUI::drawXYScopeControls() {
       if (xyp.yChan > channels) xyp.yChan = channels;
     }
 
-    float colorFloatArr[3] = {xyp.color.x,xyp.color.y,xyp.color.z};
-    if (ImGui::ColorEdit3("##coledit",colorFloatArr)) {
-      xyp.color = ImVec4(colorFloatArr[0],colorFloatArr[1],colorFloatArr[2],xyp.color.w);
-    }
+    ImGui::ColorEdit3("##coledit",(float*)&xyp.color);
+
     ImGui::End();
   }
 }
