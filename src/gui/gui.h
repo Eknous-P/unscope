@@ -128,8 +128,6 @@ class USCGUI {
     void drawAbout();
     void drawSettings();
 
-    void drawTriggerLamp(unsigned char chan);
-
     bool doRestartAudio();
 
     int  getAudioDeviceSetting();

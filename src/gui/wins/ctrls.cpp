@@ -101,9 +101,6 @@ void USCGUI::drawChanControls() {
       ImGui::SetTooltip("trigger to this channel");
     }
     ImGui::EndDisabled();
-    ImGui::SameLine();
-    drawTriggerLamp(shareTrigger>0?(shareTrigger-1):i);
-    ImGui::NewLine();
 
     sprintf(strbuf, "##chan%dctrls", i+1);
     if (ImGui::BeginTable(strbuf, 3)) {

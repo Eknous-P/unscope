@@ -239,12 +239,6 @@ void USCGUI::drawGUI() {
   // ImGui::ShowMetricsWindow();
 }
 
-void USCGUI::drawTriggerLamp(unsigned char chan) {
-  ImDrawList* dl = ImGui::GetWindowDrawList();
-  dl->AddCircleFilled(ImGui::GetCursorScreenPos()+10.0f, 10.0f, 
-    ai->didTrigger(chan)?0xff00ffff:0xee112224);
-}
-
 void USCGUI::writeOscData(unsigned char chan, float* datax, float* datay) {
   memcpy(oscAlign[chan],datax,oscDataSize*sizeof(float));
   memcpy(oscData[chan],datay,oscDataSize*sizeof(float));
