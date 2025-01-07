@@ -65,22 +65,19 @@ USCGUI::USCGUI(unscopeParams params) {
   oscDataSize = params.audioBufferSize;
 
   oscData = new float*[channels];
-  oscAuxData = new float*[channels];
   oscAlign = new float*[oscDataSize];
-  if (!oscData || !oscAuxData || !oscAlign) {
+  if (!oscData || !oscAlign) {
     return;
   }
   for (unsigned char i = 0; i < channels; i++) {
     oscData[i] = new float[oscDataSize];
-    oscAuxData[i] = new float[oscDataSize];
     oscAlign[i] = new float[oscDataSize];
 
-    if (!oscData[i] || !oscAuxData[i] || !oscAlign[i]) {
+    if (!oscData[i] || !oscAlign[i]) {
       return;
     }
 
     memset(oscData[i],0,oscDataSize*sizeof(float));
-    memset(oscAuxData[i],0,oscDataSize*sizeof(float));
     memset(oscAlign[i],0,oscDataSize*sizeof(float));
   }
   running = false;
@@ -253,10 +250,6 @@ void USCGUI::writeOscData(unsigned char chan, float* datax, float* datay) {
   memcpy(oscData[chan],datay,oscDataSize*sizeof(float));
 }
 
-void USCGUI::writeOscAuxData(unsigned char chan, float* data) {
-  memcpy(oscData[chan],data,oscDataSize*sizeof(float));
-}
-
 bool USCGUI::doRestartAudio() {
   return restartAudio;
 }
@@ -290,16 +283,6 @@ USCGUI::~USCGUI() {
     }
     delete[] oscData;
     oscData = NULL;
-  }
-  if (oscAuxData) {
-    for (unsigned char i = 0; i < channels; i++) {
-      if (oscAuxData[i]) {
-        delete[] oscAuxData[i];
-        oscAuxData[i] = NULL;
-      }
-    }
-    delete[] oscAuxData;
-    oscAuxData = NULL;
   }
   if (oscAlign) {
     for (unsigned char i = 0; i < channels; i++) {

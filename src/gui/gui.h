@@ -87,7 +87,7 @@ class USCGUI {
     unsigned char channels;
     USCRenderers renderer;
   
-    float **oscData, **oscAuxData, **oscAlign;
+    float **oscData, **oscAlign;
     unsigned long int oscDataSize, sampleRate;
     USCRender *rd;
     USCAudioInput *ai;
@@ -111,7 +111,6 @@ class USCGUI {
     void attachAudioInput(USCAudioInput* i);
 
     void writeOscData(unsigned char chan, float* datax, float* datay);
-    void writeOscAuxData(unsigned char chan, float* data);
   
     bool isRunning();
     int  init();
