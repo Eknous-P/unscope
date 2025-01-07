@@ -9,18 +9,10 @@ float clamp(float a) {
 }
 
 const char* getErrorMsg(int e) {
-  switch (e) {
-    case UAUDIOERR_NOERR:
-      return "";
-    case UAUDIOERR_NODEVS:
-    case UAUDIOERR_NODEV:
-    case UAUDIOERR_NOSTART:
-    case UAUDIOERR_NOGOOD:
-    case UGUIERROR_SETUPFAIL:
-    case UGUIERROR_INITFAIL:
-      return errMsgs[e-2];
-    default: 
-      return Pa_GetErrorText(e);
+  if (e>=0) {
+    return errMsgs[e];
+  } else {
+    return Pa_GetErrorText(e);
   }
 }
 
@@ -55,17 +47,16 @@ int main(int argc, char** argv) {
         }
         if (argv[i][flagStartIndex + 1] == 0) {
           switch (argv[i][flagStartIndex]) {
-          case UPARAM_ABOUT:
-            printf("%s%s", verMsg, aboutMsg);
-            return 0;
-          case UPARAM_HELP:
-            printf("%s%s", verMsg, helpMsg);
-            return 0;
-          case UPARAM_VERSION:
-            printf("%s", verMsg);
-            return 0;
-          default:
-            break;
+            case UPARAM_ABOUT:
+              printf("%s%s", verMsg, aboutMsg);
+              return 0;
+            case UPARAM_HELP:
+              printf("%s%s", verMsg, helpMsg);
+              return 0;
+            case UPARAM_VERSION:
+              printf("%s", verMsg);
+              return 0;
+            default: break;
           }
           if (i + 1 == argc) {
             printf("no value for argument %s given\n", argv[i]);
@@ -78,20 +69,19 @@ int main(int argc, char** argv) {
             continue;
           }
           switch (argv[i][flagStartIndex]) {
-          case UPARAM_BUFFERSIZE:
-            params.audioBufferSize = value;
-            break;
-          case UPARAM_FRAMESIZE:
-            params.audioFrameSize = value;
-            break;
-          case UPARAM_CHANNELCOUNT:
-            params.channels = value;
-            break;
-          case UPARAM_SAMPLERATE:
-            params.sampleRate = value;
-            break;
-          default:
-            break;
+            case UPARAM_BUFFERSIZE:
+              params.audioBufferSize = value;
+              break;
+            case UPARAM_FRAMESIZE:
+              params.audioFrameSize = value;
+              break;
+            case UPARAM_CHANNELCOUNT:
+              params.channels = value;
+              break;
+            case UPARAM_SAMPLERATE:
+              params.sampleRate = value;
+              break;
+            default: break;
           }
         } else {
           if (strcmp(argv[i] + flagStartIndex, "help") == 0) {
@@ -138,7 +128,7 @@ int main(int argc, char** argv) {
 
   e = g.init();
   if (e != 0) {
-    printf(ERROR_MSG "error in initializing GUI! %s\n" MSG_END,getErrorMsg(e));
+    printf(ERROR_MSG "error in initializing GUI! %s\n" MSG_END, getErrorMsg(e));
     return -1;
   }
 
@@ -214,6 +204,8 @@ PROGRAM_NAME " is made using these libraries:\n\n"
 ;
 
 const char* errMsgs[] = {
+  "",
+  "init fail",
   "no devices found\n",
   "cant open device\n",
   "cant start device\n",

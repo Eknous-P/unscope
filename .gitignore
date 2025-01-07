@@ -4,6 +4,7 @@
 .vs/
 .cache/
 build/
+release/
 imgui.ini
 unscope.ini
 CMakeSettings.json
