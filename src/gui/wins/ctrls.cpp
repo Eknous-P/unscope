@@ -1,5 +1,6 @@
 #include "gui.h"
 #include "imgui-knobs.h"
+#include <imgui.h>
 #include <shared.h>
 
 #define KNOBS_SIZE 50.0f
@@ -13,15 +14,6 @@ void USCGUI::drawGlobalControls() {
   if (ImGui::Checkbox("share trigger",&trigShare)) {
     shareTrigger=-shareTrigger;
   }
-  ImGui::BeginDisabled(!trigShare);
-  int trigChan = abs(shareTrigger);
-  if (ImGui::InputInt("trigger channel",&trigChan)) {
-    if (trigChan < 1) trigChan = 1;
-    if (trigChan > channels) trigChan = channels;
-  }
-  shareTrigger = trigChan;
-  if (!trigShare) shareTrigger = -shareTrigger;
-  ImGui::EndDisabled();
 
   if (ImGui::BeginCombo("trigger mode",triggerModeNames[triggerMode])) {
     for (unsigned char i = 0; i < 4; i++) {
@@ -96,10 +88,18 @@ void USCGUI::drawChanControls() {
     ImGui::Checkbox("enable", &tc[i].enable);
     ImGui::SameLine();
     if (i != 0) ImGui::BeginDisabled(shareParams);
-    ImGui::AlignTextToFramePadding();
     if (ImGui::Button(tc[i].triggerEdge?"Rising":"Falling")) tc[i].triggerEdge = !tc[i].triggerEdge;
     if (i != 0) ImGui::EndDisabled();
     if (ImGui::IsItemHovered()) ImGui::SetTooltip("trigger edge");
+    bool trigShare = shareTrigger>0;
+    ImGui::BeginDisabled(!trigShare);
+    ImGui::SameLine();
+    sprintf(strbuf, "##chan%dtrig", i+1);
+    if (ImGui::RadioButton(strbuf,shareTrigger==i+1)) shareTrigger=i+1;
+    if (ImGui::IsItemHovered()) {
+      ImGui::SetTooltip("trigger to this channel");
+    }
+    ImGui::EndDisabled();
     ImGui::SameLine();
     drawTriggerLamp(shareTrigger>0?(shareTrigger-1):i);
     ImGui::NewLine();
