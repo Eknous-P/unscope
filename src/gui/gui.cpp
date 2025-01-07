@@ -1,5 +1,4 @@
 #include "gui.h"
-#include <imgui.h>
 
 ImVec2 operator+(ImVec2 lhs, ImVec2 rhs) {
   return ImVec2(lhs.x+rhs.x,lhs.y+rhs.y);

@@ -1,7 +1,5 @@
 #include "gui.h"
 #include "imgui-knobs.h"
-#include <imgui.h>
-#include <shared.h>
 
 #define KNOBS_SIZE 50.0f
 

@@ -1,6 +1,4 @@
 #include "gui.h"
-#include <imgui.h>
-#include <shared.h>
 
 void USCGUI::drawAbout() {
   if (!wo.aboutOpen) return;
