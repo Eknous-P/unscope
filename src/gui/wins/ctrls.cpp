@@ -15,16 +15,19 @@ void USCGUI::drawGlobalControls() {
 
   if (ImGui::BeginCombo("trigger mode",triggerModeNames[triggerMode])) {
     for (unsigned char i = 0; i < 4; i++) {
-      if (ImGui::Selectable(triggerModeNames[i],i == triggerMode)) triggerMode = TriggerModes(i);
+      if (ImGui::Selectable(triggerModeNames[i],i == triggerMode)) {
+        triggerMode = TriggerModes(i);
+        if (triggerMode!=TRIGGER_SINGLE) updateAudio = true;
+      }
     }
     ImGui::EndCombo();
   }
   if (triggerMode==TRIGGER_SINGLE) {
     if (ai->didTrigger(shareTrigger>0?shareTrigger-1:255)) updateAudio = false;
     if (ImGui::Button("trigger")) updateAudio = true;
+  } else {
+    ImGui::Checkbox("update audio",&updateAudio);
   }
-  
-  if (triggerMode!=TRIGGER_SINGLE) ImGui::Checkbox("update audio",&updateAudio);
 
   if (devs.size() > 0) {
     if (ImGui::BeginCombo("device",devs[deviceNum].devName.c_str())) {
