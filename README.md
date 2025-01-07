@@ -1,6 +1,6 @@
 # unscope
 
-Audio oscilloscope for Linux and
+Audio oscilloscope for Linux
 ![screenshot](assets/scr1.png)
 
 ## Reporting issues
@@ -18,12 +18,14 @@ cd unscope
 ```
 
 - If you forget to clone recursively, you will have to enter
-`git submodule update --init --recursive`
+```
+git submodule update --init --recursive
+```
 to get the submodules.
 
 ### Getting the libraries
 
-Currently unscope requires the OpenGL, ALSA and PulseAudio development libraries to be installed
+Currently unscope requires the OpenGL, SDL, ALSA and PulseAudio dev libraries to be installed
 
 #### Ubuntu and Ubuntu-based
 ```

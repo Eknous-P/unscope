@@ -5,7 +5,7 @@
 #include <string>
 
 #define PROGRAM_NAME "unscope"
-#define PROGRAM_VER "0.3rc2"
+#define PROGRAM_VER "0.3"
 
 #define PROGRAM_WIDTH 1280
 #define PROGRAM_HEIGHT 720

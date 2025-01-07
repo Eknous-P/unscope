@@ -200,7 +200,10 @@ PROGRAM_NAME " is made using these libraries:\n\n"
 "PortAudio (https://github.com/PortAudio/portaudio)\n"
 "Dear ImGui (https://github.com/ocornut/imgui)\n"
 "ImPlot (https://github.com/epezent/implot)\n"
-"ImGui Knobs (https://github.com/altschuler/imgui-knobs)\n"
+"ImGui Knobs (https://github.com/altschuler/imgui-knobs)\n\n"
+PROGRAM_NAME " is licensed under the MIT licence.\n"
+"see LICENSE for details.\n"
+"Copyright © 2024-2025 Eknous\n"
 ;
 
 const char* errMsgs[] = {
