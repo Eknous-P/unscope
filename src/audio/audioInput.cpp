@@ -127,7 +127,7 @@ int USCAudioInput::bufferGetCallback(
         memset(triggerLow,0,conf.channels*sizeof(bool));
         memset(triggerHigh,0,conf.channels*sizeof(bool));
         // i -= framesPerBuffer;
-        while (i != 0 && i > (buffer.size - 2*alignParams[j].waveLen)) {
+        while (i > 0 && (i > buffer.size/2)) {
           i--;
           if (buffer.dataCopy[j][i] < alignParams[j].trigger) {
             triggerLow[j] = true;

@@ -166,7 +166,7 @@ int main(int argc, char** argv) {
     g.doFrame();
   }
   e = i.stop();
-  printf( "%s%s\n" MSG_END,(e==paNoError)?SUCCESS_MSG:ERROR_MSG, Pa_GetErrorText(e));
+  printf( "%s%s%s\n", (e==paNoError)?SUCCESS_MSG:ERROR_MSG, Pa_GetErrorText(e), MSG_END);
   return e!=paNoError;
 }
 
