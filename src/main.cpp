@@ -1,6 +1,7 @@
 #include "audio/audio.h"
 #include "gui/gui.h"
 #include "../shared.h"
+#include <cstdio>
 
 float clamp(float a) {
   if (a > 1.0f) return 1.0f;
@@ -132,10 +133,7 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  USCAudioInput i(params.audioFrameSize,
-               params.audioBufferSize,
-               params.channels,
-               params.sampleRate);
+  USCAudioInput i(&params);
 
   g.attachAudioInput(&i);
 
@@ -144,27 +142,30 @@ int main(int argc, char** argv) {
   g.getDevices(i.enumerateDevs());
   g.setAudioDeviceSetting(params.audioDevice);
 
-  printf(INFO_MSG "opening device %d: %s ...\n" MSG_END,params.audioDevice,Pa_GetDeviceInfo(params.audioDevice)->name);
+  printf(INFO_MSG "opening device %d: %s...%s\n",params.audioDevice,Pa_GetDeviceInfo(params.audioDevice)->name, MSG_END);
   e = i.init(params.audioDevice,0);
   if (e != paNoError) {
-    printf(ERROR_MSG "%d:cant init audio!\n%s" MSG_END, e, getErrorMsg(e));
+    printf(ERROR_MSG "%d: cant init audio! %s" MSG_END, e, getErrorMsg(e));
     // try again
+    printf(INFO_MSG "trying again...\n" MSG_END);
     if (e != paInvalidDevice) {
-      printf(ERROR_MSG "%d:cant init audio!\n%s" MSG_END, e, getErrorMsg(e));
+      printf(ERROR_MSG "%d: cant init audio! %s" MSG_END, e, getErrorMsg(e));
       return e;
     }
     printf(INFO_MSG "trying default device...\n" MSG_END);
     params.audioDevice = Pa_GetDefaultInputDevice();
     e = i.init(params.audioDevice,0);
     if (e != paNoError) {
-      printf(ERROR_MSG "%d:cant init audio!\n%s" MSG_END, e, getErrorMsg(e));
+      printf(ERROR_MSG "%d: cant init audio! %s" MSG_END, e, getErrorMsg(e));
       return e;
     }
     g.setAudioDeviceSetting(params.audioDevice);
   }
+
   while (g.isRunning()) {
     g.doFrame();
   }
+
   e = i.stop();
   printf( "%s%s%s\n", (e==paNoError)?SUCCESS_MSG:ERROR_MSG, Pa_GetErrorText(e), MSG_END);
   return e!=paNoError;
@@ -212,7 +213,7 @@ const char* errMsgs[] = {
   "no devices found\n",
   "cant open device\n",
   "cant start device\n",
-  "cant init portaudio\n",
+  "cant init audioinput\n",
   "cant setup gui renderer\n",
   "cant init gui renderer\n"
 };

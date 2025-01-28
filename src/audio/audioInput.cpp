@@ -1,22 +1,22 @@
 #include "audio.h"
+#include <shared.h>
 
 #define CHECK_TRIGGERED triggered[j]=triggerLow[j]&&triggerHigh[j]
 
-USCAudioInput::USCAudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned char channelsDef, unsigned int sampleRateDef) {
+USCAudioInput::USCAudioInput(unscopeParams *params) {
   isGood = Pa_Initialize()==paNoError;
   running = false;
-  conf.channels = channelsDef;
+  conf.channels = params->channels;
   if (conf.channels > 3) conf.channels = 3; // implot limitation...
-  conf.channelsDef = channelsDef;
-  conf.sampleRate = sampleRateDef;
-  conf.frameSize = frameSize;
+  conf.sampleRate = params->sampleRate;
+  conf.frameSize = params->audioFrameSize;
 
   conf.device = 0;
 
-  buffer.size = bufferSize;
+  buffer.size = params->audioBufferSize;
   buffer.data = new float*[conf.channels];
   buffer.dataCopy = new float*[conf.channels];
-  buffer.alignRamp = new float*[buffer.size];
+  buffer.alignRamp = NULL;
 
   holdoffTimer = 0;
 
@@ -27,14 +27,12 @@ USCAudioInput::USCAudioInput(unsigned int frameSize, unsigned int bufferSize, un
   for (unsigned char i = 0; i < conf.channels; i++) {
     buffer.data[i] = new float[buffer.size];
     buffer.dataCopy[i] = new float[buffer.size];
-    buffer.alignRamp[i] = new float[buffer.size];
-    if (!buffer.data[i] || !buffer.dataCopy[i] || !buffer.alignRamp[i]) {
+    if (!buffer.data[i] || !buffer.dataCopy[i]) {
       isGood = false;
       return;
     }
     memset(buffer.data[i],      0, buffer.size*sizeof(float));
     memset(buffer.dataCopy[i],  0, buffer.size*sizeof(float));
-    memset(buffer.alignRamp[i], 0, buffer.size*sizeof(float));
   }
 
   alignParams = new AlignParams[conf.channels];
@@ -43,9 +41,10 @@ USCAudioInput::USCAudioInput(unsigned int frameSize, unsigned int bufferSize, un
     return;
   }
 
+  trigger = new TriggerFallback;
+  trigger->setupTrigger(params, buffer.data);
+
   updateAudio = true;
-  triggered = new bool[conf.channels];
-  memset(triggered,0,conf.channels*sizeof(bool));
 }
 
 int USCAudioInput::_PaCallback(
@@ -70,8 +69,6 @@ int USCAudioInput::bufferGetCallback(
     (void) statusFlags;
 
     unsigned char j = 0;
-
-    memset(triggered,0,conf.channels*sizeof(bool));
 
     const int nChans = conf.channels;
   
@@ -107,61 +104,63 @@ int USCAudioInput::bufferGetCallback(
       if (updateAudio) {
         for (j = 0; j < conf.channels; j++) memcpy(buffer.dataCopy[j],buffer.data[j],buffer.size*sizeof(float));
       }
-      for (j = 0; j < conf.channels; j++) { // trigger
-        unsigned long int i = 0;
-        float delta = 0;
-        if (alignParams[j].holdoff == 0) holdoffTimer = 0;
-        if (holdoffTimer>0) {
-          holdoffTimer--;
-          delta = ((float)buffer.size/((float)alignParams[j].waveLen))/(float)buffer.size;
-          for (;i<buffer.size;i++) {
-            buffer.alignRamp[j][i]-=delta;
-          }
-        }
-        else {
-          holdoffTimer = alignParams[j].holdoff;
-        }
-        memset(buffer.alignRamp[j],-1.0f,sizeof(float)*buffer.size);
+      // for (j = 0; j < conf.channels; j++) { // trigger
+      //   unsigned long int i = 0;
+      //   float delta = 0;
+      //   if (alignParams[j].holdoff == 0) holdoffTimer = 0;
+      //   if (holdoffTimer>0) {
+      //     holdoffTimer--;
+      //     delta = ((float)buffer.size/((float)alignParams[j].waveLen))/(float)buffer.size;
+      //     for (;i<buffer.size;i++) {
+      //       buffer.alignRamp[j][i]-=delta;
+      //     }
+      //   }
+      //   else {
+      //     holdoffTimer = alignParams[j].holdoff;
+      //   }
+      //   memset(buffer.alignRamp[j],-1.0f,sizeof(float)*buffer.size);
 
-        i = buffer.size - alignParams[j].waveLen;
-        memset(triggerLow,0,conf.channels*sizeof(bool));
-        memset(triggerHigh,0,conf.channels*sizeof(bool));
-        // i -= framesPerBuffer;
-        while (i > 0 && (i > buffer.size/2)) {
-          i--;
-          if (buffer.dataCopy[j][i] < alignParams[j].trigger) {
-            triggerLow[j] = true;
-            CHECK_TRIGGERED;
-            if (triggered[j] && alignParams[j].edge) break;
-          }
-          if (buffer.dataCopy[j][i] > alignParams[j].trigger) {
-            triggerHigh[j] = true;
-            CHECK_TRIGGERED;
-            if (triggered[j] && !alignParams[j].edge) break;
-          }
-        }
-        triggerPoint[j] = i;
+      //   i = buffer.size - alignParams[j].waveLen;
+      //   memset(triggerLow,0,conf.channels*sizeof(bool));
+      //   memset(triggerHigh,0,conf.channels*sizeof(bool));
+      //   // i -= framesPerBuffer;
+      //   while (i > buffer.size/2) {
+      //     i--;
+      //     if (buffer.dataCopy[j][i] < alignParams[j].trigger) {
+      //       triggerLow[j] = true;
+      //       CHECK_TRIGGERED;
+      //       if (triggered[j] && alignParams[j].edge) break;
+      //     }
+      //     if (buffer.dataCopy[j][i] > alignParams[j].trigger) {
+      //       triggerHigh[j] = true;
+      //       CHECK_TRIGGERED;
+      //       if (triggered[j] && !alignParams[j].edge) break;
+      //     }
+      //   }
+      //   triggerPoint[j] = i;
 
-        if (triggered[j]) {
-          delta = 2.0f/(float)(alignParams[j].waveLen);
-          for (;i < buffer.size; i++) {
-            buffer.alignRamp[j][i-alignParams[j].offset] = -1.0f + delta*(i - triggerPoint[j]);
-            if (buffer.alignRamp[j][i-alignParams[j].offset] >= 1.0f) {
-              // align(0);
-              buffer.alignRamp[j][i-alignParams[j].offset] = 1.0f;
-            }
-          }
-        } else if (alignParams[j].fallback) {
-          delta = ((float)buffer.size/((float)alignParams[j].waveLen))/(float)buffer.size;
-          buffer.alignRamp[j][buffer.size-1] = 1.0f;
-          for (i = buffer.size-2; i > 0; i--) {
-            buffer.alignRamp[j][i] = clamp(buffer.alignRamp[j][i+1] - 2*delta);
-          }
-          buffer.alignRamp[j][0] = -1.0f;
-        }
+      //   if (triggered[j]) {
+      //     delta = 2.0f/(float)(alignParams[j].waveLen);
+      //     for (;i < buffer.size; i++) {
+      //       buffer.alignRamp[j][i-alignParams[j].offset] = -1.0f + delta*(i - triggerPoint[j]);
+      //       if (buffer.alignRamp[j][i-alignParams[j].offset] >= 1.0f) {
+      //         // align(0);
+      //         buffer.alignRamp[j][i-alignParams[j].offset] = 1.0f;
+      //       }
+      //     }
+      //   } else if (alignParams[j].fallback) {
+      //     delta = ((float)buffer.size/((float)alignParams[j].waveLen))/(float)buffer.size;
+      //     buffer.alignRamp[j][buffer.size-1] = 1.0f;
+      //     for (i = buffer.size-2; i > 0; i--) {
+      //       buffer.alignRamp[j][i] = clamp(buffer.alignRamp[j][i+1] - 2*delta);
+      //     }
+      //     buffer.alignRamp[j][0] = -1.0f;
+      //   }
 
-        i = 0;
-      }
+      //   i = 0;
+      // }
+      for (j = 0; j < conf.channels; j++) trigger->trigger(j, alignParams->waveLen);
+      buffer.alignRamp = trigger->getAlignBuffer();
     }
 
     delete[] triggerPoint;
@@ -196,7 +195,6 @@ int USCAudioInput::init(PaDeviceIndex dev, bool loopback) {
   if (nDevs == 0) return UAUDIOERR_NODEVS;
   if (nDevs < 0) return nDevs;
 
-  conf.channels = conf.channelsDef;
   streamParams.device = dev;
   if (streamParams.device == paNoDevice) return UAUDIOERR_NODEV;
   streamParams.channelCount = conf.channels;
@@ -267,15 +265,17 @@ void USCAudioInput::align(unsigned char chan) {
 }
 
 float *USCAudioInput::getAlignRamp(unsigned char c) {
+  if (!buffer.alignRamp) return NULL;
   return buffer.alignRamp[c];
 }
 
 bool USCAudioInput::didTrigger(unsigned char chan) {
-  if (chan == 255) {
-    for (unsigned char i = 0; i < conf.channels; i++) if (triggered[i]) return true;
-    return false;
-  }
-  return triggered[chan];
+  // if (chan == 255) {
+  //   for (unsigned char i = 0; i < conf.channels; i++) if (triggered[i]) return true;
+  //   return false;
+  // }
+  // return triggered[chan];
+  return false;
 }
 
 void USCAudioInput::setUpdateState(bool u) {
@@ -296,42 +296,8 @@ unsigned char USCAudioInput::getChannelCount() {
 
 USCAudioInput::~USCAudioInput() {
   if (isGood) Pa_Terminate();
-  if (buffer.data) {
-    for (unsigned char i = 0; i < conf.channels; i++) {
-      if (buffer.data[i]) {
-        delete[] buffer.data[i];
-        buffer.data[i] = NULL;
-      }
-    }
-    delete[] buffer.data;
-    buffer.data = NULL;
-  }
-  if (buffer.dataCopy) {
-    for (unsigned char i = 0; i < conf.channels; i++) {
-      if (buffer.dataCopy[i]) {
-        delete[] buffer.dataCopy[i];
-        buffer.dataCopy[i] = NULL;
-      }
-    }
-    delete[] buffer.dataCopy;
-    buffer.dataCopy = NULL;
-  }
-  if (buffer.alignRamp) {
-    for (unsigned char i = 0; i < conf.channels; i++) {
-      if (buffer.alignRamp[i]) {
-        delete[] buffer.alignRamp[i];
-        buffer.alignRamp[i] = NULL;
-      }
-    }
-    delete[] buffer.alignRamp;
-    buffer.alignRamp = NULL;
-  }
-  if (triggered) {
-    delete[] triggered;
-    triggered = NULL;
-  }
-  if (alignParams) {
-    delete[] alignParams;
-    alignParams = NULL;
-  }
+  delete trigger;
+  DELETE_DOUBLE_PTR(buffer.data, conf.channels)
+  DELETE_DOUBLE_PTR(buffer.dataCopy, conf.channels)
+  DELETE_PTR(alignParams)
 }

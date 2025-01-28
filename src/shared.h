@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <memory.h>
 
 #define PROGRAM_NAME "unscope"
 #define PROGRAM_VER "0.3"
@@ -15,6 +16,22 @@
 #define SUCCESS_MSG "\033[32;1m"
 #define MISC_MSG "\033[34;1m"
 #define MSG_END "\033[0m"
+
+#define FOR_RANGE(c) for (unsigned char z = 0; z < c; z++)
+#define DELETE_PTR(x) \
+  if (x) { \
+    delete[] x; \
+    x = NULL; \
+  }
+
+#define DELETE_DOUBLE_PTR(x,n) \
+  if (x) { \
+    FOR_RANGE(n) { \
+      DELETE_PTR(x[z]) \
+    } \
+    delete[] x; \
+    x = NULL; \
+  }
 
 enum unscopeErrors {
   UAUDIOERR_NOERR = 0,
@@ -44,7 +61,7 @@ enum USCRenderers {
 };
 
 struct unscopeParams {
-  unsigned int audioBufferSize;
+  unsigned long int audioBufferSize;
   unsigned int audioFrameSize;
   unsigned char channels;
   unsigned int sampleRate;

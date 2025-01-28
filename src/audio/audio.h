@@ -1,21 +1,20 @@
 #include <portaudio.h>
-#include <memory.h>
-#include <malloc.h>
 
 #include "../shared.h"
+
+#include "trigger.h"
+#include "trigger/fallback.h"
 
 #ifndef USC_AUDIO_H
 #define USC_AUDIO_H
 
 class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
   private:
-
     struct AudioConfig{
       PaDeviceIndex device;
       int sampleRate;
       int frameSize;
       unsigned char channels;
-      unsigned char channelsDef;
     };
 
     struct AudioBuffer {
@@ -35,8 +34,11 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
     PaError err;
     PaStreamParameters streamParams;
 
-    bool isGood, running, *triggered, updateAudio;
+    bool isGood, running, updateAudio;
     unsigned long int holdoffTimer;
+
+    int triggerMode;
+    Trigger *trigger;
 
     int bufferGetCallback(
       const void *inputBuffer, void *outputBuffer,
@@ -66,7 +68,7 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
     void setAlignParams(unsigned char chan, AlignParams ap);
     float *getAlignRamp(unsigned char c);
 
-    USCAudioInput(unsigned int frameSize, unsigned int bufferSize, unsigned char channelsDef, unsigned int sampleRateDef);
+    USCAudioInput(unscopeParams *params);
     ~USCAudioInput();
 };
 
