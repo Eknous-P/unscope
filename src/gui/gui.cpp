@@ -252,7 +252,7 @@ void USCGUI::drawAlignDebug() {
   if (!(al && ol)) return;
   for (unsigned long int i = 0; i < count; i++) {
     al[i] = ImVec2(((float)i/count)*winSize.x,winSize.y*clamp((1.0f-oscAlign[0][i*DIV])/2.f))+winPos;
-    ol[i] = ImVec2(((float)i/count)*winSize.x,winSize.y*(oscData[0][i*DIV]+1.0f)/2.0f)+winPos;
+    ol[i] = ImVec2(((float)i/count)*winSize.x,winSize.y*(1.0f-oscData[0][i*DIV])/2.0f)+winPos;
   }
 
   dl->AddPolyline(ol, count, 0x7f7777ff, ImDrawFlags_None, 1.0f);
