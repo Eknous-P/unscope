@@ -33,7 +33,6 @@ struct TriggerParam {
 };
 
 class Trigger {
-  const char *name, *desc;
   float **alignBuf, **chanBuf;
   unscopeParams* uParams;
   std::vector<TriggerParam> params;
@@ -43,7 +42,7 @@ class Trigger {
   public:
     virtual void setupTrigger(unscopeParams* up, float** cb);
     virtual void drawParams();
-    virtual void trigger(unsigned char chan, unsigned long int windowSize);
+    virtual bool trigger(unsigned char chan, unsigned long int windowSize);
     virtual bool getTriggered();
     virtual float** getAlignBuffer();
     virtual ~Trigger();
@@ -52,7 +51,7 @@ class Trigger {
 enum Triggers {
   TRIG_NONE = 0,
   TRIG_FALLBACK,
-  TRIG_,
+  TRIG_ANALOG,
   TRIG_MAX
 };
 

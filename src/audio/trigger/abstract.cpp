@@ -16,7 +16,8 @@ void Trigger::drawParams() {
   for (TriggerParam i:params) i.draw();
 }
 
-void Trigger::trigger(unsigned char chan, unsigned long int windowSize) {
+bool Trigger::trigger(unsigned char chan, unsigned long int windowSize) {
+  return false;
 }
 
 bool Trigger::getTriggered() {

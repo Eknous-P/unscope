@@ -1,16 +1,10 @@
 #include "fallback.h"
-#include <shared.h>
 
 void TriggerFallback::setupTrigger(unscopeParams* up, float** cb) {
-  uParams  = up;
-  chanBuf  = cb;
+  uParams = up;
+  chanBuf = cb;
 
-  alignBuf = new float*[up->channels];
-  if (alignBuf) {
-    for (unsigned char i = 0; i < up->channels; i++) {
-      alignBuf[i] = new float[up->audioBufferSize];
-    }
-  }
+  NEW_DOUBLE_PTR(alignBuf,float,up->audioBufferSize,up->channels)
 
   oldWindowSize = 0;
 
@@ -25,10 +19,10 @@ void TriggerFallback::drawParams() {
   for (TriggerParam i:params) i.draw();
 }
 
-void TriggerFallback::trigger(unsigned char chan, unsigned long int windowSize) {
+bool TriggerFallback::trigger(unsigned char chan, unsigned long int windowSize) {
   // theres no need to run this loop every time once its set,
   // since it doesnt change unless the window size does
-  if (oldWindowSize==windowSize) return;
+  if (oldWindowSize==windowSize) return true;
 
   oldWindowSize = windowSize;
   const float delta = 2.0f / windowSize;
@@ -43,6 +37,8 @@ void TriggerFallback::trigger(unsigned char chan, unsigned long int windowSize) 
     if (v < -1.0f) break;
     alignBuf[chan][i] = v;
   }
+
+  return true;
 }
 
 float** TriggerFallback::getAlignBuffer() {

@@ -18,6 +18,13 @@
 #define MSG_END "\033[0m"
 
 #define FOR_RANGE(c) for (unsigned char z = 0; z < c; z++)
+#define NEW_DOUBLE_PTR(x,type,size,count) \
+  x = new type*[count]; \
+  if (x) { \
+    FOR_RANGE(count) { \
+      x[z] = new type[size]; \
+    } \
+  }
 #define DELETE_PTR(x) \
   if (x) { \
     delete[] x; \

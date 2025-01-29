@@ -4,6 +4,7 @@
 
 #include "trigger.h"
 #include "trigger/fallback.h"
+#include "trigger/analog.h"
 
 #ifndef USC_AUDIO_H
 #define USC_AUDIO_H

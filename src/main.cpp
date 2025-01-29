@@ -1,7 +1,6 @@
 #include "audio/audio.h"
 #include "gui/gui.h"
 #include "../shared.h"
-#include <cstdio>
 
 float clamp(float a) {
   if (a > 1.0f) return 1.0f;

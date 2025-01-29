@@ -1,5 +1,4 @@
 #include "audio.h"
-#include <shared.h>
 
 #define CHECK_TRIGGERED triggered[j]=triggerLow[j]&&triggerHigh[j]
 
@@ -41,7 +40,7 @@ USCAudioInput::USCAudioInput(unscopeParams *params) {
     return;
   }
 
-  trigger = new TriggerFallback;
+  trigger = new TriggerAnalog;
   trigger->setupTrigger(params, buffer.data);
 
   updateAudio = true;
