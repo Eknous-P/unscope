@@ -233,10 +233,35 @@ void USCGUI::drawGUI() {
     drawMainScope();
     drawXYScope();
   ImPlot::DestroyContext();
-  ImGui::Begin("align");
-  ImGui::PlotLines("align",oscAlign[0],65536,0,NULL,-1.0f,1.0f,ImGui::GetContentRegionAvail());
-  ImGui::End();
+  // ImGui::Begin("align");
+  // ImGui::PlotLines("align",oscAlign[0],65536,0,NULL,-1.0f,1.0f,ImGui::GetContentRegionAvail());
+  // ImGui::End();
+  drawAlignDebug();
+  
   // ImGui::ShowMetricsWindow();
+}
+
+void USCGUI::drawAlignDebug() {
+  // very slow indeed
+#define DIV 4
+  ImGui::Begin("align");
+  ImDrawList* dl = ImGui::GetWindowDrawList();
+  unsigned long int count = oscDataSize / DIV;
+  ImVec2 *al = new ImVec2[count], *ol = new ImVec2[count];
+  ImVec2 winSize = ImGui::GetWindowSize(), winPos = ImGui::GetWindowPos();
+  if (!(al && ol)) return;
+  for (unsigned long int i = 0; i < count; i++) {
+    al[i] = ImVec2(((float)i/count)*winSize.x,winSize.y*clamp((1.0f-oscAlign[0][i*DIV])/2.f))+winPos;
+    ol[i] = ImVec2(((float)i/count)*winSize.x,winSize.y*(oscData[0][i*DIV]+1.0f)/2.0f)+winPos;
+  }
+
+  dl->AddPolyline(ol, count, 0x7f7777ff, ImDrawFlags_None, 1.0f);
+  dl->AddPolyline(al, count, 0xff77ffff, ImDrawFlags_None, 1.0f);
+
+  delete[] al;
+  delete[] ol;
+  ImGui::End();
+#undef DIV
 }
 
 void USCGUI::writeOscData(unsigned char chan, float* datax, float* datay) {
