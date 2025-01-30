@@ -23,6 +23,7 @@ void TriggerAnalog::drawParams() {
 }
 
 bool TriggerAnalog::trigger(unsigned long int windowSize) {
+  triggered = false;
   // locate trigger
   bool triggerHigh = false, triggerLow = false, foundTrigger = false;
   float trigY = 0.0f; // temp
@@ -42,6 +43,7 @@ bool TriggerAnalog::trigger(unsigned long int windowSize) {
       CHECK_TRIGGERED;
       if (foundTrigger && !true) break;
     }
+    if (triggerIndex < uParams->audioBufferSize - 2 * windowSize) return false; // out of window
   }
 
   alignBuf[triggerIndex] = -1.0f;
@@ -57,6 +59,7 @@ bool TriggerAnalog::trigger(unsigned long int windowSize) {
   // 3.003...... not quite 1...
   memset(&alignBuf[i], 0x40, (uParams->audioBufferSize-i)*sizeof(float));
 
+  triggered = true;
   return true;
 }
 

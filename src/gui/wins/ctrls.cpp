@@ -1,6 +1,5 @@
 #include "gui.h"
 #include "imgui-knobs.h"
-
 #define KNOBS_SIZE 50.0f
 
 void USCGUI::drawGlobalControls() {
@@ -12,7 +11,7 @@ void USCGUI::drawGlobalControls() {
   if (ImGui::Checkbox("share trigger",&trigShare)) {
     shareTrigger=-shareTrigger;
   }
-  if (ImGui::BeginCombo("trigger",triggerNames[trigNum-TRIG_FALLBACK])) {
+  if (ImGui::BeginCombo("trigger##trigMode",triggerNames[trigNum-TRIG_FALLBACK])) {
     for (unsigned char i = TRIG_FALLBACK; i < TRIG_MAX; i++) {
       if (ImGui::Selectable(triggerNames[i-TRIG_FALLBACK],i == trigNum)) {
         trigNum = Triggers(i);
@@ -21,19 +20,21 @@ void USCGUI::drawGlobalControls() {
     }
     ImGui::EndCombo();
   }
-
-  if (ImGui::BeginCombo("trigger mode",triggerModeNames[triggerMode])) {
-    for (unsigned char i = 0; i < 4; i++) {
-      if (ImGui::Selectable(triggerModeNames[i],i == triggerMode)) {
-        triggerMode = TriggerModes(i);
-        if (triggerMode!=TRIGGER_SINGLE) updateAudio = true;
-      }
-    }
-    ImGui::EndCombo();
+  
+  ImGui::Checkbox("enable fallback trigger", &doFallback);
+  if (ImGui::Checkbox("single shot trigger", &singleShot)) {
+    updateAudio = true;
   }
-  if (triggerMode==TRIGGER_SINGLE) {
-    if (ai->didTrigger(shareTrigger>0?shareTrigger-1:255)) updateAudio = false;
-    if (ImGui::Button("trigger")) updateAudio = true;
+  if (singleShot) {
+    bool popColor = false;
+    if (updateAudio) {
+      ImGui::PushStyleColor(ImGuiCol_Button, 0xff00ff00);
+      popColor = true;
+    }
+    if (ImGui::Button("trigger!##singleTrigButton")) {
+      updateAudio = true;
+    }
+    if (popColor) ImGui::PopStyleColor();
   } else {
     ImGui::Checkbox("update audio",&updateAudio);
   }
@@ -75,13 +76,13 @@ void USCGUI::drawGlobalControls() {
 #define UPDATE_TIMEBASE if (tc[i].timebase < 0.0f) tc[i].timebase = 0.0f; \
           if (tc[i].timebase > (float)oscDataSize/(float)sampleRate*1000.0f) tc[i].timebase = (float)oscDataSize/(float)sampleRate*1000.0f; \
           tc[i].traceSize = sampleRate * tc[i].timebase / 1000; \
-          tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize; \
-          if (tc[i].traceOffset + tc[i].traceSize > oscDataSize) tc[i].traceOffset = oscDataSize - tc[i].traceSize; \
-          if (tc[i].traceSize != 0) { \
-            tc[i].trigOffset = 2*((float)tc[i].traceOffset/(float)tc[i].traceSize)-1.0f; \
-          } else { \
-            tc[i].trigOffset = 0; \
-          }
+          // tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize; \
+          // if (tc[i].traceOffset + tc[i].traceSize > oscDataSize) tc[i].traceOffset = oscDataSize - tc[i].traceSize; \
+          // if (tc[i].traceSize != 0) { \
+          //   tc[i].trigOffset = 2*((float)tc[i].traceOffset/(float)tc[i].traceSize)-1.0f; \
+          // } else { \
+          //   tc[i].trigOffset = 0; \
+          // }
 
 #define RIGHTCLICK_EXACT_INPUT(v,d,f) \
         if (ImGui::BeginPopupContextItem(#v "input")) { \
@@ -96,12 +97,14 @@ void USCGUI::drawChanControls() {
     if (!wo.chanControlsOpen[i]) continue;
     ImGui::Begin(strbuf,&wo.chanControlsOpen[i]);
     ImGui::Checkbox("enable", &tc[i].enable);
+
     ImGui::SameLine();
-    if (i != 0) ImGui::BeginDisabled(shareParams);
-    if (ImGui::Button(tc[i].triggerEdge?"Rising":"Falling")) tc[i].triggerEdge = !tc[i].triggerEdge;
-    if (i != 0) ImGui::EndDisabled();
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("trigger edge");
+    // if (i != 0) ImGui::BeginDisabled(shareParams);
+    // if (ImGui::Button(tc[i].triggerEdge?"Rising":"Falling")) tc[i].triggerEdge = !tc[i].triggerEdge;
+    // if (i != 0) ImGui::EndDisabled();
+    // if (ImGui::IsItemHovered()) ImGui::SetTooltip("trigger edge");
     bool trigShare = shareTrigger>0;
+
     ImGui::BeginDisabled(!trigShare);
     ImGui::SameLine();
     sprintf(strbuf, "##chan%dtrig", i+1);
@@ -110,6 +113,17 @@ void USCGUI::drawChanControls() {
       ImGui::SetTooltip("trigger to this channel");
     }
     ImGui::EndDisabled();
+
+    ImGui::SameLine();
+    // color picker
+    sprintf(strbuf, "channel %d color", i+1);
+    ImGui::ColorButton(strbuf, tc[i].color);
+    sprintf(strbuf, "##chan%dcol", i+1);
+    if (ImGui::BeginPopupContextItem(strbuf,ImGuiPopupFlags_MouseButtonLeft)) {
+      sprintf(strbuf, "##chan%dcoledit", i+1);
+      ImGui::ColorPicker4(strbuf,(float*)&tc[i].color);
+      ImGui::EndPopup();
+    }
 
     sprintf(strbuf, "##chan%dctrls", i+1);
     if (ImGui::BeginTable(strbuf, 3)) {
@@ -133,67 +147,6 @@ void USCGUI::drawChanControls() {
         if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) tc[i].yScale = 1.0f;
 
       ImGui::TableNextColumn();
-        // trigger knob
-        bool hideTriggerKnob = false;
-        float* whichTrig = &tc[i].trigger;
-        if (shareParams) {
-          hideTriggerKnob = i!=0;
-          whichTrig = &tc[0].trigger;
-        }
-        if (shareTrigger > 0) {
-          hideTriggerKnob = (shareTrigger - 1)!=i;
-          whichTrig = &tc[shareTrigger - 1].trigger;
-        }
-        ImGui::BeginDisabled(hideTriggerKnob);
-        ImGuiKnobs::Knob("trigger", whichTrig, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
-        if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) {
-          if (shareParams) {
-            for (unsigned char j = 1; j < channels; j++) tc[j].trigger = 0.0f;
-          }
-          tc[i].trigger = 0.0f;
-        }
-        showTrigger = ImGui::IsItemActive();
-        showTrigger |= ai->didTrigger(i);
-        ImGui::EndDisabled();
-        if (i != 0) ImGui::BeginDisabled(shareParams);
-
-      ImGui::TableNextRow();
-      ImGui::TableNextColumn();
-        // x offset knob
-        if (ImGuiKnobs::Knob("x offset", &tc[i].trigOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
-          if (tc[i].trigOffset < -1.0f) tc[i].trigOffset = -1.0f;
-          if (tc[i].trigOffset >  1.0f) tc[i].trigOffset =  1.0f;
-        }
-        if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) {
-          tc[i].trigOffset = 0.0f;
-          tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize;
-          if (tc[i].traceSize != 0) {
-            tc[i].trigOffset = 2*((float)tc[i].traceOffset/(float)tc[i].traceSize)-1.0f;
-          } else {
-            tc[i].trigOffset = 0;
-          }
-        }
-        if (ImGui::IsItemActive()) {
-          tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize;
-          if (tc[i].traceSize != 0) {
-            tc[i].trigOffset = 2*((float)tc[i].traceOffset/(float)tc[i].traceSize)-1.0f;
-          } else {
-            tc[i].trigOffset = 0;
-          }
-        }
-        if (tc[i].traceOffset + tc[i].traceSize > oscDataSize) tc[i].traceOffset = oscDataSize - tc[i].traceSize;
-        if (i != 0) ImGui::EndDisabled();
-        if (i != 0 && shareParams) {
-          tc[i].timebase    = tc[0].timebase;
-          tc[i].traceSize   = tc[0].traceSize;
-          tc[i].traceOffset = tc[0].traceOffset;
-          tc[i].trigOffset  = tc[0].trigOffset;
-          tc[i].trigger     = tc[shareTrigger>0?(shareTrigger-1):0].trigger;
-          tc[i].trigHoldoff = tc[0].trigHoldoff;
-          tc[i].triggerEdge = tc[0].triggerEdge;
-        }
-
-      ImGui::TableNextColumn();
         // y offset knob
         if (ImGuiKnobs::Knob("y offset", &tc[i].yOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
           if (tc[i].yOffset < -1.0f) tc[i].yOffset = -1.0f;
@@ -201,11 +154,11 @@ void USCGUI::drawChanControls() {
         }
         if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) tc[i].yOffset = 0.0f;
 
+      ImGui::TableNextRow();
+      // trigger options here
+
       ImGui::EndTable();
     }
-    
-    // color picker
-    ImGui::ColorEdit4("##coledit",(float*)&tc[i].color);
     
     ImGui::End();
   }
@@ -255,7 +208,11 @@ void USCGUI::drawXYScopeControls() {
       if (xyp.yChan > channels) xyp.yChan = channels;
     }
 
-    ImGui::ColorEdit3("##coledit",(float*)&xyp.color);
+    ImGui::ColorButton("color", xyp.color);
+    if (ImGui::BeginPopupContextItem("##xycol",ImGuiPopupFlags_MouseButtonLeft)) {
+      ImGui::ColorPicker4("##xycoledit",(float*)&xyp.color);
+      ImGui::EndPopup();
+    }
 
     ImGui::End();
   }

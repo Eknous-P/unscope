@@ -48,15 +48,12 @@ class USCGUI {
     };
 
     struct traceParams {
-      bool  enable;
-      float yOffset;
-      float yScale;
+      bool   enable;
+      float  yOffset;
+      float  yScale;
       ImVec4 color;
-      float trigger;
-      int   traceSize;   float timebase;
-      int   traceOffset; float trigOffset;
-      int   trigHoldoff;
-      bool  triggerEdge;
+      int    traceSize;
+      float  timebase;
     };
 
     struct xyParams {
@@ -109,7 +106,8 @@ class USCGUI {
     bool showTrigger, shareParams;
     signed char shareTrigger; // abs part - which channel, sign - do/don't
 
-    TriggerModes triggerMode;
+    bool doFallback, singleShot;
+
     Triggers trigNum;
     Trigger **trigger, **fallbackTrigger;
 

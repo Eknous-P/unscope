@@ -31,12 +31,7 @@ USCGUI::USCGUI(unscopeParams *params) {
     tc[i].yScale = up->scale;
     tc[i].yOffset = 0;
     tc[i].timebase = up->timebase;
-    tc[i].trigger = 0;
     tc[i].traceSize = sampleRate*tc[i].timebase/1000;
-    tc[i].trigHoldoff = 0;
-    tc[i].traceOffset = tc[i].traceSize/2;
-    tc[i].trigOffset = 0;
-    tc[i].triggerEdge = true;
   }
 
   tc[0].color = ImVec4(0.13f,0.97f,0.21f,0.95f);
@@ -92,9 +87,11 @@ USCGUI::USCGUI(unscopeParams *params) {
   showTrigger  = false;
   shareParams  = true;
   shareTrigger = 1;
-  triggerMode  = TRIGGER_AUTO;
   trigNum      = TRIG_FALLBACK;
   triggerSet   = false;
+
+  doFallback = true;
+  singleShot = false;
 
   fullscreen = false;
 
@@ -264,10 +261,29 @@ void USCGUI::drawGUI() {
 
   ai->setUpdateState(updateAudio);
   setOscData(ai->getData());
+
   FOR_RANGE(channels) {
     Trigger* t = trigger[z];
-    t->trigger(tc[z].traceSize);
+    if (!t->trigger(tc[z].traceSize)) {
+      if (doFallback) {
+        t = fallbackTrigger[z];
+        t->trigger(tc[z].traceSize);
+      }
+    }
     oscAlign[z] = t->getAlignBuffer();
+  }
+
+  if (singleShot) {
+    if (shareTrigger>0) {
+      if (trigger[shareTrigger-1]->getTriggered()) updateAudio = false;
+    } else {
+      FOR_RANGE(channels) {
+        if (trigger[z]->getTriggered()) {
+          updateAudio = false;
+          break;
+        }
+      }
+    }
   }
 
 
