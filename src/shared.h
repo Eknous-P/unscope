@@ -5,18 +5,21 @@
 #include <string>
 #include <memory.h>
 
+// program stuff
 #define PROGRAM_NAME "unscope"
 #define PROGRAM_VER "0.3"
 
 #define PROGRAM_WIDTH 1280
 #define PROGRAM_HEIGHT 720
 
+// printf fancies
 #define ERROR_MSG "\033[31;1m"
 #define INFO_MSG "\033[35;1m"
 #define SUCCESS_MSG "\033[32;1m"
 #define MISC_MSG "\033[34;1m"
 #define MSG_END "\033[0m"
 
+// frequently used stuff
 #define FOR_RANGE(c) for (unsigned char z = 0; z < c; z++)
 #define NEW_DOUBLE_PTR(x,type,size,count) \
   x = new type*[count]; \
@@ -39,6 +42,15 @@
     delete[] x; \
     x = NULL; \
   }
+
+// ui fancies
+#define KNOBS_SIZE 50.0f
+
+#define RIGHTCLICK_EXACT_INPUT(v,d,f) \
+        if (ImGui::BeginPopupContextItem(#v "input")) { \
+          if (ImGui::InputScalar("##" #v "input",d,&v)) f; \
+          ImGui::EndPopup(); \
+        }
 
 enum unscopeErrors {
   UAUDIOERR_NOERR = 0,

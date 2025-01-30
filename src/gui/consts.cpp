@@ -69,13 +69,6 @@ DockSpace         ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,19 Size=1280,701 Split=X
   DockNode        ID=0x00000002 Parent=0x8B93E3BD SizeRef=275,371 HiddenTabBar=1 Selected=0x67284010\n\
 ";
 
-const char* triggerModeNames[4]={
-  "none",
-  "auto",
-  "normal",
-  "single"
-};
-
 const char* triggerNames[]={
   "fallback",
   "analog"

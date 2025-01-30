@@ -1,6 +1,5 @@
 #include "gui.h"
 #include "imgui-knobs.h"
-#define KNOBS_SIZE 50.0f
 
 void USCGUI::drawGlobalControls() {
   if (!wo.globalControlsOpen) return;
@@ -84,12 +83,6 @@ void USCGUI::drawGlobalControls() {
           //   tc[i].trigOffset = 0; \
           // }
 
-#define RIGHTCLICK_EXACT_INPUT(v,d,f) \
-        if (ImGui::BeginPopupContextItem(#v "input")) { \
-          if (ImGui::InputScalar("##" #v "input",d,&v)) f; \
-          ImGui::EndPopup(); \
-        }
-
 void USCGUI::drawChanControls() {
   for (unsigned char i = 0; i < channels; i++) {
     char strbuf[32];
@@ -155,7 +148,9 @@ void USCGUI::drawChanControls() {
         if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) tc[i].yOffset = 0.0f;
 
       ImGui::TableNextRow();
+      ImGui::TableNextColumn();
       // trigger options here
+      trigger[i]->drawParams();
 
       ImGui::EndTable();
     }

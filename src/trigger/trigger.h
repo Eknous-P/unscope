@@ -2,6 +2,8 @@
 #define TRIGGER_H
 
 #include "shared.h"
+#include "imgui.h"
+#include "imgui-knobs.h"
 
 enum TriggerParamTypes : unsigned char {
   TP_NONE = 0,
@@ -10,26 +12,55 @@ enum TriggerParamTypes : unsigned char {
   TP_CHAN,
 };
 
-struct TriggerParam {
+class TriggerParam {
   TriggerParamTypes type;
   bool exactInput;
   void *valuePtr;
   const char* label;
+  public:
+    void draw() {
+      switch (type) {
+        case TP_BOOL: {
+          ImGui::Checkbox(label, (bool*)valuePtr);
+          break;
+        }
+        case TP_KNOBNORM: {
+          ImGuiKnobs::Knob(label, (float*)valuePtr, -1.0f, 1.0f, 0.0f, "%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
+          if (exactInput) RIGHTCLICK_EXACT_INPUT(label, *(float*)valuePtr, );
+          if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) *(float*)valuePtr = 0.0f;
+          break;
+        }
+        default: break;
+      }
+    }
 
-  void draw() {}
+    void *getValue() {
+      return valuePtr;
+    }
 
-  TriggerParam():
-    type(TP_NONE),
-    exactInput(false),
-    valuePtr(NULL),
-    label(NULL) {}
+    TriggerParam():
+      type(TP_NONE),
+      exactInput(false),
+      valuePtr(NULL),
+      label(NULL) {}
 
-  TriggerParam(TriggerParamTypes t, bool i, void *p, const char* l) {
-    type       = t;
-    exactInput = i;
-    valuePtr   = p;
-    label      = l;
-  }
+    TriggerParam(TriggerParamTypes t, bool i, const char* l) {
+      type       = t;
+      exactInput = i;
+      label      = l;
+
+      switch (type) {
+        case TP_BOOL:
+          valuePtr = new bool;
+          break;
+        case TP_KNOBNORM:
+          valuePtr = new float;
+          break;
+        default:
+          valuePtr = new int;
+          break;
+      }
+    }
 };
 
 class Trigger {

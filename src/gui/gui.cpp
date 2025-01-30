@@ -87,7 +87,7 @@ USCGUI::USCGUI(unscopeParams *params) {
   showTrigger  = false;
   shareParams  = true;
   shareTrigger = 1;
-  trigNum      = TRIG_FALLBACK;
+  trigNum      = TRIG_ANALOG;
   triggerSet   = false;
 
   doFallback = true;

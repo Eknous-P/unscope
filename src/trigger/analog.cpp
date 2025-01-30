@@ -1,5 +1,6 @@
 #include "analog.h"
 #include <shared.h>
+#include <trigger.h>
 
 #define CHECK_TRIGGERED foundTrigger=triggerLow&&triggerHigh
 
@@ -10,7 +11,7 @@ void TriggerAnalog::setupTrigger(unscopeParams* up, float* cb) {
   alignBuf = new float[up->audioBufferSize];
 
   params = {
-
+    TriggerParam(TP_KNOBNORM,false,"level"),
   };
 
   triggerIndex = 0;
@@ -26,7 +27,7 @@ bool TriggerAnalog::trigger(unsigned long int windowSize) {
   triggered = false;
   // locate trigger
   bool triggerHigh = false, triggerLow = false, foundTrigger = false;
-  float trigY = 0.0f; // temp
+  float trigY = *(float*)params[0].getValue(); // temp
   triggerIndex = uParams->audioBufferSize-windowSize;
 
   memset(alignBuf, 0xbf, uParams->audioBufferSize * sizeof(float));

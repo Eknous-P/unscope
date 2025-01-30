@@ -147,7 +147,6 @@ class USCGUI {
 };
 
 extern const char *windowLayout;
-extern const char *triggerModeNames[4];
 extern const char *triggerNames[];
 
 #endif
