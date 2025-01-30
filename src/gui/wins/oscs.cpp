@@ -2,6 +2,7 @@
 
 void USCGUI::drawMainScope() {
   if (!wo.mainScopeOpen) return;
+  if (!(oscAlign && oscData)) return;
   ImGui::Begin("Scope",&wo.mainScopeOpen);
   if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
     for (unsigned char i = 0; i < channels; i++) {
@@ -41,6 +42,7 @@ void USCGUI::drawMainScope() {
 }
 
 void USCGUI::drawXYScope() {
+  if (!oscData) return;
   if (!wo.xyScopeOpen) return;
   if (channels < 2) return;
   ImGui::Begin("Scope (XY)",&wo.xyScopeOpen);

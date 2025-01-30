@@ -103,62 +103,9 @@ int USCAudioInput::bufferGetCallback(
       if (updateAudio) {
         for (j = 0; j < conf.channels; j++) memcpy(buffer.dataCopy[j],buffer.data[j],buffer.size*sizeof(float));
       }
-      // for (j = 0; j < conf.channels; j++) { // trigger
-      //   unsigned long int i = 0;
-      //   float delta = 0;
-      //   if (alignParams[j].holdoff == 0) holdoffTimer = 0;
-      //   if (holdoffTimer>0) {
-      //     holdoffTimer--;
-      //     delta = ((float)buffer.size/((float)alignParams[j].waveLen))/(float)buffer.size;
-      //     for (;i<buffer.size;i++) {
-      //       buffer.alignRamp[j][i]-=delta;
-      //     }
-      //   }
-      //   else {
-      //     holdoffTimer = alignParams[j].holdoff;
-      //   }
-      //   memset(buffer.alignRamp[j],-1.0f,sizeof(float)*buffer.size);
-
-      //   i = buffer.size - alignParams[j].waveLen;
-      //   memset(triggerLow,0,conf.channels*sizeof(bool));
-      //   memset(triggerHigh,0,conf.channels*sizeof(bool));
-      //   // i -= framesPerBuffer;
-      //   while (i > buffer.size/2) {
-      //     i--;
-      //     if (buffer.dataCopy[j][i] < alignParams[j].trigger) {
-      //       triggerLow[j] = true;
-      //       CHECK_TRIGGERED;
-      //       if (triggered[j] && alignParams[j].edge) break;
-      //     }
-      //     if (buffer.dataCopy[j][i] > alignParams[j].trigger) {
-      //       triggerHigh[j] = true;
-      //       CHECK_TRIGGERED;
-      //       if (triggered[j] && !alignParams[j].edge) break;
-      //     }
-      //   }
-      //   triggerPoint[j] = i;
-
-      //   if (triggered[j]) {
-      //     delta = 2.0f/(float)(alignParams[j].waveLen);
-      //     for (;i < buffer.size; i++) {
-      //       buffer.alignRamp[j][i-alignParams[j].offset] = -1.0f + delta*(i - triggerPoint[j]);
-      //       if (buffer.alignRamp[j][i-alignParams[j].offset] >= 1.0f) {
-      //         // align(0);
-      //         buffer.alignRamp[j][i-alignParams[j].offset] = 1.0f;
-      //       }
-      //     }
-      //   } else if (alignParams[j].fallback) {
-      //     delta = ((float)buffer.size/((float)alignParams[j].waveLen))/(float)buffer.size;
-      //     buffer.alignRamp[j][buffer.size-1] = 1.0f;
-      //     for (i = buffer.size-2; i > 0; i--) {
-      //       buffer.alignRamp[j][i] = clamp(buffer.alignRamp[j][i+1] - 2*delta);
-      //     }
-      //     buffer.alignRamp[j][0] = -1.0f;
-      //   }
-
-      //   i = 0;
-      // }
-      for (j = 0; j < conf.channels; j++) trigger->trigger(j, alignParams->waveLen);
+      for (j = 0; j < conf.channels; j++) {
+        if(!trigger->trigger(j, alignParams->waveLen)) {}
+      }
       buffer.alignRamp = trigger->getAlignBuffer();
     }
 
@@ -263,9 +210,9 @@ void USCAudioInput::setAlignParams(unsigned char chan, AlignParams ap) {
 void USCAudioInput::align(unsigned char chan) {
 }
 
-float *USCAudioInput::getAlignRamp(unsigned char c) {
+float **USCAudioInput::getAlignRamp() {
   if (!buffer.alignRamp) return NULL;
-  return buffer.alignRamp[c];
+  return buffer.alignRamp;
 }
 
 bool USCAudioInput::didTrigger(unsigned char chan) {
@@ -281,8 +228,8 @@ void USCAudioInput::setUpdateState(bool u) {
   updateAudio = u;
 }
 
-float *USCAudioInput::getData(unsigned char chan) {
-  return buffer.dataCopy[chan];
+float **USCAudioInput::getData() {
+  return buffer.dataCopy;
 }
 
 const PaDeviceInfo *USCAudioInput::getDeviceInfo() {

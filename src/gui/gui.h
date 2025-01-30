@@ -110,7 +110,7 @@ class USCGUI {
 
     void attachAudioInput(USCAudioInput* i);
 
-    void writeOscData(unsigned char chan, float* datax, float* datay);
+    void setOscData(float** d, float** a);
   
     bool isRunning();
     int  init();

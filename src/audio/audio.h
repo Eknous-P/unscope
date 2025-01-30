@@ -62,12 +62,12 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
     int stop();
 
     unsigned char getChannelCount();
-    float *getData(unsigned char chan);
+    float **getData();
     const PaDeviceInfo* getDeviceInfo();
     bool didTrigger(unsigned char chan);
     void setUpdateState(bool u);
     void setAlignParams(unsigned char chan, AlignParams ap);
-    float *getAlignRamp(unsigned char c);
+    float **getAlignRamp();
 
     USCAudioInput(unscopeParams *params);
     ~USCAudioInput();

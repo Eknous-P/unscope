@@ -224,10 +224,8 @@ void USCGUI::drawGUI() {
       tc[j].triggerEdge,
       tc[j].trigHoldoff,
       triggerMode!=TRIGGER_NORMAL));
-    writeOscData(j,
-      ai->getAlignRamp(j),
-      ai->getData(j));
   }
+  setOscData(ai->getData(), ai->getAlignRamp());
 
   ImPlot::CreateContext();
     drawMainScope();
@@ -243,6 +241,7 @@ void USCGUI::drawGUI() {
 
 void USCGUI::drawAlignDebug() {
   // very slow indeed
+  if (!(oscAlign && oscData)) return;
 #define DIV 4
   ImGui::Begin("align");
   ImDrawList* dl = ImGui::GetWindowDrawList();
@@ -264,10 +263,12 @@ void USCGUI::drawAlignDebug() {
 #undef DIV
 }
 
-void USCGUI::writeOscData(unsigned char chan, float* datax, float* datay) {
-  if (datax == NULL || datay == NULL) return;
-  memcpy(oscAlign[chan],datax,oscDataSize*sizeof(float));
-  memcpy(oscData[chan],datay,oscDataSize*sizeof(float));
+void USCGUI::setOscData(float** d, float** a) {
+  if (d == NULL || a == NULL) return;
+  FOR_RANGE(channels) {
+    memcpy(oscData[z], d[z], oscDataSize*sizeof(float));
+    memcpy(oscAlign[z], a[z], oscDataSize*sizeof(float));
+  }
 }
 
 bool USCGUI::doRestartAudio() {
@@ -294,30 +295,9 @@ USCGUI::~USCGUI() {
   if (isGood) rd->deinit();
   delete rd;
 
-  if (oscData) {
-    for (unsigned char i = 0; i < channels; i++) {
-      if (oscData[i]) {
-        delete[] oscData[i];
-        oscData[i] = NULL;
-      }
-    }
-    delete[] oscData;
-    oscData = NULL;
-  }
-  if (oscAlign) {
-    for (unsigned char i = 0; i < channels; i++) {
-      if (oscAlign[i]) {
-        delete[] oscAlign[i];
-        oscAlign[i] = NULL;
-      }
-    }
-    delete[] oscAlign;
-    oscAlign = NULL;
-  }
+  DELETE_DOUBLE_PTR(oscData, channels)
+  DELETE_DOUBLE_PTR(oscAlign, channels)
   ai = NULL;
 
-  if (tc) {
-    delete[] tc;
-    tc = NULL;
-  }
+  DELETE_PTR(tc)
 }
