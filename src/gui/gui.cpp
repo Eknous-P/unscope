@@ -1,6 +1,4 @@
 #include "gui.h"
-#include <shared.h>
-#include <trigger.h>
 
 ImVec2 operator+(ImVec2 lhs, ImVec2 rhs) {
   return ImVec2(lhs.x+rhs.x,lhs.y+rhs.y);
@@ -15,23 +13,24 @@ bool USCGUI::isRunning() {
 }
 
 USCGUI::USCGUI(unscopeParams *params) {
-  renderer = (USCRenderers)params->renderer;
+  up = params;
+  renderer = (USCRenderers)up->renderer;
   isGood = false;
   err = 0;
-  channels = params->channels;
+  channels = up->channels;
 
   sc.plotFlags = ImPlotFlags_NoLegend|ImPlotFlags_NoMenus;
   sc.scopeFlags = ImPlotAxisFlags_AutoFit|ImPlotAxisFlags_Lock|ImPlotAxisFlags_NoMenus|ImPlotAxisFlags_Foreground;
 
-  sampleRate = params->sampleRate;
+  sampleRate = up->sampleRate;
 
   tc = new traceParams[channels];
 
   for (unsigned char i = 0; i < channels; i++) {
     tc[i].enable = true;
-    tc[i].yScale = params->scale;
+    tc[i].yScale = up->scale;
     tc[i].yOffset = 0;
-    tc[i].timebase = params->timebase;
+    tc[i].timebase = up->timebase;
     tc[i].trigger = 0;
     tc[i].traceSize = sampleRate*tc[i].timebase/1000;
     tc[i].trigHoldoff = 0;
@@ -50,7 +49,7 @@ USCGUI::USCGUI(unscopeParams *params) {
   xyp.yOffset = 0;
   xyp.xScale = 1.0f;
   xyp.yScale = 1.0f;
-  xyp.persistence = params->xyPersist;
+  xyp.persistence = up->xyPersist;
   xyp.sampleLen = sampleRate*xyp.persistence/1000;
   xyp.xChan = 1;
   xyp.yChan = 2;
@@ -64,7 +63,7 @@ USCGUI::USCGUI(unscopeParams *params) {
   wo.globalControlsOpen = true;
   wo.aboutOpen=false;
 
-  oscDataSize = params->audioBufferSize;
+  oscDataSize = up->audioBufferSize;
 
   oscData = new float*[channels];
   oscAlign = new float*[channels];
@@ -94,24 +93,28 @@ USCGUI::USCGUI(unscopeParams *params) {
   shareParams  = true;
   shareTrigger = 1;
   triggerMode  = TRIGGER_AUTO;
+  trigNum      = TRIG_FALLBACK;
+  triggerSet   = false;
 
   fullscreen = false;
 
   trigColor = ImVec4(0,0,0,0);
 
+  fallbackTrigger = new Trigger*[channels];
   trigger = new Trigger*[channels];
-  if (!trigger) return;
+
+  if (!fallbackTrigger) return;
   FOR_RANGE(channels) {
     Trigger* t = new TriggerFallback;
-    printf("addr: %p\n",t);
-    if (t == NULL) return;
-    t->setupTrigger(params, oscData[z]);
-    trigger[z] = t;
+    if (!t) return;
+    t->setupTrigger(up, oscData[z]);
+
+    fallbackTrigger[z] = t;
   }
 
-  fallbackTrigger = NULL;
 
   ai = NULL;
+  isGood = true;
 }
 
 void USCGUI::attachAudioInput(USCAudioInput *i) {
@@ -134,10 +137,40 @@ void USCGUI::setupRenderer(USCRenderers r) {
   }
 }
 
+void USCGUI::setupTrigger(Triggers t) {
+  // destroy current trigger
+  if (triggerSet && trigger) {
+    for (unsigned char z = 0; z < channels; z++) {
+      if (trigger[z]) {
+        delete trigger[z];
+        trigger[z] = NULL;
+      }
+    }
+  }
+  // set new trigger
+  triggerSet = false;
+  FOR_RANGE(channels) {
+    Trigger* tp;
+    switch (t) {
+      case TRIG_ANALOG:
+        tp = new TriggerAnalog;
+        break;
+      default:
+        tp = new TriggerFallback;
+        break;
+    }
+    if (!tp) return;
+    tp->setupTrigger(up, oscData[z]);
+
+    trigger[z] = tp;
+  }
+  triggerSet = true;
+}
+
 
 int USCGUI::init() {
   setupRenderer(renderer);
-  isGood = true;
+  setupTrigger(trigNum);
   if (!isGood) return -1;
   if (running) return 0;
   if (rd->setup()!=0) return UGUIERROR_SETUPFAIL;
@@ -313,7 +346,16 @@ USCGUI::~USCGUI() {
     delete[] trigger;
     trigger = NULL;
   }
-  DELETE_DOUBLE_PTR(fallbackTrigger, channels)
+  if (fallbackTrigger) {
+    for (unsigned char z = 0; z < channels; z++) {
+      if (fallbackTrigger[z]) {
+        delete fallbackTrigger[z];
+        fallbackTrigger[z] = NULL;
+      }
+    }
+    delete[] fallbackTrigger;
+    fallbackTrigger = NULL;
+  }
 
   DELETE_DOUBLE_PTR(oscData, channels)
   DELETE_PTR(oscAlign)

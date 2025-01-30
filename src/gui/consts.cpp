@@ -75,3 +75,8 @@ const char* triggerModeNames[4]={
   "normal",
   "single"
 };
+
+const char* triggerNames[]={
+  "fallback",
+  "analog"
+};

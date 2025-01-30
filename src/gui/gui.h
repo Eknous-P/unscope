@@ -35,6 +35,10 @@ class USCRender {
 #include "render/render_directx11_sdl.h"
 #endif
 
+#include "trigger.h"
+#include "fallback.h"
+#include "analog.h"
+
 
 class USCGUI {
   private:
@@ -83,7 +87,7 @@ class USCGUI {
     ImGuiIO io;
     ImGuiStyle style;
     ImVec4 bgColor, trigColor;
-    bool isGood, running, updateAudio, restartAudio, audioLoopback;
+    bool isGood, running, updateAudio, restartAudio, audioLoopback, triggerSet;
     unsigned char channels;
     USCRenderers renderer;
   
@@ -95,20 +99,23 @@ class USCGUI {
     std::vector<DeviceEntry> devs;
     int device, deviceNum;
 
-    scopeParams sc;
-    traceParams *tc;
-    xyParams    xyp;
-    windowsOpen wo;
-    settings    st;
+    unscopeParams *up;
+    scopeParams    sc;
+    traceParams   *tc;
+    xyParams       xyp;
+    windowsOpen    wo;
+    settings       st;
 
     bool showTrigger, shareParams;
     signed char shareTrigger; // abs part - which channel, sign - do/don't
 
     TriggerModes triggerMode;
+    Triggers trigNum;
     Trigger **trigger, **fallbackTrigger;
 
   public:
     void setupRenderer(USCRenderers r);
+    void setupTrigger(Triggers t);
 
     void attachAudioInput(USCAudioInput* i);
 
@@ -143,5 +150,6 @@ class USCGUI {
 
 extern const char *windowLayout;
 extern const char *triggerModeNames[4];
+extern const char *triggerNames[];
 
 #endif

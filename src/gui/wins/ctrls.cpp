@@ -12,6 +12,15 @@ void USCGUI::drawGlobalControls() {
   if (ImGui::Checkbox("share trigger",&trigShare)) {
     shareTrigger=-shareTrigger;
   }
+  if (ImGui::BeginCombo("trigger",triggerNames[trigNum-TRIG_FALLBACK])) {
+    for (unsigned char i = TRIG_FALLBACK; i < TRIG_MAX; i++) {
+      if (ImGui::Selectable(triggerNames[i-TRIG_FALLBACK],i == trigNum)) {
+        trigNum = Triggers(i);
+        setupTrigger(trigNum);
+      }
+    }
+    ImGui::EndCombo();
+  }
 
   if (ImGui::BeginCombo("trigger mode",triggerModeNames[triggerMode])) {
     for (unsigned char i = 0; i < 4; i++) {
