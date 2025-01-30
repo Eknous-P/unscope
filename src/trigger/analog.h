@@ -4,7 +4,7 @@
 #define TRIGGER_ANALOG_H
 
 class TriggerAnalog : public Trigger {
-  float **alignBuf, **chanBuf;
+  float *alignBuf, *chanBuf;
   unscopeParams* uParams;
   std::vector<TriggerParam> params;
 
@@ -13,11 +13,11 @@ class TriggerAnalog : public Trigger {
   bool triggered;
 
   public:
-    void setupTrigger(unscopeParams* up, float** cb);
+    void setupTrigger(unscopeParams* up, float* cb);
     void drawParams();
-    bool trigger(unsigned char chan, unsigned long int windowSize);
+    bool trigger(unsigned long int windowSize);
     bool getTriggered();
-    float** getAlignBuffer();
+    float* getAlignBuffer();
     ~TriggerAnalog();
 };
 

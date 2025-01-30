@@ -33,18 +33,18 @@ struct TriggerParam {
 };
 
 class Trigger {
-  float **alignBuf, **chanBuf;
+  float *alignBuf, *chanBuf;
   unscopeParams* uParams;
   std::vector<TriggerParam> params;
 
   bool triggered;
 
   public:
-    virtual void setupTrigger(unscopeParams* up, float** cb);
+    virtual void setupTrigger(unscopeParams* up, float* cb);
     virtual void drawParams();
-    virtual bool trigger(unsigned char chan, unsigned long int windowSize);
+    virtual bool trigger(unsigned long int windowSize);
     virtual bool getTriggered();
-    virtual float** getAlignBuffer();
+    virtual float* getAlignBuffer();
     virtual ~Trigger();
 };
 

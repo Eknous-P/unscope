@@ -105,7 +105,7 @@ class USCGUI {
     signed char shareTrigger; // abs part - which channel, sign - do/don't
 
     TriggerModes triggerMode;
-    Trigger *trigger, *fallbackTrigger;
+    Trigger **trigger, **fallbackTrigger;
 
   public:
     void setupRenderer(USCRenderers r);

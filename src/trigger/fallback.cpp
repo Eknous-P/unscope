@@ -1,10 +1,11 @@
 #include "fallback.h"
+#include <shared.h>
 
-void TriggerFallback::setupTrigger(unscopeParams* up, float** cb) {
+void TriggerFallback::setupTrigger(unscopeParams* up, float* cb) {
   uParams = up;
   chanBuf = cb;
 
-  NEW_DOUBLE_PTR(alignBuf,float,up->audioBufferSize,up->channels)
+  alignBuf = new float[up->audioBufferSize];
 
   oldWindowSize = 0;
 
@@ -19,7 +20,7 @@ void TriggerFallback::drawParams() {
   for (TriggerParam i:params) i.draw();
 }
 
-bool TriggerFallback::trigger(unsigned char chan, unsigned long int windowSize) {
+bool TriggerFallback::trigger(unsigned long int windowSize) {
   // theres no need to run this loop every time once its set,
   // since it doesnt change unless the window size does
   if (oldWindowSize==windowSize) return true;
@@ -28,20 +29,20 @@ bool TriggerFallback::trigger(unsigned char chan, unsigned long int windowSize) 
   const float delta = 2.0f / windowSize;
 
   // -1.498.... close enough to -1
-  memset(alignBuf[chan], 0xbf, (uParams->audioBufferSize - 2) * sizeof(float));
+  memset(alignBuf, 0xbf, (uParams->audioBufferSize - 2) * sizeof(float));
 
-  alignBuf[chan][uParams->audioBufferSize-1] = 1.0f;
+  alignBuf[uParams->audioBufferSize-1] = 1.0f;
 
   for (unsigned long int i = uParams->audioBufferSize-2; i > 0; i--) {
-    float v = alignBuf[chan][i+1] - delta;
+    float v = alignBuf[i+1] - delta;
     if (v < -1.0f) break;
-    alignBuf[chan][i] = v;
+    alignBuf[i] = v;
   }
 
   return true;
 }
 
-float** TriggerFallback::getAlignBuffer() {
+float* TriggerFallback::getAlignBuffer() {
   return alignBuf;
 }
 
@@ -50,14 +51,5 @@ bool TriggerFallback::getTriggered() {
 }
 
 TriggerFallback::~TriggerFallback() {
-  if (alignBuf) {
-    for (unsigned char z = 0; z < uParams->channels; z++) {
-      if (alignBuf[z]) {
-        delete[] alignBuf[z];
-        alignBuf[z] = __null;
-      }
-    }
-    delete[] alignBuf;
-    alignBuf = __null;
-  }
+  DELETE_PTR(alignBuf)
 }

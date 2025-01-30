@@ -4,7 +4,7 @@
 #define TRIGGER_FALLBACK_H
 
 class TriggerFallback : public Trigger {
-  float **alignBuf, **chanBuf;
+  float *alignBuf, *chanBuf;
   unscopeParams* uParams;
   std::vector<TriggerParam> params;
   unsigned long int oldWindowSize;
@@ -12,11 +12,11 @@ class TriggerFallback : public Trigger {
   bool triggered;
 
   public:
-    void setupTrigger(unscopeParams* up, float** cb);
+    void setupTrigger(unscopeParams* up, float* cb);
     void drawParams();
-    bool trigger(unsigned char chan, unsigned long int windowSize);
+    bool trigger(unsigned long int windowSize);
     bool getTriggered();
-    float** getAlignBuffer();
+    float* getAlignBuffer();
     ~TriggerFallback();
 };
 

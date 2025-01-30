@@ -1,5 +1,6 @@
 #include "gui.h"
 #include <shared.h>
+#include <trigger.h>
 
 ImVec2 operator+(ImVec2 lhs, ImVec2 rhs) {
   return ImVec2(lhs.x+rhs.x,lhs.y+rhs.y);
@@ -66,19 +67,19 @@ USCGUI::USCGUI(unscopeParams *params) {
   oscDataSize = params->audioBufferSize;
 
   oscData = new float*[channels];
-  // oscAlign = new float*[oscDataSize];
-  if (!oscData/* || !oscAlign*/) {
+  oscAlign = new float*[channels];
+  if (!oscData || !oscAlign) {
     return;
   }
-  for (unsigned char i = 0; i < channels; i++) {
-    oscData[i] = new float[oscDataSize];
+  FOR_RANGE(channels) {
+    oscData[z] = new float[oscDataSize];
     // oscAlign[i] = new float[oscDataSize];
 
-    if (!oscData[i]/* || !oscAlign[i]*/) {
+    if (oscData[z] == NULL/* || !oscAlign[i]*/) {
       return;
     }
 
-    memset(oscData[i],0,oscDataSize*sizeof(float));
+    memset(oscData[z],0,oscDataSize*sizeof(float));
     // memset(oscAlign[i],0,oscDataSize*sizeof(float));
   }
   running = false;
@@ -98,8 +99,15 @@ USCGUI::USCGUI(unscopeParams *params) {
 
   trigColor = ImVec4(0,0,0,0);
 
-  trigger = new TriggerAnalog;
-  trigger->setupTrigger(params, oscData);
+  trigger = new Trigger*[channels];
+  if (!trigger) return;
+  FOR_RANGE(channels) {
+    Trigger* t = new TriggerFallback;
+    printf("addr: %p\n",t);
+    if (t == NULL) return;
+    t->setupTrigger(params, oscData[z]);
+    trigger[z] = t;
+  }
 
   fallbackTrigger = NULL;
 
@@ -221,21 +229,20 @@ void USCGUI::drawGUI() {
 
   drawAbout();
 
+  ai->setUpdateState(updateAudio);
   setOscData(ai->getData());
-  for (unsigned char j = 0; j < channels; j++) {
-    ai->setUpdateState(updateAudio);
-    trigger->trigger(j, tc[j].traceSize);
+  FOR_RANGE(channels) {
+    Trigger* t = trigger[z];
+    t->trigger(tc[z].traceSize);
+    oscAlign[z] = t->getAlignBuffer();
   }
-  oscAlign = trigger->getAlignBuffer();
 
 
   ImPlot::CreateContext();
     drawMainScope();
     drawXYScope();
   ImPlot::DestroyContext();
-  // ImGui::Begin("align");
-  // ImGui::PlotLines("align",oscAlign[0],65536,0,NULL,-1.0f,1.0f,ImGui::GetContentRegionAvail());
-  // ImGui::End();
+  
   drawAlignDebug();
   
   // ImGui::ShowMetricsWindow();
@@ -297,16 +304,19 @@ USCGUI::~USCGUI() {
     rd = NULL;
   }
   if (trigger) {
-    delete trigger;
+    for (unsigned char z = 0; z < channels; z++) {
+      if (trigger[z]) {
+        delete trigger[z];
+        trigger[z] = NULL;
+      }
+    }
+    delete[] trigger;
     trigger = NULL;
   }
-  if (fallbackTrigger) {
-    delete fallbackTrigger;
-    fallbackTrigger = NULL;
-  }
+  DELETE_DOUBLE_PTR(fallbackTrigger, channels)
 
   DELETE_DOUBLE_PTR(oscData, channels)
-  // DELETE_DOUBLE_PTR(oscAlign, channels)
+  DELETE_PTR(oscAlign)
   ai = NULL;
 
   DELETE_PTR(tc)
