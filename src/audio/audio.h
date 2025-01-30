@@ -20,14 +20,12 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
 
     struct AudioBuffer {
       float **data, **dataCopy;
-      float **alignRamp;
       unsigned long int size;
       unsigned long int index;
     };
 
     AudioConfig conf;
     AudioBuffer buffer;
-    AlignParams *alignParams;
 
     std::vector<DeviceEntry> devs;
   
@@ -37,9 +35,6 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
 
     bool isGood, running, updateAudio;
     unsigned long int holdoffTimer;
-
-    int triggerMode;
-    Trigger *trigger;
 
     int bufferGetCallback(
       const void *inputBuffer, void *outputBuffer,
@@ -66,8 +61,6 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
     const PaDeviceInfo* getDeviceInfo();
     bool didTrigger(unsigned char chan);
     void setUpdateState(bool u);
-    void setAlignParams(unsigned char chan, AlignParams ap);
-    float **getAlignRamp();
 
     USCAudioInput(unscopeParams *params);
     ~USCAudioInput();

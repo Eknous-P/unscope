@@ -88,10 +88,11 @@ endif()
 
 list(APPEND unscope_srcs ${aud_srcs} ${gui_srcs})
 list(APPEND unscope_srcs 
+${srcs_path}/trigger/abstract.cpp
+${srcs_path}/trigger/fallback.cpp
+${srcs_path}/trigger/analog.cpp
+
 ${srcs_path}/audio/audioInput.cpp
-${srcs_path}/audio/trigger/abstract.cpp
-${srcs_path}/audio/trigger/fallback.cpp
-${srcs_path}/audio/trigger/analog.cpp
 
 ${srcs_path}/gui/render/abstract.cpp
 )
@@ -124,6 +125,7 @@ ${imgui_path}/backends
 ${implot_path}
 ./submodules/imgui-knobs
 ${srcs_path}
+${srcs_path}/trigger
 ${srcs_path}/audio
 ${srcs_path}/gui)
 

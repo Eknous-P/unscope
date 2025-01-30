@@ -1,4 +1,5 @@
 #include "gui.h"
+#include <shared.h>
 
 ImVec2 operator+(ImVec2 lhs, ImVec2 rhs) {
   return ImVec2(lhs.x+rhs.x,lhs.y+rhs.y);
@@ -12,24 +13,24 @@ bool USCGUI::isRunning() {
   return running;
 }
 
-USCGUI::USCGUI(unscopeParams params) {
-  renderer = (USCRenderers)params.renderer;
+USCGUI::USCGUI(unscopeParams *params) {
+  renderer = (USCRenderers)params->renderer;
   isGood = false;
   err = 0;
-  channels = params.channels;
+  channels = params->channels;
 
   sc.plotFlags = ImPlotFlags_NoLegend|ImPlotFlags_NoMenus;
   sc.scopeFlags = ImPlotAxisFlags_AutoFit|ImPlotAxisFlags_Lock|ImPlotAxisFlags_NoMenus|ImPlotAxisFlags_Foreground;
 
-  sampleRate = params.sampleRate;
+  sampleRate = params->sampleRate;
 
   tc = new traceParams[channels];
 
   for (unsigned char i = 0; i < channels; i++) {
     tc[i].enable = true;
-    tc[i].yScale = params.scale;
+    tc[i].yScale = params->scale;
     tc[i].yOffset = 0;
-    tc[i].timebase = params.timebase;
+    tc[i].timebase = params->timebase;
     tc[i].trigger = 0;
     tc[i].traceSize = sampleRate*tc[i].timebase/1000;
     tc[i].trigHoldoff = 0;
@@ -48,7 +49,7 @@ USCGUI::USCGUI(unscopeParams params) {
   xyp.yOffset = 0;
   xyp.xScale = 1.0f;
   xyp.yScale = 1.0f;
-  xyp.persistence = params.xyPersist;
+  xyp.persistence = params->xyPersist;
   xyp.sampleLen = sampleRate*xyp.persistence/1000;
   xyp.xChan = 1;
   xyp.yChan = 2;
@@ -62,23 +63,23 @@ USCGUI::USCGUI(unscopeParams params) {
   wo.globalControlsOpen = true;
   wo.aboutOpen=false;
 
-  oscDataSize = params.audioBufferSize;
+  oscDataSize = params->audioBufferSize;
 
   oscData = new float*[channels];
-  oscAlign = new float*[oscDataSize];
-  if (!oscData || !oscAlign) {
+  // oscAlign = new float*[oscDataSize];
+  if (!oscData/* || !oscAlign*/) {
     return;
   }
   for (unsigned char i = 0; i < channels; i++) {
     oscData[i] = new float[oscDataSize];
-    oscAlign[i] = new float[oscDataSize];
+    // oscAlign[i] = new float[oscDataSize];
 
-    if (!oscData[i] || !oscAlign[i]) {
+    if (!oscData[i]/* || !oscAlign[i]*/) {
       return;
     }
 
     memset(oscData[i],0,oscDataSize*sizeof(float));
-    memset(oscAlign[i],0,oscDataSize*sizeof(float));
+    // memset(oscAlign[i],0,oscDataSize*sizeof(float));
   }
   running = false;
   updateAudio = true;
@@ -96,6 +97,11 @@ USCGUI::USCGUI(unscopeParams params) {
   fullscreen = false;
 
   trigColor = ImVec4(0,0,0,0);
+
+  trigger = new TriggerAnalog;
+  trigger->setupTrigger(params, oscData);
+
+  fallbackTrigger = NULL;
 
   ai = NULL;
 }
@@ -215,17 +221,13 @@ void USCGUI::drawGUI() {
 
   drawAbout();
 
+  setOscData(ai->getData());
   for (unsigned char j = 0; j < channels; j++) {
     ai->setUpdateState(updateAudio);
-    ai->setAlignParams(j,
-      AlignParams((triggerMode==TRIGGER_NONE)?-INFINITY:tc[j].trigger,
-      tc[j].traceSize,
-      tc[j].traceOffset,
-      tc[j].triggerEdge,
-      tc[j].trigHoldoff,
-      triggerMode!=TRIGGER_NORMAL));
+    trigger->trigger(j, tc[j].traceSize);
   }
-  setOscData(ai->getData(), ai->getAlignRamp());
+  oscAlign = trigger->getAlignBuffer();
+
 
   ImPlot::CreateContext();
     drawMainScope();
@@ -243,7 +245,7 @@ void USCGUI::drawAlignDebug() {
   // very slow indeed
   if (!(oscAlign && oscData)) return;
 #define DIV 4
-  ImGui::Begin("align");
+  ImGui::Begin("align", NULL, ImGuiWindowFlags_NoTitleBar);
   ImDrawList* dl = ImGui::GetWindowDrawList();
   unsigned long int count = oscDataSize / DIV;
   ImVec2 *al = new ImVec2[count], *ol = new ImVec2[count];
@@ -263,12 +265,9 @@ void USCGUI::drawAlignDebug() {
 #undef DIV
 }
 
-void USCGUI::setOscData(float** d, float** a) {
-  if (d == NULL || a == NULL) return;
-  FOR_RANGE(channels) {
-    memcpy(oscData[z], d[z], oscDataSize*sizeof(float));
-    memcpy(oscAlign[z], a[z], oscDataSize*sizeof(float));
-  }
+void USCGUI::setOscData(float** d) {
+  if (d == NULL) return;
+  FOR_RANGE(channels) memcpy(oscData[z], d[z], oscDataSize*sizeof(float));
 }
 
 bool USCGUI::doRestartAudio() {
@@ -293,10 +292,21 @@ USCGUI::~USCGUI() {
   // ImGui::SaveIniSettingsToDisk(INIFILE);
   // Cleanup
   if (isGood) rd->deinit();
-  delete rd;
+  if (rd) {
+    delete rd;
+    rd = NULL;
+  }
+  if (trigger) {
+    delete trigger;
+    trigger = NULL;
+  }
+  if (fallbackTrigger) {
+    delete fallbackTrigger;
+    fallbackTrigger = NULL;
+  }
 
   DELETE_DOUBLE_PTR(oscData, channels)
-  DELETE_DOUBLE_PTR(oscAlign, channels)
+  // DELETE_DOUBLE_PTR(oscAlign, channels)
   ai = NULL;
 
   DELETE_PTR(tc)

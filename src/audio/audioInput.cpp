@@ -15,7 +15,6 @@ USCAudioInput::USCAudioInput(unscopeParams *params) {
   buffer.size = params->audioBufferSize;
   buffer.data = new float*[conf.channels];
   buffer.dataCopy = new float*[conf.channels];
-  buffer.alignRamp = NULL;
 
   holdoffTimer = 0;
 
@@ -33,15 +32,6 @@ USCAudioInput::USCAudioInput(unscopeParams *params) {
     memset(buffer.data[i],      0, buffer.size*sizeof(float));
     memset(buffer.dataCopy[i],  0, buffer.size*sizeof(float));
   }
-
-  alignParams = new AlignParams[conf.channels];
-  if (!alignParams) {
-    isGood = false;
-    return;
-  }
-
-  trigger = new TriggerAnalog;
-  trigger->setupTrigger(params, buffer.data);
 
   updateAudio = true;
 }
@@ -103,10 +93,10 @@ int USCAudioInput::bufferGetCallback(
       if (updateAudio) {
         for (j = 0; j < conf.channels; j++) memcpy(buffer.dataCopy[j],buffer.data[j],buffer.size*sizeof(float));
       }
-      for (j = 0; j < conf.channels; j++) {
-        if(!trigger->trigger(j, alignParams->waveLen)) {}
-      }
-      buffer.alignRamp = trigger->getAlignBuffer();
+      // for (j = 0; j < conf.channels; j++) {
+      //   if(!trigger->trigger(j, alignParams->waveLen)) {}
+      // }
+      // buffer.alignRamp = trigger->getAlignBuffer();
     }
 
     delete[] triggerPoint;
@@ -203,18 +193,6 @@ int USCAudioInput::stop() {
   return Pa_CloseStream(stream);
 }
 
-void USCAudioInput::setAlignParams(unsigned char chan, AlignParams ap) {
-  alignParams[chan] = ap;
-}
-
-void USCAudioInput::align(unsigned char chan) {
-}
-
-float **USCAudioInput::getAlignRamp() {
-  if (!buffer.alignRamp) return NULL;
-  return buffer.alignRamp;
-}
-
 bool USCAudioInput::didTrigger(unsigned char chan) {
   // if (chan == 255) {
   //   for (unsigned char i = 0; i < conf.channels; i++) if (triggered[i]) return true;
@@ -242,8 +220,6 @@ unsigned char USCAudioInput::getChannelCount() {
 
 USCAudioInput::~USCAudioInput() {
   if (isGood) Pa_Terminate();
-  delete trigger;
   DELETE_DOUBLE_PTR(buffer.data, conf.channels)
   DELETE_DOUBLE_PTR(buffer.dataCopy, conf.channels)
-  DELETE_PTR(alignParams)
 }

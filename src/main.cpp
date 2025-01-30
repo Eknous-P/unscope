@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
     }
   };
 
-  USCGUI g(params);
+  USCGUI g(&params);
 
   e = g.init();
   if (e != 0) {

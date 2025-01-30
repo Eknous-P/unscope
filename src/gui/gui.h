@@ -103,14 +103,16 @@ class USCGUI {
 
     bool showTrigger, shareParams;
     signed char shareTrigger; // abs part - which channel, sign - do/don't
+
     TriggerModes triggerMode;
+    Trigger *trigger, *fallbackTrigger;
 
   public:
     void setupRenderer(USCRenderers r);
 
     void attachAudioInput(USCAudioInput* i);
 
-    void setOscData(float** d, float** a);
+    void setOscData(float** d);
   
     bool isRunning();
     int  init();
@@ -135,7 +137,7 @@ class USCGUI {
     int  getAudioDeviceSetting();
     void setAudioDeviceSetting(int d);
   
-    USCGUI(unscopeParams params);
+    USCGUI(unscopeParams *params);
     ~USCGUI();
 };
 
