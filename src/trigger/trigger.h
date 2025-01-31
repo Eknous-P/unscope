@@ -26,7 +26,7 @@ class TriggerParam {
         }
         case TP_KNOBNORM: {
           ImGuiKnobs::Knob(label, (float*)valuePtr, -1.0f, 1.0f, 0.0f, "%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
-          if (exactInput) RIGHTCLICK_EXACT_INPUT(label, *(float*)valuePtr, );
+          if (exactInput) RIGHTCLICK_EXACT_INPUT((float*)valuePtr, ImGuiDataType_Float, );
           if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) *(float*)valuePtr = 0.0f;
           break;
         }
@@ -88,7 +88,7 @@ class Trigger {
 
   public:
     virtual void setupTrigger(unscopeParams* up, float* cb);
-    virtual void drawParams();
+    virtual std::vector<TriggerParam> getParams();
     virtual bool trigger(unsigned long int windowSize);
     virtual bool getTriggered();
     virtual float* getAlignBuffer();

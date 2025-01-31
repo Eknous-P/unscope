@@ -13,7 +13,7 @@ class TriggerFallback : public Trigger {
 
   public:
     void setupTrigger(unscopeParams* up, float* cb);
-    void drawParams();
+    std::vector<TriggerParam> getParams();
     bool trigger(unsigned long int windowSize);
     bool getTriggered();
     float* getAlignBuffer();

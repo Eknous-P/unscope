@@ -12,8 +12,8 @@ void Trigger::setupTrigger(unscopeParams* up, float* cb) {
   triggered = false;
 }
 
-void Trigger::drawParams() {
-  for (TriggerParam i:params) i.draw();
+std::vector<TriggerParam> Trigger::getParams() {
+  return params;
 }
 
 bool Trigger::trigger(unsigned long int windowSize) {

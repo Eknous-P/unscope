@@ -48,7 +48,7 @@
 
 #define RIGHTCLICK_EXACT_INPUT(v,d,f) \
         if (ImGui::BeginPopupContextItem(#v "input")) { \
-          if (ImGui::InputScalar("##" #v "input",d,&v)) f; \
+          if (ImGui::InputScalar("##" #v "input",d,v)) f; \
           ImGui::EndPopup(); \
         }
 

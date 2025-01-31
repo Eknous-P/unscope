@@ -1,5 +1,7 @@
 #include "gui.h"
 #include "imgui-knobs.h"
+#include <imgui.h>
+#include <trigger.h>
 
 void USCGUI::drawGlobalControls() {
   if (!wo.globalControlsOpen) return;
@@ -150,7 +152,14 @@ void USCGUI::drawChanControls() {
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
       // trigger options here
-      trigger[i]->drawParams();
+      unsigned char counter=0;
+      for (TriggerParam i :trigger[i]->getParams()) {
+        i.draw();
+        if (counter==3) ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        counter++;
+        counter&=3;
+      }
 
       ImGui::EndTable();
     }
@@ -171,16 +180,16 @@ void USCGUI::drawXYScopeControls() {
       if (ImGuiKnobs::Knob("persistence", &xyp.persistence, 0.0f, 1000.0f, 0.0f,"%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
         xyp.sampleLen = sampleRate * xyp.persistence / 1000;
       }
-      RIGHTCLICK_EXACT_INPUT(xyp.persistence, ImGuiDataType_Float, {if (xyp.persistence<0.0f) {xyp.persistence=0.0f;} if (xyp.persistence>1000.0f) {xyp.persistence=1000.0f;} xyp.sampleLen = sampleRate * xyp.persistence / 1000;})
+      RIGHTCLICK_EXACT_INPUT(&xyp.persistence, ImGuiDataType_Float, {if (xyp.persistence<0.0f) {xyp.persistence=0.0f;} if (xyp.persistence>1000.0f) {xyp.persistence=1000.0f;} xyp.sampleLen = sampleRate * xyp.persistence / 1000;})
       ImGui::TableNextColumn();
 
       ImGuiKnobs::Knob("x scale", &xyp.xScale, 0.5f, 4.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
       if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.xScale = 1.0f;
-      RIGHTCLICK_EXACT_INPUT(xyp.yScale, ImGuiDataType_Float, {if (xyp.yScale<0.25f) {xyp.yScale=0.25f;} if (xyp.yScale>4.0f) {xyp.yScale=4.0f;}})
+      RIGHTCLICK_EXACT_INPUT(&xyp.yScale, ImGuiDataType_Float, {if (xyp.yScale<0.25f) {xyp.yScale=0.25f;} if (xyp.yScale>4.0f) {xyp.yScale=4.0f;}})
       ImGui::TableNextColumn();
       ImGuiKnobs::Knob("y scale", &xyp.yScale, 0.5f, 4.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
       if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.yScale = 1.0f;
-      RIGHTCLICK_EXACT_INPUT(xyp.xScale, ImGuiDataType_Float, {if (xyp.xScale<0.25f) {xyp.xScale=0.25f;} if (xyp.xScale>4.0f) {xyp.xScale=4.0f;}})
+      RIGHTCLICK_EXACT_INPUT(&xyp.xScale, ImGuiDataType_Float, {if (xyp.xScale<0.25f) {xyp.xScale=0.25f;} if (xyp.xScale>4.0f) {xyp.xScale=4.0f;}})
       ImGui::TableNextRow();
 
       ImGui::TableNextColumn();

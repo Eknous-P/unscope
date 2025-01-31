@@ -1,5 +1,4 @@
 #include "fallback.h"
-#include <shared.h>
 
 void TriggerFallback::setupTrigger(unscopeParams* up, float* cb) {
   uParams = up;
@@ -16,8 +15,8 @@ void TriggerFallback::setupTrigger(unscopeParams* up, float* cb) {
   triggered = true;
 }
 
-void TriggerFallback::drawParams() {
-  for (TriggerParam i:params) i.draw();
+std::vector<TriggerParam> TriggerFallback::getParams() {
+  return params;
 }
 
 bool TriggerFallback::trigger(unsigned long int windowSize) {

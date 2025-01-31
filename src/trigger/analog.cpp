@@ -1,6 +1,4 @@
 #include "analog.h"
-#include <shared.h>
-#include <trigger.h>
 
 #define CHECK_TRIGGERED foundTrigger=triggerLow&&triggerHigh
 
@@ -12,6 +10,7 @@ void TriggerAnalog::setupTrigger(unscopeParams* up, float* cb) {
 
   params = {
     TriggerParam(TP_KNOBNORM,false,"level"),
+    TriggerParam(TP_KNOBNORM,true,"x offset"),
   };
 
   triggerIndex = 0;
@@ -19,8 +18,8 @@ void TriggerAnalog::setupTrigger(unscopeParams* up, float* cb) {
   triggered = true;
 }
 
-void TriggerAnalog::drawParams() {
-  for (TriggerParam i:params) i.draw();
+std::vector<TriggerParam> TriggerAnalog::getParams() {
+  return params;
 }
 
 bool TriggerAnalog::trigger(unsigned long int windowSize) {
@@ -28,18 +27,19 @@ bool TriggerAnalog::trigger(unsigned long int windowSize) {
   // locate trigger
   bool triggerHigh = false, triggerLow = false, foundTrigger = false;
   float trigY = *(float*)params[0].getValue(); // temp
-  triggerIndex = uParams->audioBufferSize-windowSize;
+  long int offset = (windowSize / 2) * *(float*)params[1].getValue();
+  triggerIndex = uParams->audioBufferSize - windowSize;
 
   memset(alignBuf, 0xbf, uParams->audioBufferSize * sizeof(float));
 
   while (triggerIndex > 0) {
     triggerIndex--;
-    if (chanBuf[triggerIndex + windowSize/2] < trigY) {
+    if (chanBuf[triggerIndex + windowSize/2 + offset] < trigY) {
       triggerLow = true;
       CHECK_TRIGGERED;
       if (foundTrigger && true) break;
     }
-    if (chanBuf[triggerIndex + windowSize/2] > trigY) {
+    if (chanBuf[triggerIndex + windowSize/2 + offset] > trigY) {
       triggerHigh = true;
       CHECK_TRIGGERED;
       if (foundTrigger && !true) break;
