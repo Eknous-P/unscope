@@ -38,7 +38,12 @@ ${implot_path}/implot.cpp
 ${implot_path}/implot_demo.cpp
 ${implot_path}/implot_items.cpp
 
-./submodules/imgui-knobs/imgui-knobs.cpp)
+./submodules/imgui-knobs/imgui-knobs.cpp
+
+./submodules/imgui_toggle/imgui_toggle_palette.cpp
+./submodules/imgui_toggle/imgui_toggle_presets.cpp
+./submodules/imgui_toggle/imgui_toggle_renderer.cpp
+./submodules/imgui_toggle/imgui_toggle.cpp)
 
 pkg_check_modules(SDL sdl2 REQUIRED)
 list(APPEND cpl_opts ${SDL_CFLAGS_OTHER})
@@ -124,6 +129,7 @@ ${imgui_path}/misc/cpp
 ${imgui_path}/backends
 ${implot_path}
 ./submodules/imgui-knobs
+./submodules/imgui_toggle/
 ${srcs_path}
 ${srcs_path}/trigger
 ${srcs_path}/audio

@@ -1,15 +1,14 @@
 #include "gui.h"
 #include "imgui-knobs.h"
-#include <imgui.h>
-#include <trigger.h>
+#include "imgui_toggle.h"
 
 void USCGUI::drawGlobalControls() {
   if (!wo.globalControlsOpen) return;
   ImGui::Begin("Global Controls",&wo.globalControlsOpen);
-  ImGui::Checkbox("share parameters",&shareParams);
+  ImGui::Toggle("share parameters",&shareParams);
 
   bool trigShare = shareTrigger>0;
-  if (ImGui::Checkbox("share trigger",&trigShare)) {
+  if (ImGui::Toggle("share trigger",&trigShare)) {
     shareTrigger=-shareTrigger;
   }
   if (ImGui::BeginCombo("trigger##trigMode",triggerNames[trigNum-TRIG_FALLBACK])) {
@@ -22,8 +21,8 @@ void USCGUI::drawGlobalControls() {
     ImGui::EndCombo();
   }
   
-  ImGui::Checkbox("enable fallback trigger", &doFallback);
-  if (ImGui::Checkbox("single shot trigger", &singleShot)) {
+  ImGui::Toggle("enable fallback trigger", &doFallback);
+  if (ImGui::Toggle("single shot trigger", &singleShot)) {
     updateAudio = true;
   }
   if (singleShot) {
@@ -37,7 +36,7 @@ void USCGUI::drawGlobalControls() {
     }
     if (popColor) ImGui::PopStyleColor();
   } else {
-    ImGui::Checkbox("update audio",&updateAudio);
+    ImGui::Toggle("update audio",&updateAudio);
   }
 
   if (devs.size() > 0) {
@@ -91,7 +90,7 @@ void USCGUI::drawChanControls() {
     sprintf(strbuf,"Channel %d Controls",i+1);
     if (!wo.chanControlsOpen[i]) continue;
     ImGui::Begin(strbuf,&wo.chanControlsOpen[i]);
-    ImGui::Checkbox("enable", &tc[i].enable);
+    ImGui::Toggle("enable", &tc[i].enable);
 
     ImGui::SameLine();
     // if (i != 0) ImGui::BeginDisabled(shareParams);
@@ -121,10 +120,11 @@ void USCGUI::drawChanControls() {
     }
 
     sprintf(strbuf, "##chan%dctrls", i+1);
-    if (ImGui::BeginTable(strbuf, 3)) {
+    if (ImGui::BeginTable(strbuf, 4)) {
       ImGui::TableSetupColumn("c1",ImGuiTableColumnFlags_WidthFixed);
       ImGui::TableSetupColumn("c2",ImGuiTableColumnFlags_WidthFixed);
       ImGui::TableSetupColumn("c3",ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("c4",ImGuiTableColumnFlags_WidthFixed);
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
         // timebase knob

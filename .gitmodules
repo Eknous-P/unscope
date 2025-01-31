@@ -11,3 +11,6 @@
 [submodule "submodules/imgui-knobs"]
 	path = submodules/imgui-knobs
 	url = https://github.com/altschuler/imgui-knobs.git
+[submodule "submodules/imgui_toggle"]
+	path = submodules/imgui_toggle
+	url = https://github.com/cmdwtf/imgui_toggle.git

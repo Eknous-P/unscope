@@ -4,6 +4,7 @@
 #include "shared.h"
 #include "imgui.h"
 #include "imgui-knobs.h"
+#include "imgui_toggle.h"
 
 enum TriggerParamTypes : unsigned char {
   TP_NONE = 0,
@@ -21,7 +22,7 @@ class TriggerParam {
     void draw() {
       switch (type) {
         case TP_BOOL: {
-          ImGui::Checkbox(label, (bool*)valuePtr);
+          ImGui::Toggle(label, (bool*)valuePtr);
           break;
         }
         case TP_KNOBNORM: {
