@@ -51,5 +51,6 @@ bool TriggerFallback::getTriggered() {
 }
 
 TriggerFallback::~TriggerFallback() {
+  for (TriggerParam i:params) i.destroy();
   DELETE_PTR(alignBuf)
 }

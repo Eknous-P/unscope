@@ -29,4 +29,5 @@ float* Trigger::getAlignBuffer() {
 }
 
 Trigger::~Trigger(){
+  for (TriggerParam i:params) i.destroy();
 }

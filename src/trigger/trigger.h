@@ -52,12 +52,28 @@ class TriggerParam {
       switch (type) {
         case TP_BOOL:
           valuePtr = new bool;
+          *(bool*)valuePtr = false;
           break;
         case TP_KNOBNORM:
           valuePtr = new float;
+          *(float*)valuePtr = 0.0f;
           break;
         default:
           valuePtr = new int;
+          *(int*)valuePtr = 0;
+          break;
+      }
+    }
+    void destroy() {
+      switch (type) {
+        case TP_BOOL:
+          if (valuePtr) delete (bool*)valuePtr;
+          break;
+        case TP_KNOBNORM:
+          if (valuePtr) delete (float*)valuePtr;
+          break;
+        default:
+          if (valuePtr) delete (int*)valuePtr;
           break;
       }
     }
