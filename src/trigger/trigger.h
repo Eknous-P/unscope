@@ -6,22 +6,37 @@
 #include "imgui-knobs.h"
 #include "imgui_toggle.h"
 
+#define INIT_PARAM_VALUE \
+      switch (type) { \
+        case TP_TOGGLE: \
+          valuePtr = new bool; \
+          *(bool*)valuePtr = false; \
+          break; \
+        case TP_KNOBNORM: \
+          valuePtr = new float; \
+          *(float*)valuePtr = 0.0f; \
+          break; \
+        default: \
+          valuePtr = new int; \
+          *(int*)valuePtr = 0; \
+          break; \
+      }
+
 enum TriggerParamTypes : unsigned char {
   TP_NONE = 0,
-  TP_BOOL,
+  TP_TOGGLE,
   TP_KNOBNORM, // [-1,1]
-  TP_CHAN,
 };
 
 class TriggerParam {
   TriggerParamTypes type;
   bool exactInput;
   void *valuePtr;
-  const char* label;
+  const char *label, *desc;
   public:
     void draw() {
       switch (type) {
-        case TP_BOOL: {
+        case TP_TOGGLE: {
           ImGui::Toggle(label, (bool*)valuePtr);
           break;
         }
@@ -33,6 +48,11 @@ class TriggerParam {
         }
         default: break;
       }
+      if (desc) {
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
+          ImGui::SetTooltip("%s", desc);
+        }
+      }
     }
 
     void *getValue() {
@@ -43,31 +63,28 @@ class TriggerParam {
       type(TP_NONE),
       exactInput(false),
       valuePtr(NULL),
-      label(NULL) {}
+      label(NULL),
+      desc(NULL) {}
 
-    TriggerParam(TriggerParamTypes t, bool i, const char* l) {
+    TriggerParam(TriggerParamTypes t, bool i, const char* l):
+      desc(NULL) {
       type       = t;
       exactInput = i;
       label      = l;
-
-      switch (type) {
-        case TP_BOOL:
-          valuePtr = new bool;
-          *(bool*)valuePtr = false;
-          break;
-        case TP_KNOBNORM:
-          valuePtr = new float;
-          *(float*)valuePtr = 0.0f;
-          break;
-        default:
-          valuePtr = new int;
-          *(int*)valuePtr = 0;
-          break;
-      }
+      INIT_PARAM_VALUE
     }
+
+    TriggerParam(TriggerParamTypes t, bool i, const char* l, const char* d) {
+      type       = t;
+      exactInput = i;
+      label      = l;
+      desc       = d;
+      INIT_PARAM_VALUE
+    }
+
     void destroy() {
       switch (type) {
-        case TP_BOOL:
+        case TP_TOGGLE:
           if (valuePtr) delete (bool*)valuePtr;
           break;
         case TP_KNOBNORM:

@@ -11,6 +11,7 @@ void TriggerAnalog::setupTrigger(unscopeParams* up, float* cb) {
   params = {
     TriggerParam(TP_KNOBNORM,false,"level"),
     TriggerParam(TP_KNOBNORM,true,"x offset"),
+    TriggerParam(TP_TOGGLE,false,"extend trigger range","allows trigger to scan for the full audio buffer,\ninstead of the visible range"),
   };
 
   triggerIndex = 0;
@@ -44,7 +45,9 @@ bool TriggerAnalog::trigger(unsigned long int windowSize) {
       CHECK_TRIGGERED;
       if (foundTrigger && !true) break;
     }
-    if (triggerIndex < uParams->audioBufferSize - 2 * windowSize) return false; // out of window
+    if (!*(bool*)params[2].getValue()) {
+      if (triggerIndex < uParams->audioBufferSize - 2 * windowSize) return false; // out of window
+    }
   }
 
   alignBuf[triggerIndex] = -1.0f;
