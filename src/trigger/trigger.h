@@ -60,6 +60,10 @@ class TriggerParam {
       return valuePtr;
     }
 
+    TriggerParamTypes getType() {
+      return type;
+    }
+
     TriggerParam():
       type(TP_NONE),
       exactInput(false),

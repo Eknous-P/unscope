@@ -1,6 +1,7 @@
 #include "gui.h"
 #include "imgui-knobs.h"
 #include "imgui_toggle.h"
+#include <trigger.h>
 
 void USCGUI::drawGlobalControls() {
   if (!wo.globalControlsOpen) return;
@@ -93,10 +94,6 @@ void USCGUI::drawChanControls() {
     ImGui::Toggle("enable", &tc[i].enable);
 
     ImGui::SameLine();
-    // if (i != 0) ImGui::BeginDisabled(shareParams);
-    // if (ImGui::Button(tc[i].triggerEdge?"Rising":"Falling")) tc[i].triggerEdge = !tc[i].triggerEdge;
-    // if (i != 0) ImGui::EndDisabled();
-    // if (ImGui::IsItemHovered()) ImGui::SetTooltip("trigger edge");
     bool trigShare = shareTrigger>0;
 
     ImGui::BeginDisabled(!trigShare);
@@ -161,10 +158,12 @@ void USCGUI::drawChanControls() {
             ImGui::SetTooltip("triggering on channel %d", shareTrigger);
           }
         }
-        if (counter==3) ImGui::TableNextRow();
-        ImGui::TableNextColumn();
-        counter++;
-        counter&=3;
+        if (p.getType()!=TP_TOGGLE) {
+          if (counter==3) ImGui::TableNextRow();
+          ImGui::TableNextColumn();
+          counter++;
+          counter&=3;
+        }
       }
       ImGui::EndDisabled();
 
