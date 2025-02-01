@@ -290,7 +290,7 @@ void USCGUI::drawGUI() {
     drawXYScope();
   ImPlot::DestroyContext();
   
-  drawAlignDebug();
+  // drawAlignDebug();
   
   // ImGui::ShowMetricsWindow();
 }
