@@ -93,8 +93,12 @@ void USCGUI::drawChanControls() {
     ImGui::Toggle("enable", &tc[i].enable);
 
     ImGui::SameLine();
-    bool trigShare = shareTrigger>0;
-    bool disable = (trigShare && i != shareTrigger - 1) || (shareParams && i != 0);
+    bool trigShare = shareTrigger > 0;
+
+    unsigned char mainCh = 0;
+    if (trigShare) mainCh = shareTrigger - 1;
+
+    bool disable = (trigShare && i != shareTrigger - 1) || (shareParams && i != mainCh);
 
     ImGui::BeginDisabled(!trigShare);
     ImGui::SameLine();
@@ -130,9 +134,9 @@ void USCGUI::drawChanControls() {
         if (ImGuiKnobs::Knob("timebase", &tc[i].timebase, 0, (float)oscDataSize/(float)sampleRate*1000.0f, 0.0f, "%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
           UPDATE_TIMEBASE;
         }
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+        if (disable) if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
           if (shareParams) {
-            ImGui::SetTooltip("shared with channel 1");
+            ImGui::SetTooltip("shared with channel %d", mainCh + 1);
           } else {
             ImGui::SetTooltip("triggering on channel %d", shareTrigger);
           }
@@ -163,7 +167,7 @@ void USCGUI::drawChanControls() {
         if (disable) {
           if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
             if (shareParams) {
-              ImGui::SetTooltip("shared with channel 1");
+              ImGui::SetTooltip("shared with channel %d", mainCh + 1);
             } else {
               ImGui::SetTooltip("triggering on channel %d", shareTrigger);
             }
@@ -183,11 +187,12 @@ void USCGUI::drawChanControls() {
     
     ImGui::End();
 
-    if (shareParams && i != 0) {
-      tc[i].timebase = tc[0].timebase;
+    if (shareParams && i != mainCh) {
+      tc[i].timebase = tc[mainCh].timebase;
+      UPDATE_TIMEBASE;
       for (unsigned char j = 0; j < trigger[i]->getParams().size(); j++) {
         TriggerParam p = trigger[i]->getParams()[j];
-        memcpy(p.getValue(),trigger[0]->getParams()[j].getValue(),TriggerParamTypeSize[p.getType()]);
+        memcpy(p.getValue(),trigger[mainCh]->getParams()[j].getValue(),TriggerParamTypeSize[p.getType()]);
       }
     }
   }
