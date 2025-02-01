@@ -34,6 +34,7 @@ class TriggerParam {
   void *valuePtr;
   const char *label, *desc;
   public:
+    bool bindToDragX, bindToDragY;
     void draw() {
       switch (type) {
         case TP_TOGGLE: {
@@ -66,19 +67,23 @@ class TriggerParam {
       label(NULL),
       desc(NULL) {}
 
-    TriggerParam(TriggerParamTypes t, bool i, const char* l):
+    TriggerParam(TriggerParamTypes t, bool i, const char* l, bool dragX, bool dragY):
       desc(NULL) {
       type       = t;
       exactInput = i;
       label      = l;
+      bindToDragX = dragX;
+      bindToDragY = dragY;
       INIT_PARAM_VALUE
     }
 
-    TriggerParam(TriggerParamTypes t, bool i, const char* l, const char* d) {
+    TriggerParam(TriggerParamTypes t, bool i, const char* l, const char* d, bool dragX, bool dragY) {
       type       = t;
       exactInput = i;
       label      = l;
       desc       = d;
+      bindToDragX = dragX;
+      bindToDragY = dragY;
       INIT_PARAM_VALUE
     }
 

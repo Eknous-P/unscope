@@ -3,7 +3,6 @@ for trigger
 
 - `getTriggerPoint()`
 - nicer ui for toggles
-- hdrag/vdrag binds
 - indicator whether in fallback
 
 otherwise

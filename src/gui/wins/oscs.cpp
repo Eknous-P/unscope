@@ -19,22 +19,19 @@ void USCGUI::drawMainScope() {
       if (oscAlign[i] && oscData[i] && oscDataSize) {
         ImPlot::PlotLine("##scopeplot", oscAlign[trigChan], oscData[i], oscDataSize,ImPlotFlags_NoLegend);
       }
-      // trigColor = ai->didTrigger(trigChan)?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
-      // double trigDouble = tc[trigChan].trigger;
-      // double offsDouble = tc[i].trigOffset;
-      // if ((i == shareTrigger-1 || shareTrigger < 0) && triggerMode != TRIGGER_NONE) if (ImPlot::DragLineY(2*i,&trigDouble,trigColor)) tc[i].trigger = trigDouble;
-      // showTrigger |= ImPlot::IsAxisHovered(i+ImAxis_Y1);
-      // if ((i == shareTrigger-1 || shareTrigger < 0) && showTrigger && triggerMode != TRIGGER_NONE) ImPlot::TagY(tc[i].trigger,trigColor,"CH %d",i+1);
-
-      // if (ImPlot::DragLineX(2*i+1,&offsDouble,ImVec4(0,1,0,.5))) {
-      //   tc[i].trigOffset = clamp(offsDouble);
-      //   tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize;
-      //   if (tc[i].traceSize != 0) {
-      //     tc[i].trigOffset = 2*((float)tc[i].traceOffset/(float)tc[i].traceSize)-1.0f;
-      //   } else {
-      //     tc[i].trigOffset = 0;
-      //   }
-      // }
+      ImVec4 trigColor = trigger[i]->getTriggered()?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
+      for (TriggerParam p : trigger[i]->getParams()) {
+        if (shareTrigger > 0 && i != shareTrigger - 1) continue;
+        double valD = *(float*)p.getValue();
+        if (p.bindToDragX) {
+          if (ImPlot::DragLineX(2*i+1, &valD, tc[i].color)) *(float*)p.getValue() = valD;
+          // ImPlot::TagX(valD, trigColor, "CH %d", i + 1);
+        }
+        if (p.bindToDragY) {
+          if (ImPlot::DragLineY(2*i+1, &valD, trigColor)) *(float*)p.getValue() = valD;
+          ImPlot::TagY(valD, trigColor, "CH %d", i + 1);
+        }
+      }
     }
     ImPlot::EndPlot();
   }

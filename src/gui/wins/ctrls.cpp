@@ -102,7 +102,7 @@ void USCGUI::drawChanControls() {
     ImGui::BeginDisabled(!trigShare);
     ImGui::SameLine();
     sprintf(strbuf, "##chan%dtrig", i+1);
-    if (ImGui::RadioButton(strbuf,shareTrigger==i+1)) shareTrigger=i+1;
+    if (trigShare) if (ImGui::RadioButton(strbuf,shareTrigger==i+1)) shareTrigger=i+1;
     if (ImGui::IsItemHovered()) {
       ImGui::SetTooltip("trigger to this channel");
     }
@@ -153,13 +153,20 @@ void USCGUI::drawChanControls() {
       ImGui::TableNextColumn();
       // trigger options here
       unsigned char counter=0;
-      for (TriggerParam i :trigger[i]->getParams()) {
-        i.draw();
+      ImGui::BeginDisabled(trigShare && i != shareTrigger - 1);
+      for (TriggerParam p : trigger[i]->getParams()) {
+        p.draw();
+        if (trigShare && i != shareTrigger - 1) {
+          if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+            ImGui::SetTooltip("triggering on channel %d", shareTrigger);
+          }
+        }
         if (counter==3) ImGui::TableNextRow();
         ImGui::TableNextColumn();
         counter++;
         counter&=3;
       }
+      ImGui::EndDisabled();
 
       ImGui::EndTable();
     }

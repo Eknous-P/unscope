@@ -9,9 +9,9 @@ void TriggerAnalog::setupTrigger(unscopeParams* up, float* cb) {
   alignBuf = new float[up->audioBufferSize];
 
   params = {
-    TriggerParam(TP_KNOBNORM,false,"level"),
-    TriggerParam(TP_KNOBNORM,true,"x offset"),
-    TriggerParam(TP_TOGGLE,false,"extend trigger range","allows trigger to scan for the full audio buffer,\ninstead of the visible range"),
+    TriggerParam(TP_KNOBNORM,false,"level",false,true),
+    TriggerParam(TP_KNOBNORM,true,"x offset",true,false),
+    TriggerParam(TP_TOGGLE,false,"extend trigger range","allows trigger to scan for the full audio buffer,\ninstead of the visible range",false,false),
   };
 
   triggerIndex = 0;

@@ -83,7 +83,7 @@ class USCGUI {
     bool fullscreen;
     ImGuiIO io;
     ImGuiStyle style;
-    ImVec4 bgColor, trigColor;
+    ImVec4 bgColor;
     bool isGood, running, updateAudio, restartAudio, audioLoopback, triggerSet;
     unsigned char channels;
     USCRenderers renderer;

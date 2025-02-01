@@ -95,8 +95,6 @@ USCGUI::USCGUI(unscopeParams *params) {
 
   fullscreen = false;
 
-  trigColor = ImVec4(0,0,0,0);
-
   fallbackTrigger = new Trigger*[channels];
   trigger = new Trigger*[channels];
 
