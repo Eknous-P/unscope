@@ -28,6 +28,12 @@ enum TriggerParamTypes : unsigned char {
   TP_KNOBNORM, // [-1,1]
 };
 
+const unsigned char TriggerParamTypeSize[]={
+  sizeof(int),
+  sizeof(bool),
+  sizeof(float)
+};
+
 class TriggerParam {
   TriggerParamTypes type;
   bool exactInput;

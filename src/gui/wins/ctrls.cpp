@@ -1,7 +1,6 @@
 #include "gui.h"
 #include "imgui-knobs.h"
 #include "imgui_toggle.h"
-#include <trigger.h>
 
 void USCGUI::drawGlobalControls() {
   if (!wo.globalControlsOpen) return;
@@ -95,6 +94,7 @@ void USCGUI::drawChanControls() {
 
     ImGui::SameLine();
     bool trigShare = shareTrigger>0;
+    bool disable = (trigShare && i != shareTrigger - 1) || (shareParams && i != 0);
 
     ImGui::BeginDisabled(!trigShare);
     ImGui::SameLine();
@@ -125,14 +125,21 @@ void USCGUI::drawChanControls() {
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
         // timebase knob
-        if (i != 0) ImGui::BeginDisabled(shareParams);
+        ImGui::BeginDisabled(disable);
         tc[i].timebase = tc[i].traceSize * 1000.0f / sampleRate;
         if (ImGuiKnobs::Knob("timebase", &tc[i].timebase, 0, (float)oscDataSize/(float)sampleRate*1000.0f, 0.0f, "%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
           UPDATE_TIMEBASE;
         }
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+          if (shareParams) {
+            ImGui::SetTooltip("shared with channel 1");
+          } else {
+            ImGui::SetTooltip("triggering on channel %d", shareTrigger);
+          }
+        }
       ImGui::TableNextColumn();
         // y scale knob
-        if (i != 0) ImGui::EndDisabled();
+        ImGui::EndDisabled();
         if (ImGuiKnobs::Knob("y scale", &tc[i].yScale, 0.25f, 10.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
           if (tc[i].yScale < 0.0f) tc[i].yScale = 0.0f;
         }
@@ -150,12 +157,16 @@ void USCGUI::drawChanControls() {
       ImGui::TableNextColumn();
       // trigger options here
       unsigned char counter=0;
-      ImGui::BeginDisabled(trigShare && i != shareTrigger - 1);
+      ImGui::BeginDisabled(disable);
       for (TriggerParam p : trigger[i]->getParams()) {
         p.draw();
-        if (trigShare && i != shareTrigger - 1) {
+        if (disable) {
           if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-            ImGui::SetTooltip("triggering on channel %d", shareTrigger);
+            if (shareParams) {
+              ImGui::SetTooltip("shared with channel 1");
+            } else {
+              ImGui::SetTooltip("triggering on channel %d", shareTrigger);
+            }
           }
         }
         if (p.getType()!=TP_TOGGLE) {
@@ -171,6 +182,14 @@ void USCGUI::drawChanControls() {
     }
     
     ImGui::End();
+
+    if (shareParams && i != 0) {
+      tc[i].timebase = tc[0].timebase;
+      for (unsigned char j = 0; j < trigger[i]->getParams().size(); j++) {
+        TriggerParam p = trigger[i]->getParams()[j];
+        memcpy(p.getValue(),trigger[0]->getParams()[j].getValue(),TriggerParamTypeSize[p.getType()]);
+      }
+    }
   }
 }
 

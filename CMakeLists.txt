@@ -138,9 +138,6 @@ ${srcs_path}/gui)
 target_compile_options(unscope PRIVATE ${cpl_opts})
 target_link_libraries(unscope PRIVATE ${lnk_libs})
 
-if(WIN32)
-add_custom_command(TARGET unscope POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_BINARY_DIR}/submodules/SDL/SDL2d.dll"
-        ${CMAKE_BINARY_DIR})
+if (MINGW)
+  target_link_options(unscope PRIVATE "-static -static-libgcc -static-libstdc++")
 endif()

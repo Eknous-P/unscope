@@ -16,7 +16,7 @@ const char* getErrorMsg(int e) {
   }
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
   int e;
   unscopeParams params;
 
@@ -170,13 +170,13 @@ int main(int argc, char** argv) {
   return e!=paNoError;
 }
 
-#ifdef _WIN32
-int APIENTRY WinMain(HINSTANCE hInstance,
-    HINSTANCE hPrevInstance,
-    LPSTR lpCmdLine, int nCmdShow) {
-  return main(__argc, __argv);
-}
-#endif
+// #ifdef _WIN32
+// int APIENTRY WinMain(HINSTANCE hInstance,
+//     HINSTANCE hPrevInstance,
+//     LPSTR lpCmdLine, int nCmdShow) {
+//   return main(__argc, __argv);
+// }
+// #endif
 
 const char* verMsg = MISC_MSG PROGRAM_NAME " (version " PROGRAM_VER ")\n" MSG_END;
 
