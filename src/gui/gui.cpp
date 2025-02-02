@@ -46,8 +46,8 @@ USCGUI::USCGUI(unscopeParams *params) {
   xyp.yScale = 1.0f;
   xyp.persistence = up->xyPersist;
   xyp.sampleLen = sampleRate*xyp.persistence/1000;
-  xyp.xChan = 1;
-  xyp.yChan = 2;
+  xyp.axisChan[0] = 1;
+  xyp.axisChan[1] = 2;
 
   wo.mainScopeOpen = true;
   wo.chanControlsOpen[0] = true;

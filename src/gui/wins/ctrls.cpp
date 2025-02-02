@@ -233,13 +233,18 @@ void USCGUI::drawXYScopeControls() {
     ImGui::EndTable();
     }
 
-    if (ImGui::InputInt("X channel",&xyp.xChan)) {
-      if (xyp.xChan < 1) xyp.xChan = 1;
-      if (xyp.xChan > channels) xyp.xChan = channels;
+    ImGui::Text("axis channels (x/y):");
+    if (ImGui::InputScalarN("##axisChan", ImGuiDataType_U8, xyp.axisChan, 2, &step_one, NULL, "ch %d", 0)) {
+      if (xyp.axisChan[0] < 1) xyp.axisChan[0] = 1;
+      if (xyp.axisChan[0] > channels) xyp.axisChan[0] = channels;
+      if (xyp.axisChan[1] < 1) xyp.axisChan[1] = 1;
+      if (xyp.axisChan[1] > channels) xyp.axisChan[1] = channels;
     }
-    if (ImGui::InputInt("Y channel",&xyp.yChan)) {
-      if (xyp.yChan < 1) xyp.yChan = 1;
-      if (xyp.yChan > channels) xyp.yChan = channels;
+    ImGui::SameLine();
+    if (ImGui::Button("swap")) {
+      unsigned char temp = xyp.axisChan[0];
+      xyp.axisChan[0] = xyp.axisChan[1];
+      xyp.axisChan[1] = temp;
     }
 
     ImGui::ColorButton("color", xyp.color);

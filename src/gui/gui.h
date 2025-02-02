@@ -62,7 +62,7 @@ class USCGUI {
       ImVec4 color;
       int   sampleLen;
       float persistence;
-      int   xChan,   yChan;
+      unsigned char axisChan[2];
     };
 
     struct windowsOpen {
@@ -146,6 +146,7 @@ class USCGUI {
     ~USCGUI();
 };
 
+extern const unsigned char step_one;
 extern const char *windowLayout;
 extern const char *triggerNames[];
 

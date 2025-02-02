@@ -48,7 +48,7 @@ void USCGUI::drawXYScope() {
     ImPlot::SetupAxisLimits(ImAxis_X1,-1.0f/xyp.xScale-xyp.xOffset,1.0f/xyp.xScale-xyp.xOffset);
     ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/xyp.yScale-xyp.yOffset,1.0f/xyp.yScale-xyp.yOffset);
     ImPlot::SetNextLineStyle(xyp.color,0.125f);
-    ImPlot::PlotLine("##scopeplot", oscData[xyp.xChan-1] + (oscDataSize - xyp.sampleLen), oscData[xyp.yChan-1] + (oscDataSize - xyp.sampleLen), xyp.sampleLen,ImPlotFlags_NoLegend);
+    ImPlot::PlotLine("##scopeplot", oscData[xyp.axisChan[0]-1] + (oscDataSize - xyp.sampleLen), oscData[xyp.axisChan[1]-1] + (oscDataSize - xyp.sampleLen), xyp.sampleLen,ImPlotFlags_NoLegend);
     ImPlot::EndPlot();
   }
   ImGui::End();
