@@ -56,7 +56,8 @@ USCGUI::USCGUI(unscopeParams *params) {
   wo.xyScopeOpen = true;
   wo.xyScopeControlsOpen = true;
   wo.globalControlsOpen = true;
-  wo.aboutOpen=false;
+  wo.aboutOpen = false;
+  wo.settingsOpen = false;
 
   oscDataSize = up->audioBufferSize;
 
@@ -109,11 +110,16 @@ USCGUI::USCGUI(unscopeParams *params) {
 
 
   ai = NULL;
+  cf = NULL;
   isGood = true;
 }
 
 void USCGUI::attachAudioInput(USCAudioInput *i) {
   ai = i;
+}
+
+void USCGUI::attachConfig(USCConfig *c) {
+  cf = c;
 }
 
 void USCGUI::setupRenderer(USCRenderers r) {
@@ -230,6 +236,11 @@ void USCGUI::drawGUI() {
   //   audioLoopback = false;
   // }
   if (ImGui::BeginMainMenuBar()) {
+    if (ImGui::BeginMenu("File")) {
+      ImGui::MenuItem("Settings...", NULL, &wo.settingsOpen);
+      if (ImGui::MenuItem("Exit")) running = false;
+      ImGui::EndMenu();
+    }
     if (ImGui::BeginMenu("Scopes")) {
       ImGui::MenuItem("Main Scope",NULL,&wo.mainScopeOpen);
       ImGui::MenuItem("Scope (XY)",NULL,&wo.xyScopeOpen);
@@ -256,6 +267,7 @@ void USCGUI::drawGUI() {
   drawXYScopeControls();
 
   drawAbout();
+  drawSettings();
 
   ai->setUpdateState(updateAudio);
   setOscData(ai->getData());

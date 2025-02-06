@@ -1,6 +1,7 @@
-#include "audio/audio.h"
-#include "gui/gui.h"
-#include "../shared.h"
+#include "shared.h"
+#include "audio.h"
+#include "gui.h"
+#include "config.h"
 
 float clamp(float a) {
   if (a > 1.0f) return 1.0f;
@@ -34,6 +35,10 @@ int main(int argc, char* argv[]) {
 #else
   params.renderer = USC_REND_OPENGL_SDL;
 #endif
+
+  USCConfig conf(
+    "~/.config/unscope/unscope.yaml"
+  , &params);
 
   // parse arguments
   if (argc > 1) {
@@ -128,30 +133,31 @@ int main(int argc, char* argv[]) {
 
   e = g.init();
   if (e != 0) {
-    printf(ERROR_MSG "error in initializing GUI! %s\n" MSG_END, getErrorMsg(e));
+    printf(ERROR_MSG "error in initializing GUI! %s" MSG_END, getErrorMsg(e));
     return -1;
   }
 
   USCAudioInput i(&params);
 
   g.attachAudioInput(&i);
+  g.attachConfig(&conf);
 
   params.audioDevice = Pa_GetDefaultInputDevice();
 
   g.getDevices(i.enumerateDevs());
   g.setAudioDeviceSetting(params.audioDevice);
 
-  printf(INFO_MSG "opening device %d: %s...%s\n",params.audioDevice,Pa_GetDeviceInfo(params.audioDevice)->name, MSG_END);
+  printf(INFO_MSG "opening device %d: %s...%s",params.audioDevice,Pa_GetDeviceInfo(params.audioDevice)->name, MSG_END);
   e = i.init(params.audioDevice,0);
   if (e != paNoError) {
     printf(ERROR_MSG "%d: cant init audio! %s" MSG_END, e, getErrorMsg(e));
     // try again
-    printf(INFO_MSG "trying again...\n" MSG_END);
+    printf(INFO_MSG "trying again..." MSG_END);
     if (e != paInvalidDevice) {
       printf(ERROR_MSG "%d: cant init audio! %s" MSG_END, e, getErrorMsg(e));
       return e;
     }
-    printf(INFO_MSG "trying default device...\n" MSG_END);
+    printf(INFO_MSG "trying default device..." MSG_END);
     params.audioDevice = Pa_GetDefaultInputDevice();
     e = i.init(params.audioDevice,0);
     if (e != paNoError) {
@@ -166,7 +172,7 @@ int main(int argc, char* argv[]) {
   }
 
   e = i.stop();
-  printf( "%s%s%s\n", (e==paNoError)?SUCCESS_MSG:ERROR_MSG, Pa_GetErrorText(e), MSG_END);
+  printf( "%s%s%s", (e==paNoError)?SUCCESS_MSG:ERROR_MSG, Pa_GetErrorText(e), MSG_END);
   return e!=paNoError;
 }
 
@@ -178,7 +184,7 @@ int main(int argc, char* argv[]) {
 // }
 // #endif
 
-const char* verMsg = MISC_MSG PROGRAM_NAME " (version " PROGRAM_VER ")\n" MSG_END;
+const char* verMsg = MISC_MSG PROGRAM_NAME " (version " PROGRAM_VER ")" MSG_END;
 
 const char* helpMsg =
 "Program arguments\n"

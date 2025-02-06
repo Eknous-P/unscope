@@ -5,8 +5,9 @@
 #include <implot.h>
 #include "imgui_stdlib.h"
 
-#include "../shared.h"
-#include "../audio/audio.h"
+#include "shared.h"
+#include "audio.h"
+#include "config.h"
 
 #define INIFILE "unscope.ini"
 
@@ -73,6 +74,7 @@ class USCGUI {
       bool xyScopeControlsOpen;
       bool globalControlsOpen;
       bool aboutOpen;
+      bool settingsOpen;
     };
 
     int err;
@@ -89,6 +91,7 @@ class USCGUI {
     unsigned long int oscDataSize, sampleRate;
     USCRender *rd;
     USCAudioInput *ai;
+    USCConfig *cf;
 
     std::vector<DeviceEntry> devs;
     int device, deviceNum;
@@ -112,6 +115,7 @@ class USCGUI {
     void setupTrigger(Triggers t);
 
     void attachAudioInput(USCAudioInput* i);
+    void attachConfig(USCConfig* c);
 
     void setOscData(float** d);
   

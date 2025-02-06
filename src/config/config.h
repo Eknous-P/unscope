@@ -16,16 +16,19 @@ enum SettingTypes : unsigned char {
 };
 
 class Setting {
-  void* data;
+  void *data;
   SettingTypes type;
   const char *key, *label, *desc;
+  bool isBound;
   public:
     bool passesFilter(ImGuiTextFilter* filter);
     void draw();
+    void *getData();
     int save(YAML::Node* conf);
     int load(YAML::Node* conf);
-    Setting(SettingTypes type, const char* k, const char* l, const char* d);
-    ~Setting();
+    void destroy();
+    Setting(SettingTypes t, const char* k, const char* l, const char* d);
+    Setting(SettingTypes t, const char* k, const char* l, const char* d, void* bind);
 };
 
 // 
@@ -33,11 +36,12 @@ class Setting {
 class USCConfig {
   YAML::Node conf;
   std::vector<Setting> settings;
+  bool isEmpty;
 
   public:
     int loadConfig();
     void drawSettings();
-    USCConfig(const char* filePath);
+    USCConfig(const char* filePath, unscopeParams* p);
     ~USCConfig();
 };
 
