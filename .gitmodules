@@ -14,3 +14,6 @@
 [submodule "submodules/imgui_toggle"]
 	path = submodules/imgui_toggle
 	url = https://github.com/cmdwtf/imgui_toggle.git
+[submodule "submodules/yaml-cpp"]
+	path = submodules/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp.git

@@ -140,5 +140,6 @@ struct AlignParams {
 float clamp(float a);
 extern const char *helpMsg, *verMsg, *aboutMsg, *errMsgs[], *renderers[];
 const char* getErrorMsg(int e);
+extern const int step_one;
 
 #endif

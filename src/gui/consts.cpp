@@ -78,5 +78,3 @@ const char* triggerNames[]={
   "fallback",
   "analog"
 };
-
-const unsigned char step_one = 1;

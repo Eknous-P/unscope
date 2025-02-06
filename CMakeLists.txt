@@ -20,12 +20,16 @@ set(srcs_path ./src/)
 set(cpl_opts "")
 set(lnk_libs "")
 
-# AUDIO LIBRARY
+# audio library
 set(PA_BUILD_SHARED_LIBS OFF CACHE BOOL "Build dynamic library" FORCE)
 add_subdirectory(submodules/portaudio EXCLUDE_FROM_ALL)
 list(APPEND lnk_libs PortAudio)
 
-# GUI SOURCES
+# yaml library
+add_subdirectory(submodules/yaml-cpp EXCLUDE_FROM_ALL)
+list(APPEND lnk_libs yaml-cpp)
+
+# gui sources
 set(gui_srcs
 ${imgui_path}/imgui.cpp
 ${imgui_path}/imgui_demo.cpp
@@ -74,7 +78,7 @@ set(SDL_FILESYSTEM OFF)
 set(SDL_SENSOR OFF)
 set(SDL_LOCALE OFF)
 
-# SOURCES
+# sources
 
 set(unscope_srcs)
 
@@ -93,6 +97,8 @@ endif()
 
 list(APPEND unscope_srcs ${aud_srcs} ${gui_srcs})
 list(APPEND unscope_srcs 
+${srcs_path}/config/config.cpp
+
 ${srcs_path}/trigger/abstract.cpp
 ${srcs_path}/trigger/fallback.cpp
 ${srcs_path}/trigger/analog.cpp
@@ -130,7 +136,9 @@ ${imgui_path}/backends
 ${implot_path}
 ./submodules/imgui-knobs
 ./submodules/imgui_toggle/
+./submodules/yaml-cpp/include/yaml-cpp/
 ${srcs_path}
+${srcs_path}/config
 ${srcs_path}/trigger
 ${srcs_path}/audio
 ${srcs_path}/gui)

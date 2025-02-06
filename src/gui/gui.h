@@ -39,6 +39,7 @@ class USCRender {
 #include "fallback.h"
 #include "analog.h"
 
+#include "config.h"
 
 class USCGUI {
   private:
@@ -74,10 +75,6 @@ class USCGUI {
       bool aboutOpen;
     };
 
-    struct settings {
-      bool doSetting;
-    };
-
     int err;
 
     bool fullscreen;
@@ -101,7 +98,6 @@ class USCGUI {
     traceParams   *tc;
     xyParams       xyp;
     windowsOpen    wo;
-    settings       st;
 
     bool showTrigger, shareParams;
     signed char shareTrigger; // abs part - which channel, sign - do/don't
@@ -146,7 +142,6 @@ class USCGUI {
     ~USCGUI();
 };
 
-extern const unsigned char step_one;
 extern const char *windowLayout;
 extern const char *triggerNames[];
 

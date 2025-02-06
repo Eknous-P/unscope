@@ -226,3 +226,5 @@ const char* renderers[] = {
   "DirectX 11 + SDL",
 #endif
 };
+
+const int step_one = 1;
