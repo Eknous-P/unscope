@@ -1,49 +1,48 @@
 #include "config.h"
+#include "extData.h"
 #include "imgui_toggle.h"
-#include "imgui_stdlib.h"
 
-#define CHAR_BUF_SIZE 2048
+#define CHAR_BUF_SIZE 4096
 
-Setting::Setting(SettingTypes t, const char* k, const char* l, const char* d):
-  isBound(false) {
-  type = t;
-  switch (type) {
-    case SETTING_TOGGLE:
-      data = new bool;
-      if (!data) return;
-      *(bool*)data = false;
-      break;
-    case SETTING_INT:
-    case SETTING_NONE:
-      data = new int;
-      if (!data) return;
-      *(int*)data = 0;
-      break;
-    case SETTING_FLOAT:
-      data = new float;
-      if (!data) return;
-      *(int*)data = 0;
-      break;
-    case SETTING_STRING:
-      data = new char[CHAR_BUF_SIZE];
-      if (!data) return;
-      memset(data, 0, CHAR_BUF_SIZE * sizeof(char));
-      break;
-    default: return;
+Setting::Setting(SettingTypes t, const char* k, const char* l, const char* d, void* bind, void* ext, size_t es) {
+  if (bind) {
+    data = bind;
+    isBound = true;
+  } else {
+    switch (t) {
+      case SETTING_TOGGLE:
+        data = new bool;
+        if (!data) return;
+        *(bool*)data = false;
+        break;
+      case SETTING_NONE:
+      case SETTING_INT:
+      case SETTING_SELECTABLE_INT:
+      case SETTING_SELECTABLE_STRING:
+        data = new int;
+        if (!data) return;
+        *(int*)data = 0;
+        break;
+      case SETTING_FLOAT:
+        data = new float;
+        if (!data) return;
+        *(int*)data = 0;
+        break;
+      case SETTING_STRING:
+        data = new char[CHAR_BUF_SIZE];
+        if (!data) return;
+        memset(data, 0, CHAR_BUF_SIZE * sizeof(char));
+        break;
+      default: break;
+    }
+    isBound = false;
   }
-
-  key = k;
-  label = l;
-  desc = d;
-}
-
-Setting::Setting(SettingTypes t, const char* k, const char* l, const char* d, void* bind):
-  isBound(true) {
   type = t;
-  data = bind;
   key = k;
   label = l;
   desc = d;
+  extData = ext;
+  extDataSize = es;
 }
 
 bool Setting::passesFilter(ImGuiTextFilter* filter) {
@@ -66,6 +65,31 @@ void Setting::draw() {
     case SETTING_STRING:
       ImGui::InputText(label, (char*)data, CHAR_BUF_SIZE);
       break;
+    case SETTING_SELECTABLE_INT: {
+      char buf[64];
+      snprintf(buf, 64, "%d", *(int*)data);
+      if (ImGui::BeginCombo(label, buf)) {
+        for (size_t i=0; i<extDataSize; i++) {
+          snprintf(buf, 64, "%d", ((int*)extData)[i]);
+          if (ImGui::Selectable(buf, *(int*)data == ((int*)extData)[i])) {
+            *(int*)data = ((int*)extData)[i];
+          }
+        }
+        ImGui::EndCombo();
+      }
+      break;
+    }
+    case SETTING_SELECTABLE_STRING: {
+      if (ImGui::BeginCombo(label, ((char**)extData)[*(int*)data])) {
+        for (size_t i=0; i<extDataSize; i++) {
+          if (ImGui::Selectable(((char**)extData)[i], *(int*)data == i)) {
+            *(int*)data = i;
+          }
+        }
+        ImGui::EndCombo();
+      }
+      break;
+    }
     default: return;
   }
   if (desc) {
@@ -152,25 +176,37 @@ USCConfig::USCConfig(const char* filePath, unscopeParams* p) {
   }
 
   settings = {
-    Setting(SETTING_INT, "channels", "channels", NULL, &(p->channels)),
-    Setting(SETTING_INT, "sampleRate", "sample rate", NULL, &(p->sampleRate)),
-    Setting(SETTING_INT, "bufferSize", "buffer size", NULL, &(p->audioBufferSize)),
-    Setting(SETTING_INT, "frameSize", "frame size", NULL, &(p->audioFrameSize)),
+    SettingsCategory("Audio", {
+      Setting(SETTING_INT, "channels", "channels", NULL, &(p->channels), NULL, 0),
+      Setting(SETTING_SELECTABLE_INT, "sampleRate", "sample rate", NULL, &(p->sampleRate), (void*)sampleRateSelectableData, 9),
+      Setting(SETTING_INT, "bufferSize", "buffer size", NULL, &(p->audioBufferSize), NULL, 0),
+      Setting(SETTING_INT, "frameSize", "frame size", NULL, &(p->audioFrameSize), NULL, 0),
+      // Setting(SETTING_SELECTABLE_STRING, "device", "device", NULL, &(p->audioDevice), );
+    }),
 
   };
 }
 
 int USCConfig::loadConfig() {
   if (isEmpty) return 1;
-  for (Setting s:settings) s.load(&conf);
+  for (SettingsCategory c:settings) {
+    for (Setting s:c.settings) s.load(&conf);
+  }
   return 0;
 }
 
 void USCConfig::drawSettings() {
-  for (Setting s:settings) s.draw();
+  for (SettingsCategory c:settings) {
+    ImGui::BulletText("%s",c.name);
+    ImGui::Indent();
+    for (Setting s:c.settings) s.draw();
+    ImGui::Unindent();
+  }
 }
 
 USCConfig::~USCConfig() {
-  for (Setting s:settings) s.destroy();
+  for (SettingsCategory c:settings) {
+    for (Setting s:c.settings) s.destroy();
+  }
   (void)conf;
 }

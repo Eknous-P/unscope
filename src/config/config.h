@@ -5,18 +5,21 @@
 #include "yaml.h"
 #include "imgui.h"
 
-// looks familiar?
+// looks familiar? (https://github.com/Eknous-P/furnace/tree/settings3)
 
 enum SettingTypes : unsigned char {
   SETTING_NONE = 0,
   SETTING_TOGGLE,
   SETTING_INT,
   SETTING_FLOAT,
-  SETTING_STRING
+  SETTING_STRING,
+  SETTING_SELECTABLE_INT,
+  SETTING_SELECTABLE_STRING,
 };
 
 class Setting {
-  void *data;
+  void *data, *extData;
+  size_t extDataSize;
   SettingTypes type;
   const char *key, *label, *desc;
   bool isBound;
@@ -27,15 +30,24 @@ class Setting {
     int save(YAML::Node* conf);
     int load(YAML::Node* conf);
     void destroy();
-    Setting(SettingTypes t, const char* k, const char* l, const char* d);
-    Setting(SettingTypes t, const char* k, const char* l, const char* d, void* bind);
+    Setting(SettingTypes t, const char* k, const char* l, const char* d, void* bind, void* ext, size_t es);
+};
+
+struct SettingsCategory {
+  const char* name;
+  std::vector<Setting> settings;
+  // handle recursion later, not needed now
+  SettingsCategory(const char* n, std::initializer_list<Setting> s) {
+    name = n;
+    settings = s;
+  }
 };
 
 // 
 
 class USCConfig {
   YAML::Node conf;
-  std::vector<Setting> settings;
+  std::vector<SettingsCategory> settings;
   bool isEmpty;
 
   public:

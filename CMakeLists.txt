@@ -98,6 +98,7 @@ endif()
 list(APPEND unscope_srcs ${aud_srcs} ${gui_srcs})
 list(APPEND unscope_srcs 
 ${srcs_path}/config/config.cpp
+${srcs_path}/config/extData.cpp
 
 ${srcs_path}/trigger/abstract.cpp
 ${srcs_path}/trigger/fallback.cpp
