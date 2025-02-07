@@ -50,6 +50,7 @@ class USCConfig {
   YAML::Node conf;
   bool isEmpty;
   const char* confFile;
+  unscopeParams* params;
 
   public:
     std::vector<SettingsCategory> settings;

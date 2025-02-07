@@ -82,19 +82,26 @@ enum USCRenderers {
 };
 
 struct unscopeParams {
-  unsigned long int audioBufferSize;
-  unsigned int audioFrameSize;
-  unsigned char channels;
-  unsigned int sampleRate;
+  // audio
+  long int audioBufferSize;
+  int audioFrameSize;
+  char channels;
+  int sampleRate;
   int audioDevice;
 
-  // gui ...
+  // gui
   float timebase;
   float xyPersist;
   float scale;
-  float trigger;
 
   int renderer;
+
+  // colors
+  int chanColor[3];
+  int triggeredColor;
+  int fallbackColor;
+  int notTriggeredColor;
+  int xyColor;
 };
 
 struct DeviceEntry {

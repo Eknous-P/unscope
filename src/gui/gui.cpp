@@ -254,7 +254,7 @@ void USCGUI::drawGUI() {
     }
     if (ImGui::BeginMenu("Scopes")) {
       ImGui::MenuItem("Main Scope",NULL,&wo.mainScopeOpen);
-      ImGui::MenuItem("Scope (XY)",NULL,&wo.xyScopeOpen);
+      if (channels>1) ImGui::MenuItem("Scope (XY)",NULL,&wo.xyScopeOpen);
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Controls")) {

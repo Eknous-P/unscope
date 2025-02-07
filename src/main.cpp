@@ -29,7 +29,6 @@ int main(int argc, char* argv[]) {
   params.timebase        = 60;    // ms
   params.xyPersist       = 40;    // ms
   params.scale           = 1.0f;  // (no unit)
-  params.trigger         = 0.0f;  // (no unit)
 #ifdef _WIN32
   params.renderer = USC_REND_DIRECTX11_SDL;
 #else
@@ -51,6 +50,7 @@ int main(int argc, char* argv[]) {
   confPath+=PROGRAM_CONF_FILE;
 
   USCConfig conf(confPath.c_str(), &params);
+  conf.loadConfig();
 
   // parse arguments
   if (argc > 1) {
