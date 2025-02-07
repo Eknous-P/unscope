@@ -94,6 +94,7 @@ class USCGUI {
     USCConfig *cf;
 
     std::vector<DeviceEntry> devs;
+    char** devs_c; // for settings
     int device, deviceNum;
 
     unscopeParams *up;

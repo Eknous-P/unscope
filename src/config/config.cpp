@@ -1,6 +1,11 @@
 #include "config.h"
 #include "extData.h"
 #include "imgui_toggle.h"
+#include <cstdio>
+#include <emittermanip.h>
+#include <node/parse.h>
+#include <sys/stat.h>
+#include <errno.h>
 
 #define CHAR_BUF_SIZE 4096
 
@@ -33,6 +38,10 @@ Setting::Setting(SettingTypes t, const char* k, const char* l, const char* d, vo
         if (!data) return;
         memset(data, 0, CHAR_BUF_SIZE * sizeof(char));
         break;
+      case SETTING_COLOR:
+        data = new ImVec4;
+        if (!data) return;
+        memset(data, 0, sizeof(ImVec4));
       default: break;
     }
     isBound = false;
@@ -90,10 +99,14 @@ void Setting::draw() {
       }
       break;
     }
+    case SETTING_COLOR: {
+      ImGui::ColorEdit4(label, (float*)data);
+      break;
+    }
     default: return;
   }
   if (desc) {
-    if (ImGui::IsItemHovered()) {
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
       ImGui::SetTooltip("%s", desc);
     }
   }
@@ -104,19 +117,48 @@ void* Setting::getData() {
 }
 
 int Setting::save(YAML::Node* conf) {
+  // if (conf->Type() != YAML::NodeType::Map) return 1;
   switch (type) {
-    case SETTING_TOGGLE:
-      (*conf)[key] = *(bool*)data;
+    case SETTING_TOGGLE: {
+      if ((*conf)[key]) {
+        (*conf)[key] = *(bool*)data;
+      } else {
+        (*conf).force_insert(key, *(bool*)data);
+      }
       return 0;
-    case SETTING_INT:
+    }
     case SETTING_NONE:
-      (*conf)[key] = *(int*)data;
+    case SETTING_INT:
+    case SETTING_SELECTABLE_INT:
+    case SETTING_SELECTABLE_STRING: {
+      if ((*conf)[key]) {
+        (*conf)[key] = *(int*)data;
+      } else {
+        (*conf).force_insert(key, *(int*)data);
+      }
       return 0;
-    case SETTING_FLOAT:
-      (*conf)[key] = *(float*)data;
+    }
+    case SETTING_FLOAT:{
+      if ((*conf)[key]) {
+        (*conf)[key] = *(float*)data;
+      } else {
+        (*conf).force_insert(key, *(float*)data);
+      }
       return 0;
-    case SETTING_STRING:
-      (*conf)[key] = (char*)data;
+    }
+    case SETTING_STRING:{
+      if ((*conf)[key]) {
+        (*conf)[key] = (char*)data;
+      } else {
+        (*conf).force_insert(key, (char*)data);
+      }
+      return 0;
+    }
+    case SETTING_COLOR:
+      (*conf)[key].push_back(((float*)data)[0]);
+      (*conf)[key].push_back(((float*)data)[1]);
+      (*conf)[key].push_back(((float*)data)[2]);
+      (*conf)[key].push_back(((float*)data)[3]);
       return 0;
     default: return 0;
   }
@@ -136,6 +178,12 @@ int Setting::load(YAML::Node* conf) {
       return 0;
     case SETTING_STRING:
       snprintf((char*)data, CHAR_BUF_SIZE, "%s", ((*conf)[key].as<std::string>()).c_str());
+      return 0;
+    case SETTING_COLOR:
+      ((float*)data)[0] = (*conf)[key][0].as<float>();
+      ((float*)data)[1] = (*conf)[key][1].as<float>();
+      ((float*)data)[2] = (*conf)[key][2].as<float>();
+      ((float*)data)[3] = (*conf)[key][3].as<float>();
       return 0;
     default: return 0;
   }
@@ -157,6 +205,8 @@ void Setting::destroy() {
     case SETTING_STRING:
       if (data) delete[] (char*)data;
       break;
+    case SETTING_COLOR:
+      if (data) delete (ImVec4*)data;
     default: return;
   }
   data = NULL;
@@ -165,14 +215,12 @@ void Setting::destroy() {
 // USCConfig definitions
 
 USCConfig::USCConfig(const char* filePath, unscopeParams* p) {
+  confFile = filePath;
   try {
     conf = YAML::LoadFile(filePath);
-    isEmpty = false;
   } catch (std::exception& xc) {
     printf(ERROR_MSG "config file not found (%s)" MSG_END, xc.what());
-    // TODO: DEAL WITH CONFIG CREATION
-    conf = YAML::Load("");
-    isEmpty = true;
+    printf(INFO_MSG "new config file will be made at %s" MSG_END, confFile);
   }
 
   settings = {
@@ -181,7 +229,6 @@ USCConfig::USCConfig(const char* filePath, unscopeParams* p) {
       Setting(SETTING_SELECTABLE_INT, "sampleRate", "sample rate", NULL, &(p->sampleRate), (void*)sampleRateSelectableData, 9),
       Setting(SETTING_INT, "bufferSize", "buffer size", NULL, &(p->audioBufferSize), NULL, 0),
       Setting(SETTING_INT, "frameSize", "frame size", NULL, &(p->audioFrameSize), NULL, 0),
-      // Setting(SETTING_SELECTABLE_STRING, "device", "device", NULL, &(p->audioDevice), );
     }),
 
   };
@@ -192,6 +239,32 @@ int USCConfig::loadConfig() {
   for (SettingsCategory c:settings) {
     for (Setting s:c.settings) s.load(&conf);
   }
+  return 0;
+}
+
+int USCConfig::saveConfig() {
+  for (SettingsCategory c:settings) {
+    for (Setting s:c.settings) s.save(&conf);
+  }
+  YAML::Emitter confOut;
+  confOut << conf;
+  FILE* f;
+  // attempt 1: check for file
+  f = fopen(confFile, "wb");
+  if (!f) {
+    printf(ERROR_MSG "failed to open config file! %d" MSG_END, errno);
+    printf(INFO_MSG "making conf dir... (%d)" MSG_END,
+    mkdir(confFile, 0733));
+    f = fopen(confFile, "wb");
+    if (!f) {
+      printf(ERROR_MSG "really failed to open config file!!! %d" MSG_END, errno);
+      return 1;
+    }
+  }
+  rewind(f);
+  fprintf(f,"%s",confOut.c_str());
+  fclose(f);
+  printf(SUCCESS_MSG "written config!!" MSG_END);
   return 0;
 }
 

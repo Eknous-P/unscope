@@ -15,6 +15,7 @@ enum SettingTypes : unsigned char {
   SETTING_STRING,
   SETTING_SELECTABLE_INT,
   SETTING_SELECTABLE_STRING,
+  SETTING_COLOR,
 };
 
 class Setting {
@@ -47,11 +48,13 @@ struct SettingsCategory {
 
 class USCConfig {
   YAML::Node conf;
-  std::vector<SettingsCategory> settings;
   bool isEmpty;
+  const char* confFile;
 
   public:
+    std::vector<SettingsCategory> settings;
     int loadConfig();
+    int saveConfig();
     void drawSettings();
     USCConfig(const char* filePath, unscopeParams* p);
     ~USCConfig();

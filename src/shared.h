@@ -12,6 +12,8 @@
 #define PROGRAM_WIDTH 1280
 #define PROGRAM_HEIGHT 720
 
+#define PROGRAM_CONF_FILE "unscope.yaml"
+
 // printf fancies
 #define ERROR_MSG "\033[31;1m"
 #define INFO_MSG "\033[35;1m"

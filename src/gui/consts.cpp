@@ -25,7 +25,7 @@ DockId=0x00000009,0\n\
 \n\
 [Window][Scope (XY)]\n\
 Pos=980,19\n\
-Size=300,318\n\
+Size=300,316\n\
 Collapsed=0\n\
 DockId=0x0000000B,0\n\
 \n\
@@ -56,6 +56,11 @@ DockId=0x0000000C,0\n\
 [Window][Dear ImGui Metrics/Debugger]\n\
 Pos=60,60\n\
 Size=676,484\n\
+Collapsed=0\n\
+\n\
+[Window][Settings]\n\
+Pos=361,195\n\
+Size=557,330\n\
 Collapsed=0\n\
 \n\
 [Docking][Data]\n\

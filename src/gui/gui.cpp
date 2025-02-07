@@ -1,4 +1,6 @@
 #include "gui.h"
+#include <config.h>
+#include <shared.h>
 
 ImVec2 operator+(ImVec2 lhs, ImVec2 rhs) {
   return ImVec2(lhs.x+rhs.x,lhs.y+rhs.y);
@@ -57,7 +59,7 @@ USCGUI::USCGUI(unscopeParams *params) {
   wo.xyScopeControlsOpen = true;
   wo.globalControlsOpen = true;
   wo.aboutOpen = false;
-  wo.settingsOpen = false;
+  wo.settingsOpen = true;
 
   oscDataSize = up->audioBufferSize;
 
@@ -85,6 +87,7 @@ USCGUI::USCGUI(unscopeParams *params) {
   device    = 0;
   deviceNum = 0;
   devs.clear();
+  devs_c = NULL;
   showTrigger  = false;
   shareParams  = true;
   shareTrigger = 1;
@@ -206,6 +209,14 @@ int USCGUI::init() {
 
 void USCGUI::getDevices(std::vector<DeviceEntry> d) {
   devs = d;
+  devs_c = new char*[devs.size()];
+  FOR_RANGE(devs.size()) {
+    devs_c[z] = new char[2048];
+    strncpy(devs_c[z], devs[z].devName.c_str(), 2048);
+  }
+  cf->settings[0].settings.push_back(
+    Setting(SETTING_SELECTABLE_STRING, "device", "device", NULL, &deviceNum, devs_c, devs.size())
+  );
 }
 
 void USCGUI::doFrame() {
@@ -388,4 +399,5 @@ USCGUI::~USCGUI() {
   ai = NULL;
 
   DELETE_PTR(tc)
+  DELETE_DOUBLE_PTR(devs_c, devs.size())
 }

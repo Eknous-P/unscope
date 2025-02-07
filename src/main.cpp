@@ -36,9 +36,21 @@ int main(int argc, char* argv[]) {
   params.renderer = USC_REND_OPENGL_SDL;
 #endif
 
-  USCConfig conf(
-    "~/.config/unscope/unscope.yaml"
-  , &params);
+  std::string confPath;
+  // remember when the only roadblock to a windows build was just building it?
+  // well you can forget all that! file io is here to fuck it all up
+
+#ifndef _WIN32
+  confPath+=getenv("HOME");
+  if (confPath.size()==0) {
+    printf(INFO_MSG "failed to get home directory! expect config fails..." MSG_END);
+  }
+  confPath+="/.config/unscope/";
+#endif
+
+  confPath+=PROGRAM_CONF_FILE;
+
+  USCConfig conf(confPath.c_str(), &params);
 
   // parse arguments
   if (argc > 1) {

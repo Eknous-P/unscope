@@ -14,6 +14,10 @@ void USCGUI::drawSettings() {
 
     cf->drawSettings();
 
+    if (ImGui::Button("Save")) {
+      cf->saveConfig();
+    }
+    ImGui::SameLine();
     if (ImGui::Button("Cancel")) wo.settingsOpen = false;
     ImGui::EndPopup();
   }
