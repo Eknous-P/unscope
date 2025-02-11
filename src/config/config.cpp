@@ -2,6 +2,7 @@
 #include "extData.h"
 #include "imgui_toggle.h"
 #include <cstdio>
+#include <emitter.h>
 #include <emittermanip.h>
 #include <imgui.h>
 #include <node/parse.h>
@@ -164,8 +165,7 @@ int Setting::save(YAML::Node* conf) {
 }
 
 int Setting::load(YAML::Node* conf) {
-  YAML::Node dat = (*conf);
-  if (!dat.IsScalar()) return 1;
+  YAML::Node dat = (*conf)[key];
   switch (type) {
     case SETTING_TOGGLE:
       *(bool*)data = dat.as<bool>();
@@ -219,7 +219,7 @@ USCConfig::USCConfig(const char* filePath, unscopeParams* p) {
   YAML::Node temp;
   try {
     temp = YAML::LoadFile(filePath);
-    temp = conf;
+    conf = temp;
   } catch (std::exception& xc) {
     printf(ERROR_MSG "config file not found (%s)" MSG_END, xc.what());
     printf(INFO_MSG "new config file will be made at %s" MSG_END, confFile);
