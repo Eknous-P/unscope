@@ -1,6 +1,5 @@
 #include "gui.h"
-#include <config.h>
-#include <shared.h>
+#include <imgui.h>
 
 ImVec2 operator+(ImVec2 lhs, ImVec2 rhs) {
   return ImVec2(lhs.x+rhs.x,lhs.y+rhs.y);
@@ -123,6 +122,9 @@ void USCGUI::attachAudioInput(USCAudioInput *i) {
 
 void USCGUI::attachConfig(USCConfig *c) {
   cf = c;
+
+  const char* layout = cf->getLayout();
+  if (layout) ImGui::LoadIniSettingsFromMemory(layout);
 }
 
 void USCGUI::setupRenderer(USCRenderers r) {
@@ -366,7 +368,8 @@ void USCGUI::setAudioDeviceSetting(int d) {
 }
 
 USCGUI::~USCGUI() {
-  // ImGui::SaveIniSettingsToDisk(INIFILE);
+  cf->saveLayout(ImGui::SaveIniSettingsToMemory());
+  cf->saveConfig();
   // Cleanup
   if (isGood) rd->deinit();
   if (rd) {
@@ -397,6 +400,7 @@ USCGUI::~USCGUI() {
   DELETE_DOUBLE_PTR(oscData, channels)
   DELETE_PTR(oscAlign)
   ai = NULL;
+  cf = NULL;
 
   DELETE_PTR(tc)
   DELETE_DOUBLE_PTR(devs_c, devs.size())

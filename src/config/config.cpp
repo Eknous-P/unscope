@@ -275,6 +275,23 @@ int USCConfig::saveConfig() {
   return 0;
 }
 
+YAML::Node USCConfig::getConfig(const char* key) {
+  return conf[key];
+}
+
+void USCConfig::saveLayout(const char* layout) {
+  if (conf["layout"]) {
+    conf["layout"] = layout;
+  } else {
+    conf.force_insert("layout", layout);
+  }
+}
+
+const char* USCConfig::getLayout() {
+  if (!conf["layout"]) return NULL;
+  return conf["layout"].as<std::string>().c_str();
+}
+
 void USCConfig::drawSettings() {
   for (SettingsCategory c:settings) {
     ImGui::BulletText("%s",c.name);
