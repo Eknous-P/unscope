@@ -1,13 +1,7 @@
 #include "config.h"
 #include "extData.h"
 #include "imgui_toggle.h"
-#include <cstdio>
-#include <emitter.h>
-#include <emittermanip.h>
-#include <imgui.h>
-#include <node/parse.h>
 #include <sys/stat.h>
-#include <errno.h>
 
 #define CHAR_BUF_SIZE 4096
 
@@ -122,7 +116,6 @@ void* Setting::getData() {
 }
 
 int Setting::save(YAML::Node* conf) {
-  // if (conf->Type() != YAML::NodeType::Map) return 1;
   switch (type) {
     case SETTING_TOGGLE: {
       if ((*conf)[key]) {
@@ -166,20 +159,27 @@ int Setting::save(YAML::Node* conf) {
 
 int Setting::load(YAML::Node* conf) {
   YAML::Node dat = (*conf)[key];
+  if (!dat.IsDefined()) return 1;
   switch (type) {
-    case SETTING_TOGGLE:
-      *(bool*)data = dat.as<bool>();
+    case SETTING_TOGGLE: {
+      bool value = dat.as<bool>();
+      *(bool*)data = value;
       return 0;
+    }
     case SETTING_INT:
     case SETTING_NONE:
     case SETTING_SELECTABLE_INT:
     case SETTING_SELECTABLE_STRING:
-    case SETTING_COLOR:
-      *(bool*)data = dat.as<signed int>();
+    case SETTING_COLOR: {
+      int value = dat.as<int>();
+      *(int*)data = value;
       return 0;
-    case SETTING_FLOAT:
-      *(bool*)data = dat.as<float>();
+    }
+    case SETTING_FLOAT: {
+      float value = dat.as<float>();
+      *(float*)data = value;
       return 0;
+    }
     case SETTING_STRING:
       snprintf((char*)data, CHAR_BUF_SIZE, "%s", (dat.as<std::string>()).c_str());
       return 0;
@@ -234,6 +234,8 @@ USCConfig::USCConfig(const char* filePath, unscopeParams* p) {
     }),
     SettingsCategory("Colors", {
       Setting(SETTING_COLOR, "chan1col", "channel 1", NULL, &(params->chanColor[0]), NULL, 0),
+      Setting(SETTING_COLOR, "chan2col", "channel 2", NULL, &(params->chanColor[1]), NULL, 0),
+      Setting(SETTING_COLOR, "chan3col", "channel 3", NULL, &(params->chanColor[2]), NULL, 0),
     })
   };
 }
