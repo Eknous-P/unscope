@@ -93,6 +93,7 @@ class USCGUI {
     signed char shareTrigger; // abs part - which channel, sign - do/don't
 
     bool doFallback, singleShot;
+    bool scheduleLayoutReset;
 
     Triggers trigNum;
     Trigger **trigger, **fallbackTrigger;
@@ -139,6 +140,7 @@ extern ImVec2 operator+(ImVec2 lhs, ImVec2 rhs);
 extern ImVec2 operator+(ImVec2 lhs, float rhs);
 
 extern const char *windowLayout;
+extern const unsigned long int windowLayoutSize;
 extern const char *triggerNames[];
 
 #endif

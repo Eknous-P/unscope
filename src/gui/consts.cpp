@@ -6,11 +6,6 @@ Pos=0,19\n\
 Size=1280,701\n\
 Collapsed=0\n\
 \n\
-[Window][Debug##Default]\n\
-Pos=60,60\n\
-Size=400,400\n\
-Collapsed=0\n\
-\n\
 [Window][Controls]\n\
 Pos=725,0\n\
 Size=275,167\n\
@@ -53,11 +48,6 @@ Size=300,161\n\
 Collapsed=0\n\
 DockId=0x0000000C,0\n\
 \n\
-[Window][Dear ImGui Metrics/Debugger]\n\
-Pos=60,60\n\
-Size=676,484\n\
-Collapsed=0\n\
-\n\
 [Window][Settings]\n\
 Pos=303,143\n\
 Size=674,434\n\
@@ -78,6 +68,8 @@ DockSpace         ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,19 Size=1280,701 Split=X
         DockNode  ID=0x00000004 Parent=0x00000008 SizeRef=300,207 Selected=0xDFE49EEC\n\
   DockNode        ID=0x00000002 Parent=0x8B93E3BD SizeRef=275,371 HiddenTabBar=1 Selected=0x67284010\n\
 ";
+
+const unsigned long int windowLayoutSize = 1917;
 
 const char* triggerNames[]={
   "fallback",

@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
   params.xyScopeControlsOpen = params.channels > 1;
   params.globalControlsOpen  = true;
   params.aboutOpen           = false;
-  params.settingsOpen        = true; // TODO: false
+  params.settingsOpen        = false;
   params.fullscreen          = false;
   params.enableMultiViewport = false;
 

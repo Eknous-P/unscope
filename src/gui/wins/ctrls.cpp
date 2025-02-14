@@ -1,7 +1,6 @@
 #include "gui.h"
 #include "imgui-knobs.h"
 #include "imgui_toggle.h"
-#include <imgui.h>
 
 void USCGUI::drawGlobalControls() {
   if (!up->globalControlsOpen) return;
@@ -29,7 +28,7 @@ void USCGUI::drawGlobalControls() {
   if (singleShot) {
     bool popColor = false;
     if (updateAudio) {
-      ImGui::PushStyleColor(ImGuiCol_Button, 0xff00ff00);
+      ImGui::PushStyleColor(ImGuiCol_Button, up->triggeredColor);
       popColor = true;
     }
     if (ImGui::Button("trigger!##singleTrigButton")) {

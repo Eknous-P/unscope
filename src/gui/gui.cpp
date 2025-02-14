@@ -75,6 +75,8 @@ USCGUI::USCGUI(unscopeParams *params) {
   doFallback = true;
   singleShot = false;
 
+  scheduleLayoutReset = false;
+
   fallbackTrigger = new Trigger*[channels];
   trigger = new Trigger*[channels];
 
@@ -173,7 +175,7 @@ int USCGUI::init() {
     style.WindowRounding = 0.0f;
     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
   }
-  ImGui::LoadIniSettingsFromMemory(windowLayout);
+  ImGui::LoadIniSettingsFromMemory(windowLayout, windowLayoutSize);
   // Setup Platform/Renderer backends
   if (rd->init()!=0) return UGUIERROR_INITFAIL;
   bgColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -185,7 +187,7 @@ int USCGUI::init() {
     std::string layout = cf->getLayout();
     if (layout.size()>0) {
       printf("%s\nsize: %lu\n", layout.c_str(), layout.size());
-      // ImGui::LoadIniSettingsFromMemory(layout.c_str());
+      ImGui::LoadIniSettingsFromMemory(layout.c_str(), layout.size());
     }
   }
   return 0;
@@ -214,6 +216,11 @@ void USCGUI::doFrame() {
 
   ImGui::Render();
   rd->endFrame(io,bgColor);
+  if (scheduleLayoutReset) {
+    cf->saveLayout(windowLayout);
+    ImGui::LoadIniSettingsFromMemory(windowLayout, windowLayoutSize);
+    scheduleLayoutReset = false;
+  }
 }
 
 void USCGUI::drawGUI() {
@@ -233,6 +240,7 @@ void USCGUI::drawGUI() {
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
       ImGui::MenuItem("Settings...", NULL, &up->settingsOpen);
+      if (ImGui::MenuItem("Reset Layout")) scheduleLayoutReset = true;
       if (ImGui::MenuItem("Exit")) running = false;
       ImGui::EndMenu();
     }
@@ -299,7 +307,7 @@ void USCGUI::drawGUI() {
   
   // drawAlignDebug();
   
-  ImGui::ShowMetricsWindow();
+  // ImGui::ShowMetricsWindow();
 }
 
 void USCGUI::drawAlignDebug() {
