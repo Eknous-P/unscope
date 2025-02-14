@@ -202,14 +202,20 @@ void USCGUI::drawXYScopeControls() {
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
 
-      float maxTime = bufferTime;
+      /*
+      max buffer time = buffer length / sample rate (s)
+      buffer length = max buffer time (s) * sample rate
+      */
+
+      float maxTime = bufferTime * 1000.0f;
       if (maxTime > 1000.0f) maxTime = 1000.0f;
-      xyp.persistence = xyp.sampleLen * maxTime / sampleRate;
-      if (ImGuiKnobs::Knob("persistence", &xyp.persistence, 0.0f, maxTime, 0.0f,"%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
+      int maxBuf = sampleRate * maxTime / 1000.0f;
+      xyp.persistence = ((float)xyp.sampleLen / sampleRate) * 1000.0f;
+      if (ImGuiKnobs::Knob("persistence", &xyp.persistence, 0.0f, maxTime, 0.0f,NULL, ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
         xyp.sampleLen = sampleRate * xyp.persistence / 1000.0f;
-        if (xyp.sampleLen > oscDataSize) xyp.sampleLen = oscDataSize;
+        if (xyp.sampleLen > maxBuf) xyp.sampleLen = maxBuf;
       }
-      RIGHTCLICK_EXACT_INPUT(&xyp.persistence, ImGuiDataType_Float, {if (xyp.persistence<0.0f) {xyp.persistence=0.0f;} if (xyp.persistence>maxTime) {xyp.persistence=maxTime;} xyp.sampleLen = sampleRate * (xyp.persistence / maxTime);})
+      RIGHTCLICK_EXACT_INPUT(&xyp.persistence, ImGuiDataType_Float, {if (xyp.persistence<0.0f) {xyp.persistence=0.0f;} if (xyp.persistence>maxTime) {xyp.persistence=maxTime;} xyp.sampleLen = sampleRate * xyp.persistence / 1000.0f;})
       ImGui::TableNextColumn();
 
       ImGuiKnobs::Knob("x scale", &xyp.xScale, 0.5f, 4.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);

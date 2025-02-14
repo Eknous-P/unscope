@@ -45,7 +45,7 @@ USCGUI::USCGUI(unscopeParams *params) {
 
   oscDataSize = up->audioBufferSize;
 
-  bufferTime = (float)oscDataSize / (float)sampleRate * 1000.0f;
+  bufferTime = (float)oscDataSize / (float)sampleRate;
 
   oscData = new float*[channels];
   oscAlign = new float*[channels];

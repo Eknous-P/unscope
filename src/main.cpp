@@ -86,7 +86,6 @@ int main(int argc, char* argv[]) {
     CONF_LOAD_BOOL(globalControlsOpen);
     CONF_LOAD_BOOL(fullscreen);
   }
-
 #undef CONF_LOAD_BOOL
 
   // parse arguments
@@ -117,7 +116,7 @@ int main(int argc, char* argv[]) {
             continue;
           }
           try {
-            value = std ::stoi(argv[i + 1]);
+            value = std::stoi(argv[i + 1]);
           } catch (...) {
             printf("invalid argument for %s given: %s\n", argv[i], argv[i + 1]);
             continue;

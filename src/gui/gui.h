@@ -74,6 +74,7 @@ class USCGUI {
   
     float **oscData, **oscAlign;
     unsigned long int oscDataSize, sampleRate;
+    // helper vars
     float bufferTime;
     USCRender *rd;
     USCAudioInput *ai;
