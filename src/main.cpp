@@ -41,6 +41,13 @@ int main(int argc, char* argv[]) {
   params.settingsOpen        = true; // TODO: false
   params.fullscreen          = false;
 
+  params.chanColor[0] = -231278815;
+  params.chanColor[1] = -231003155;
+  params.chanColor[2] = -219179238;
+  params.triggeredColor    = -14096106;
+  params.notTriggeredColor = -13167105;
+  params.xyColor = 1025376039;
+
 #ifdef _WIN32
   params.renderer = USC_REND_DIRECTX11_SDL;
 #else

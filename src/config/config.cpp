@@ -105,6 +105,8 @@ void Setting::draw() {
     default: return;
   }
   if (desc) {
+    ImGui::SameLine();
+    ImGui::TextDisabled("(?)");
     if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
       ImGui::SetTooltip("%s", desc);
     }
@@ -248,7 +250,7 @@ USCConfig::USCConfig(const char* filePath, unscopeParams* p) {
         &(params->sampleRate),
         (void*)sampleRateSelectableData, 9),
       S(SETTING_INT,
-        "bufferSize", "buffer size", NULL,
+        "bufferSize", "buffer size", "the number of audio samples to store",
         &(params->audioBufferSize),
         NULL, 0),
       S(SETTING_INT,
@@ -278,7 +280,7 @@ USCConfig::USCConfig(const char* filePath, unscopeParams* p) {
         &(params->notTriggeredColor),
         NULL, 0),
       S(SETTING_COLOR,
-        "xyCol", "XY scope", NULL,
+        "xyCol", "XY scope", "note: the transparency/alpha of this color is the intensity control",
         &(params->xyColor),
         NULL, 0),
     })
