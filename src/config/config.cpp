@@ -118,10 +118,11 @@ void* Setting::getData() {
 int Setting::save(YAML::Node* conf) {
   switch (type) {
     case SETTING_TOGGLE: {
+      bool value = *(bool*)data;
       if ((*conf)[key]) {
-        (*conf)[key] = *(bool*)data;
+        (*conf)[key] = value;
       } else {
-        (*conf).force_insert(key, *(bool*)data);
+        (*conf).force_insert(key, value);
       }
       return 0;
     }
@@ -130,28 +131,30 @@ int Setting::save(YAML::Node* conf) {
     case SETTING_SELECTABLE_INT:
     case SETTING_SELECTABLE_STRING:
     case SETTING_COLOR: {
+      int value = *(int*)data;
       if ((*conf)[key]) {
-        (*conf)[key] = *(int*)data;
+        (*conf)[key] = value;
       } else {
-        (*conf).force_insert(key, *(int*)data);
+        (*conf).force_insert(key, value);
       }
       return 0;
     }
     case SETTING_FLOAT: {
+      float value = *(float*)data;
       if ((*conf)[key]) {
-        (*conf)[key] = *(float*)data;
+        (*conf)[key] = value;
       } else {
-        (*conf).force_insert(key, *(float*)data);
+        (*conf).force_insert(key, value);
       }
       return 0;
     }
     case SETTING_STRING: {
+      const char* value = (const char*)data;
       if ((*conf)[key]) {
-        (*conf)[key] = (char*)data;
+        (*conf)[key] = value;
       } else {
-        (*conf).force_insert(key, (char*)data);
+        (*conf).force_insert(key, value);
       }
-      return 0;
     }
     default: return 0;
   }
@@ -225,19 +228,65 @@ USCConfig::USCConfig(const char* filePath, unscopeParams* p) {
     printf(INFO_MSG "new config file will be made at %s" MSG_END, confFile);
   }
 
+#define S(...) Setting(__VA_ARGS__)
+#define C(...) SettingsCategory(__VA_ARGS__)
+
   settings = {
-    SettingsCategory("Audio", {
-      Setting(SETTING_INT, "channels", "channels", NULL, &(params->channels), NULL, 0),
-      Setting(SETTING_SELECTABLE_INT, "sampleRate", "sample rate", NULL, &(params->sampleRate), (void*)sampleRateSelectableData, 9),
-      Setting(SETTING_INT, "bufferSize", "buffer size", NULL, &(params->audioBufferSize), NULL, 0),
-      Setting(SETTING_INT, "frameSize", "frame size", NULL, &(params->audioFrameSize), NULL, 0),
+    C("Audio", {
+      /*
+        (type),
+        (key),(name),(description),
+        (bind),
+        (ext. data),(ext. data size)
+      */
+      S(SETTING_INT,
+        "channels", "channels", NULL,
+        &(params->channels),
+        NULL, 0),
+      S(SETTING_SELECTABLE_INT,
+        "sampleRate", "sample rate", NULL,
+        &(params->sampleRate),
+        (void*)sampleRateSelectableData, 9),
+      S(SETTING_INT,
+        "bufferSize", "buffer size", NULL,
+        &(params->audioBufferSize),
+        NULL, 0),
+      S(SETTING_INT,
+        "frameSize", "frame size", NULL,
+        &(params->audioFrameSize),
+        NULL, 0),
     }),
-    SettingsCategory("Colors", {
-      Setting(SETTING_COLOR, "chan1col", "channel 1", NULL, &(params->chanColor[0]), NULL, 0),
-      Setting(SETTING_COLOR, "chan2col", "channel 2", NULL, &(params->chanColor[1]), NULL, 0),
-      Setting(SETTING_COLOR, "chan3col", "channel 3", NULL, &(params->chanColor[2]), NULL, 0),
+    C("Colors", {
+      S(SETTING_COLOR,
+        "chan1col", "channel 1", NULL,
+        &(params->chanColor[0]),
+        NULL, 0),
+      S(SETTING_COLOR,
+        "chan2col", "channel 2", NULL,
+        &(params->chanColor[1]),
+        NULL, 0),
+      S(SETTING_COLOR,
+        "chan3col", "channel 3", NULL,
+        &(params->chanColor[2]),
+        NULL, 0),
+      S(SETTING_COLOR,
+        "trigCol", "successful trigger", NULL,
+        &(params->triggeredColor),
+        NULL, 0),
+      S(SETTING_COLOR,
+        "notTrigCol", "unsuccessful trigger", NULL,
+        &(params->notTriggeredColor),
+        NULL, 0),
+      S(SETTING_COLOR,
+        "xyCol", "XY scope", NULL,
+        &(params->xyColor),
+        NULL, 0),
     })
   };
+
+#undef S
+#undef C
+
 }
 
 int USCConfig::loadConfig() {
@@ -279,6 +328,38 @@ YAML::Node USCConfig::getConfig(const char* key) {
   return conf[key];
 }
 
+void USCConfig::setConfig(const char* key, bool data) {
+  if (conf[key]) {
+    conf[key] = data;
+  } else {
+    conf.force_insert(key, data);
+  }
+}
+
+void USCConfig::setConfig(const char* key, int data) {
+  if (conf[key]) {
+    conf[key] = data;
+  } else {
+    conf.force_insert(key, data);
+  }
+}
+
+void USCConfig::setConfig(const char* key, float data) {
+  if (conf[key]) {
+    conf[key] = data;
+  } else {
+    conf.force_insert(key, data);
+  }
+}
+
+void USCConfig::setConfig(const char* key, const char* data) {
+  if (conf[key]) {
+    conf[key] = data;
+  } else {
+    conf.force_insert(key, data);
+  }
+}
+
 void USCConfig::saveLayout(const char* layout) {
   if (conf["layout"]) {
     conf["layout"] = layout;
@@ -287,9 +368,9 @@ void USCConfig::saveLayout(const char* layout) {
   }
 }
 
-const char* USCConfig::getLayout() {
+std::string USCConfig::getLayout() {
   if (!conf["layout"]) return NULL;
-  return conf["layout"].as<std::string>().c_str();
+  return conf["layout"].as<std::string>();
 }
 
 void USCConfig::drawSettings() {

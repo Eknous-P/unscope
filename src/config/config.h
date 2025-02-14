@@ -54,11 +54,19 @@ class USCConfig {
 
   public:
     std::vector<SettingsCategory> settings;
+  
     int loadConfig();
     int saveConfig();
+  
     YAML::Node getConfig(const char* key);
+    void setConfig(const char* key, bool data);
+    void setConfig(const char* key, int data);
+    void setConfig(const char* key, float data);
+    void setConfig(const char* key, const char* data);
+
     void saveLayout(const char* layout);
-    const char* getLayout();
+    std::string getLayout();
+
     void drawSettings();
     USCConfig(const char* filePath, unscopeParams* p);
     ~USCConfig();

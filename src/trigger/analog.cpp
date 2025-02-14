@@ -2,11 +2,11 @@
 
 #define CHECK_TRIGGERED foundTrigger=triggerLow&&triggerHigh
 
-void TriggerAnalog::setupTrigger(unscopeParams* up, float* cb) {
-  uParams = up;
+void TriggerAnalog::setupTrigger(unsigned long int bs, float* cb) {
   chanBuf = cb;
+  bufferSize = bs;
 
-  alignBuf = new float[up->audioBufferSize];
+  alignBuf = new float[bufferSize];
 
   params = {
     TriggerParam(TP_KNOBNORM,false,"level",false,true),
@@ -30,9 +30,9 @@ bool TriggerAnalog::trigger(unsigned long int windowSize) {
   bool triggerHigh = false, triggerLow = false, foundTrigger = false, edge = !*(bool*)params[3].getValue();
   float trigY = *(float*)params[0].getValue(); // temp
   long int offset = (windowSize / 2) * *(float*)params[1].getValue();
-  triggerIndex = uParams->audioBufferSize - windowSize;
+  triggerIndex = bufferSize - windowSize;
 
-  memset(alignBuf, 0xbf, uParams->audioBufferSize * sizeof(float));
+  memset(alignBuf, 0xbf, bufferSize * sizeof(float));
 
   while (triggerIndex > 0) {
     triggerIndex--;
@@ -47,7 +47,7 @@ bool TriggerAnalog::trigger(unsigned long int windowSize) {
       if (foundTrigger && !edge) break;
     }
     if (!*(bool*)params[2].getValue()) {
-      if (triggerIndex < uParams->audioBufferSize - 2 * windowSize) return false; // out of window
+      if (triggerIndex < bufferSize - 2 * windowSize) return false; // out of window
     }
   }
 
@@ -55,14 +55,14 @@ bool TriggerAnalog::trigger(unsigned long int windowSize) {
 
   const float delta = 2.0f / windowSize;
   unsigned long int i = triggerIndex + 1;
-  for (; i < uParams->audioBufferSize; i++) {
+  for (; i < bufferSize; i++) {
     float v = alignBuf[i-1] + delta;
     if (v > 1.0f) break;
     alignBuf[i] = v;
   }
 
   // 3.003...... not quite 1...
-  memset(&alignBuf[i], 0x40, (uParams->audioBufferSize-i)*sizeof(float));
+  memset(&alignBuf[i], 0x40, (bufferSize-i)*sizeof(float));
 
   triggered = true;
   return true;

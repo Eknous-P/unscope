@@ -30,7 +30,6 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
     PaStreamParameters streamParams;
 
     bool isGood, running, updateAudio;
-    unsigned long int holdoffTimer;
 
     int bufferGetCallback(
       const void *inputBuffer, void *outputBuffer,
@@ -55,7 +54,6 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
     unsigned char getChannelCount();
     float **getData();
     const PaDeviceInfo* getDeviceInfo();
-    bool didTrigger(unsigned char chan);
     void setUpdateState(bool u);
 
     USCAudioInput(unscopeParams *params);

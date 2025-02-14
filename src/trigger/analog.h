@@ -5,7 +5,7 @@
 
 class TriggerAnalog : public Trigger {
   float *alignBuf, *chanBuf;
-  unscopeParams* uParams;
+  unsigned long int bufferSize;
   std::vector<TriggerParam> params;
 
   unsigned long int triggerIndex;
@@ -13,7 +13,7 @@ class TriggerAnalog : public Trigger {
   bool triggered;
 
   public:
-    void setupTrigger(unscopeParams* up, float* cb);
+    void setupTrigger(unsigned long int bs, float* cb);
     std::vector<TriggerParam> getParams();
     bool trigger(unsigned long int windowSize);
     bool getTriggered();

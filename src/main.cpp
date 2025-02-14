@@ -29,6 +29,18 @@ int main(int argc, char* argv[]) {
   params.timebase        = 60;    // ms
   params.xyPersist       = 40;    // ms
   params.scale           = 1.0f;  // (no unit)
+
+  params.mainScopeOpen       = true;
+  params.chanControlsOpen[0] = true;
+  params.chanControlsOpen[1] = params.channels > 1;
+  params.chanControlsOpen[2] = params.channels > 2;
+  params.xyScopeOpen         = params.channels > 1;
+  params.xyScopeControlsOpen = params.channels > 1;
+  params.globalControlsOpen  = true;
+  params.aboutOpen           = false;
+  params.settingsOpen        = true; // TODO: false
+  params.fullscreen          = false;
+
 #ifdef _WIN32
   params.renderer = USC_REND_DIRECTX11_SDL;
 #else
@@ -39,7 +51,8 @@ int main(int argc, char* argv[]) {
   // remember when the only roadblock to a windows build was just building it?
   // well you can forget all that! file io is here to fuck it all up
 
-#ifndef _WIN32
+#ifdef _WIN32
+#else
   confPath+=getenv("HOME");
   if (confPath.size()==0) {
     printf(INFO_MSG "failed to get home directory! expect config fails..." MSG_END);
@@ -51,6 +64,19 @@ int main(int argc, char* argv[]) {
 
   USCConfig conf(confPath.c_str(), &params);
   conf.loadConfig();
+
+#define CONF_LOAD_BOOL(x) params.x = conf.getConfig(#x).as<bool>()
+
+  CONF_LOAD_BOOL(mainScopeOpen);
+  params.chanControlsOpen[0] = conf.getConfig("chanControlsOpen1").as<bool>();
+  params.chanControlsOpen[1] = conf.getConfig("chanControlsOpen2").as<bool>();
+  params.chanControlsOpen[2] = conf.getConfig("chanControlsOpen3").as<bool>();
+  CONF_LOAD_BOOL(xyScopeOpen);
+  CONF_LOAD_BOOL(xyScopeControlsOpen);
+  CONF_LOAD_BOOL(globalControlsOpen);
+  CONF_LOAD_BOOL(fullscreen);
+
+#undef CONF_LOAD_BOOL
 
   // parse arguments
   if (argc > 1) {
@@ -142,6 +168,7 @@ int main(int argc, char* argv[]) {
   };
 
   USCGUI g(&params);
+  g.attachConfig(&conf);
 
   e = g.init();
   if (e != 0) {
@@ -150,9 +177,7 @@ int main(int argc, char* argv[]) {
   }
 
   USCAudioInput i(&params);
-
   g.attachAudioInput(&i);
-  g.attachConfig(&conf);
 
   params.audioDevice = Pa_GetDefaultInputDevice();
 
@@ -182,6 +207,21 @@ int main(int argc, char* argv[]) {
   while (g.isRunning()) {
     g.doFrame();
   }
+
+  g.deinint();
+
+#define CONF_WIN(x) conf.setConfig(#x,params.x)
+  CONF_WIN(mainScopeOpen);
+  conf.setConfig("chanControlsOpen1", params.chanControlsOpen[0]);
+  conf.setConfig("chanControlsOpen2", params.chanControlsOpen[1]);
+  conf.setConfig("chanControlsOpen3", params.chanControlsOpen[2]);
+  CONF_WIN(xyScopeOpen);
+  CONF_WIN(xyScopeControlsOpen);
+  CONF_WIN(globalControlsOpen);
+  CONF_WIN(fullscreen);
+#undef CONF_WIN
+
+  conf.saveConfig();
 
   e = i.stop();
   printf( "%s%s%s", (e==paNoError)?SUCCESS_MSG:ERROR_MSG, Pa_GetErrorText(e), MSG_END);

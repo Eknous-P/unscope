@@ -1,5 +1,4 @@
 #include "gui.h"
-#include <imgui.h>
 
 ImVec2 operator+(ImVec2 lhs, ImVec2 rhs) {
   return ImVec2(lhs.x+rhs.x,lhs.y+rhs.y);
@@ -32,35 +31,21 @@ USCGUI::USCGUI(unscopeParams *params) {
     tc[i].yScale = up->scale;
     tc[i].yOffset = 0;
     tc[i].timebase = up->timebase;
-    tc[i].traceSize = sampleRate*tc[i].timebase/1000;
+    tc[i].traceSize = sampleRate * tc[i].timebase / 1000.0f;
   }
 
-  tc[0].color = ImVec4(0.13f,0.97f,0.21f,0.95f);
-  if (channels > 1) {
-  tc[1].color = ImVec4(0.93f,0.17f,0.23f,0.95f);
-  }
-
-  xyp.color = ImVec4(0.13f,0.97f,0.21f,0.35f);
   xyp.xOffset = 0;
   xyp.yOffset = 0;
   xyp.xScale = 1.0f;
   xyp.yScale = 1.0f;
   xyp.persistence = up->xyPersist;
-  xyp.sampleLen = sampleRate*xyp.persistence/1000;
+  xyp.sampleLen = sampleRate * xyp.persistence / 1000.0f;
   xyp.axisChan[0] = 1;
   xyp.axisChan[1] = 2;
 
-  wo.mainScopeOpen = true;
-  wo.chanControlsOpen[0] = true;
-  wo.chanControlsOpen[1] = true;
-  wo.chanControlsOpen[2] = true;
-  wo.xyScopeOpen = true;
-  wo.xyScopeControlsOpen = true;
-  wo.globalControlsOpen = true;
-  wo.aboutOpen = false;
-  wo.settingsOpen = true;
-
   oscDataSize = up->audioBufferSize;
+
+  bufferTime = (float)oscDataSize / (float)sampleRate * 1000.0f;
 
   oscData = new float*[channels];
   oscAlign = new float*[channels];
@@ -69,14 +54,8 @@ USCGUI::USCGUI(unscopeParams *params) {
   }
   FOR_RANGE(channels) {
     oscData[z] = new float[oscDataSize];
-    // oscAlign[i] = new float[oscDataSize];
-
-    if (oscData[z] == NULL/* || !oscAlign[i]*/) {
-      return;
-    }
-
+    if (oscData[z] == NULL) return;
     memset(oscData[z],0,oscDataSize*sizeof(float));
-    // memset(oscAlign[i],0,oscDataSize*sizeof(float));
   }
   running = false;
   updateAudio = true;
@@ -96,8 +75,6 @@ USCGUI::USCGUI(unscopeParams *params) {
   doFallback = true;
   singleShot = false;
 
-  fullscreen = false;
-
   fallbackTrigger = new Trigger*[channels];
   trigger = new Trigger*[channels];
 
@@ -105,7 +82,7 @@ USCGUI::USCGUI(unscopeParams *params) {
   FOR_RANGE(channels) {
     Trigger* t = new TriggerFallback;
     if (!t) return;
-    t->setupTrigger(up, oscData[z]);
+    t->setupTrigger(oscDataSize, oscData[z]);
 
     fallbackTrigger[z] = t;
   }
@@ -122,9 +99,6 @@ void USCGUI::attachAudioInput(USCAudioInput *i) {
 
 void USCGUI::attachConfig(USCConfig *c) {
   cf = c;
-
-  const char* layout = cf->getLayout();
-  if (layout) ImGui::LoadIniSettingsFromMemory(layout);
 }
 
 void USCGUI::setupRenderer(USCRenderers r) {
@@ -166,7 +140,7 @@ void USCGUI::setupTrigger(Triggers t) {
         break;
     }
     if (!tp) return;
-    tp->setupTrigger(up, oscData[z]);
+    tp->setupTrigger(oscDataSize, oscData[z]);
 
     trigger[z] = tp;
   }
@@ -200,12 +174,20 @@ int USCGUI::init() {
     style.Colors[ImGuiCol_WindowBg].w = 1.0f;
   }
   ImGui::LoadIniSettingsFromMemory(windowLayout);
-  // ImGui::LoadIniSettingsFromDisk(INIFILE);
   // Setup Platform/Renderer backends
   if (rd->init()!=0) return UGUIERROR_INITFAIL;
   bgColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
   running = true;
   io = ImGui::GetIO();
+  rd->doFullscreen(up->fullscreen);
+
+  if (cf) {
+    std::string layout = cf->getLayout();
+    if (layout.size()>0) {
+      printf("%s\nsize: %lu\n", layout.c_str(), layout.size());
+      // ImGui::LoadIniSettingsFromMemory(layout.c_str());
+    }
+  }
   return 0;
 }
 
@@ -226,7 +208,7 @@ void USCGUI::doFrame() {
   if (!running) return;
   ImGui::NewFrame();
   
-  ImGui::DockSpaceOverViewport(ImGui::GetWindowViewport(),0);
+  ImGui::DockSpaceOverViewport();
 
   USCGUI::drawGUI();
 
@@ -236,8 +218,8 @@ void USCGUI::doFrame() {
 
 void USCGUI::drawGUI() {
   if (ImGui::IsKeyPressed(ImGuiKey_F11)) {
-    fullscreen = !fullscreen;
-    rd->doFullscreen(fullscreen);
+    up->fullscreen = !up->fullscreen;
+    rd->doFullscreen(up->fullscreen);
   }
   // if (devs[device].shouldPassThru) {
   //   ImGui::SameLine();
@@ -250,27 +232,27 @@ void USCGUI::drawGUI() {
   // }
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
-      ImGui::MenuItem("Settings...", NULL, &wo.settingsOpen);
+      ImGui::MenuItem("Settings...", NULL, &up->settingsOpen);
       if (ImGui::MenuItem("Exit")) running = false;
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Scopes")) {
-      ImGui::MenuItem("Main Scope",NULL,&wo.mainScopeOpen);
-      if (channels>1) ImGui::MenuItem("Scope (XY)",NULL,&wo.xyScopeOpen);
+      ImGui::MenuItem("Main Scope",NULL,&up->mainScopeOpen);
+      if (channels>1) ImGui::MenuItem("Scope (XY)",NULL,&up->xyScopeOpen);
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Controls")) {
       for (unsigned char i = 0; i < channels; i++) {
         char buf[32];
         sprintf(buf,"Channel %d Controls",i+1);
-        ImGui::MenuItem(buf,NULL,&wo.chanControlsOpen[i]);
+        ImGui::MenuItem(buf,NULL,&up->chanControlsOpen[i]);
       }
-      ImGui::MenuItem("XY Scope Controls",NULL,&wo.xyScopeControlsOpen);
-      ImGui::MenuItem("Global Controls",NULL,&wo.globalControlsOpen);
+      ImGui::MenuItem("XY Scope Controls",NULL,&up->xyScopeControlsOpen);
+      ImGui::MenuItem("Global Controls",NULL,&up->globalControlsOpen);
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("About")) {
-      ImGui::MenuItem("About...",NULL,&wo.aboutOpen);
+      ImGui::MenuItem("About...",NULL,&up->aboutOpen);
       ImGui::EndMenu();
     }
     ImGui::EndMainMenuBar();
@@ -317,7 +299,7 @@ void USCGUI::drawGUI() {
   
   // drawAlignDebug();
   
-  // ImGui::ShowMetricsWindow();
+  ImGui::ShowMetricsWindow();
 }
 
 void USCGUI::drawAlignDebug() {
@@ -367,9 +349,12 @@ void USCGUI::setAudioDeviceSetting(int d) {
   }
 }
 
+void USCGUI::deinint() {
+  const char* layout = ImGui::SaveIniSettingsToMemory();
+  cf->saveLayout(layout);
+}
+
 USCGUI::~USCGUI() {
-  cf->saveLayout(ImGui::SaveIniSettingsToMemory());
-  cf->saveConfig();
   // Cleanup
   if (isGood) rd->deinit();
   if (rd) {

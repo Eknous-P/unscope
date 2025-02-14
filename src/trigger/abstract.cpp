@@ -1,9 +1,9 @@
 #include "trigger.h"
 
-void Trigger::setupTrigger(unscopeParams* up, float* cb) {
-  uParams  = up;
-  alignBuf = NULL;
-  chanBuf  = cb;
+void Trigger::setupTrigger(unsigned long int bs, float* cb) {
+  alignBuf   = NULL;
+  chanBuf    = cb;
+  bufferSize = bs;
 
   params = {
 

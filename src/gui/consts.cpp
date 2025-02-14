@@ -59,8 +59,8 @@ Size=676,484\n\
 Collapsed=0\n\
 \n\
 [Window][Settings]\n\
-Pos=361,195\n\
-Size=557,330\n\
+Pos=303,143\n\
+Size=674,434\n\
 Collapsed=0\n\
 \n\
 [Docking][Data]\n\

@@ -1,9 +1,9 @@
 #include "gui.h"
 
 void USCGUI::drawSettings() {
-  if (!wo.settingsOpen) return;
+  if (!up->settingsOpen) return;
   ImGui::OpenPopup("Settings");
-  if (ImGui::BeginPopupModal("Settings",&wo.settingsOpen,ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoTitleBar)) {
+  if (ImGui::BeginPopupModal("Settings",&up->settingsOpen,ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoTitleBar)) {
     ImVec2 viewSize = ImGui::GetMainViewport()->Size,
            winSize = ImGui::GetWindowSize();
     ImGui::SetWindowPos(ImVec2(
@@ -16,9 +16,10 @@ void USCGUI::drawSettings() {
 
     if (ImGui::Button("Save")) {
       cf->saveConfig();
+      up->settingsOpen = false;
     }
     ImGui::SameLine();
-    if (ImGui::Button("Cancel")) wo.settingsOpen = false;
+    if (ImGui::Button("Cancel")) up->settingsOpen = false;
     ImGui::EndPopup();
   }
 }

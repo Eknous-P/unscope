@@ -40,8 +40,6 @@ class USCRender {
 #include "fallback.h"
 #include "analog.h"
 
-#include "config.h"
-
 class USCGUI {
   private:
     struct scopeParams {
@@ -53,7 +51,6 @@ class USCGUI {
       bool   enable;
       float  yOffset;
       float  yScale;
-      ImVec4 color;
       int    traceSize;
       float  timebase;
     };
@@ -61,25 +58,13 @@ class USCGUI {
     struct xyParams {
       float xScale,  yScale;
       float xOffset, yOffset;
-      ImVec4 color;
       int   sampleLen;
       float persistence;
       unsigned char axisChan[2];
     };
 
-    struct windowsOpen {
-      bool mainScopeOpen;
-      bool chanControlsOpen[3];
-      bool xyScopeOpen;
-      bool xyScopeControlsOpen;
-      bool globalControlsOpen;
-      bool aboutOpen;
-      bool settingsOpen;
-    };
-
     int err;
 
-    bool fullscreen;
     ImGuiIO io;
     ImGuiStyle style;
     ImVec4 bgColor;
@@ -89,6 +74,7 @@ class USCGUI {
   
     float **oscData, **oscAlign;
     unsigned long int oscDataSize, sampleRate;
+    float bufferTime;
     USCRender *rd;
     USCAudioInput *ai;
     USCConfig *cf;
@@ -101,7 +87,6 @@ class USCGUI {
     scopeParams    sc;
     traceParams   *tc;
     xyParams       xyp;
-    windowsOpen    wo;
 
     bool showTrigger, shareParams;
     signed char shareTrigger; // abs part - which channel, sign - do/don't
@@ -142,6 +127,8 @@ class USCGUI {
 
     int  getAudioDeviceSetting();
     void setAudioDeviceSetting(int d);
+
+    void deinint();
   
     USCGUI(unscopeParams *params);
     ~USCGUI();

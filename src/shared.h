@@ -95,6 +95,7 @@ struct unscopeParams {
   float scale;
 
   int renderer;
+  bool fullscreen;
 
   // colors
   int chanColor[3];
@@ -102,6 +103,15 @@ struct unscopeParams {
   int fallbackColor;
   int notTriggeredColor;
   int xyColor;
+
+  // window openness
+  bool mainScopeOpen;
+  bool chanControlsOpen[3];
+  bool xyScopeOpen;
+  bool xyScopeControlsOpen;
+  bool globalControlsOpen;
+  bool aboutOpen;
+  bool settingsOpen;
 };
 
 struct DeviceEntry {

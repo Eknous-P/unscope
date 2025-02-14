@@ -1,9 +1,9 @@
 #include "gui.h"
 
 void USCGUI::drawMainScope() {
-  if (!wo.mainScopeOpen) return;
+  if (!up->mainScopeOpen) return;
   if (!(oscAlign && oscData)) return;
-  ImGui::Begin("Scope",&wo.mainScopeOpen);
+  ImGui::Begin("Scope",&up->mainScopeOpen);
   if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
     for (unsigned char i = 0; i < channels; i++) {
       ImPlot::SetupAxis(ImAxis(i),"t",ImPlotAxisFlags_NoLabel|ImPlotAxisFlags_NoTickLabels|sc.scopeFlags);
@@ -14,17 +14,17 @@ void USCGUI::drawMainScope() {
     for (unsigned char i = 0; i < channels; i++) {
       if (!tc[i].enable) continue;
       ImPlot::SetAxes(i,i+ImAxis_Y1);
-      ImPlot::SetNextLineStyle(tc[i].color,0.25f);
+      ImPlot::SetNextLineStyle(ImGui::ColorConvertU32ToFloat4(up->chanColor[i]),0.25f);
       unsigned char trigChan = (shareTrigger>0)?(shareTrigger-1):i;
       if (oscAlign[i] && oscData[i] && oscDataSize) {
         ImPlot::PlotLine("##scopeplot", oscAlign[trigChan], oscData[i], oscDataSize,ImPlotFlags_NoLegend);
       }
-      ImVec4 trigColor = trigger[i]->getTriggered()?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
+      ImVec4 trigColor = ImGui::ColorConvertU32ToFloat4(trigger[i]->getTriggered()?up->triggeredColor:up->notTriggeredColor);
       for (TriggerParam p : trigger[i]->getParams()) {
         if (shareTrigger > 0 && i != shareTrigger - 1) continue;
         double valD = *(float*)p.getValue();
         if (p.bindToDragX) {
-          if (ImPlot::DragLineX(2*i+1, &valD, tc[i].color)) *(float*)p.getValue() = valD;
+          if (ImPlot::DragLineX(2*i+1, &valD, ImGui::ColorConvertU32ToFloat4(up->chanColor[i]))) *(float*)p.getValue() = valD;
           // ImPlot::TagX(valD, trigColor, "CH %d", i + 1);
         }
         if (p.bindToDragY) {
@@ -40,14 +40,14 @@ void USCGUI::drawMainScope() {
 
 void USCGUI::drawXYScope() {
   if (!oscData) return;
-  if (!wo.xyScopeOpen) return;
+  if (!up->xyScopeOpen) return;
   if (channels < 2) return;
-  ImGui::Begin("Scope (XY)",&wo.xyScopeOpen);
+  ImGui::Begin("Scope (XY)",&up->xyScopeOpen);
   if (ImPlot::BeginPlot("##scopexy", ImGui::GetContentRegionAvail(),sc.plotFlags|ImPlotFlags_Equal)) {
     ImPlot::SetupAxes("##x","##y",ImPlotAxisFlags_NoTickLabels|ImPlotAxisFlags_Lock,sc.scopeFlags|ImPlotAxisFlags_NoTickLabels);
     ImPlot::SetupAxisLimits(ImAxis_X1,-1.0f/xyp.xScale-xyp.xOffset,1.0f/xyp.xScale-xyp.xOffset);
     ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/xyp.yScale-xyp.yOffset,1.0f/xyp.yScale-xyp.yOffset);
-    ImPlot::SetNextLineStyle(xyp.color,0.125f);
+    ImPlot::SetNextLineStyle(ImGui::ColorConvertU32ToFloat4(up->xyColor),0.125f);
     ImPlot::PlotLine("##scopeplot", oscData[xyp.axisChan[0]-1] + (oscDataSize - xyp.sampleLen), oscData[xyp.axisChan[1]-1] + (oscDataSize - xyp.sampleLen), xyp.sampleLen,ImPlotFlags_NoLegend);
     ImPlot::EndPlot();
   }

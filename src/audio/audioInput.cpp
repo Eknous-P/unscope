@@ -1,7 +1,5 @@
 #include "audio.h"
 
-#define CHECK_TRIGGERED triggered[j]=triggerLow[j]&&triggerHigh[j]
-
 USCAudioInput::USCAudioInput(unscopeParams *params) {
   isGood = Pa_Initialize()==paNoError;
   running = false;
@@ -15,8 +13,6 @@ USCAudioInput::USCAudioInput(unscopeParams *params) {
   buffer.size = params->audioBufferSize;
   buffer.data = new float*[conf.channels];
   buffer.dataCopy = new float*[conf.channels];
-
-  holdoffTimer = 0;
 
   if (!buffer.data) {
     isGood = false;
@@ -57,18 +53,7 @@ int USCAudioInput::bufferGetCallback(
     (void) timeInfo;
     (void) statusFlags;
 
-    unsigned char j = 0;
-
     const int nChans = conf.channels;
-  
-    unsigned int *triggerPoint = new unsigned int[nChans];
-    memset(triggerPoint,0,conf.channels*sizeof(int));
-  
-    bool *triggerLow = new bool[nChans];
-    bool *triggerHigh = new bool[nChans];
-
-    memset(triggerLow,0,conf.channels*sizeof(bool));
-    memset(triggerHigh,0,conf.channels*sizeof(bool));
 
     if (inputBuffer==NULL) {
       for (buffer.index = 0; buffer.index < buffer.size*conf.channels; buffer.index++) {
@@ -77,31 +62,23 @@ int USCAudioInput::bufferGetCallback(
       }
     } else {
       // push vaules back
-      for (j = 0; j < conf.channels; j++) {
-        memcpy(buffer.data[j],
-        buffer.data[j] + framesPerBuffer,
+      FOR_RANGE(nChans) {
+        memcpy(buffer.data[z],
+        buffer.data[z] + framesPerBuffer,
         (buffer.size-framesPerBuffer)*sizeof(float));
       }
       // get data
       for (buffer.index = 0; buffer.index < framesPerBuffer; buffer.index++) {
-        for (j = 0; j < conf.channels; j++) {
+        FOR_RANGE(nChans) {
           float dat = *audIn++;
-          buffer.data[j][buffer.size - framesPerBuffer + buffer.index] = dat;
+          buffer.data[z][buffer.size - framesPerBuffer + buffer.index] = dat;
           if (outputBuffer != NULL) *audOut++ = dat;
         }
       }
       if (updateAudio) {
-        for (j = 0; j < conf.channels; j++) memcpy(buffer.dataCopy[j],buffer.data[j],buffer.size*sizeof(float));
+        FOR_RANGE(nChans) memcpy(buffer.dataCopy[z],buffer.data[z],buffer.size*sizeof(float));
       }
-      // for (j = 0; j < conf.channels; j++) {
-      //   if(!trigger->trigger(j, alignParams->waveLen)) {}
-      // }
-      // buffer.alignRamp = trigger->getAlignBuffer();
     }
-
-    delete[] triggerPoint;
-    delete[] triggerLow;
-    delete[] triggerHigh;
 
     return paContinue;
 }
@@ -191,15 +168,6 @@ int USCAudioInput::stop() {
   if (!running) return 0;
   running = false;
   return Pa_CloseStream(stream);
-}
-
-bool USCAudioInput::didTrigger(unsigned char chan) {
-  // if (chan == 255) {
-  //   for (unsigned char i = 0; i < conf.channels; i++) if (triggered[i]) return true;
-  //   return false;
-  // }
-  // return triggered[chan];
-  return false;
 }
 
 void USCAudioInput::setUpdateState(bool u) {

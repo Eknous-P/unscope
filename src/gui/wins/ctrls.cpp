@@ -3,8 +3,8 @@
 #include "imgui_toggle.h"
 
 void USCGUI::drawGlobalControls() {
-  if (!wo.globalControlsOpen) return;
-  ImGui::Begin("Global Controls",&wo.globalControlsOpen);
+  if (!up->globalControlsOpen) return;
+  ImGui::Begin("Global Controls",&up->globalControlsOpen);
   ImGui::Toggle("share parameters",&shareParams);
 
   bool trigShare = shareTrigger>0;
@@ -88,8 +88,8 @@ void USCGUI::drawChanControls() {
   for (unsigned char i = 0; i < channels; i++) {
     char strbuf[32];
     sprintf(strbuf,"Channel %d Controls",i+1);
-    if (!wo.chanControlsOpen[i]) continue;
-    ImGui::Begin(strbuf,&wo.chanControlsOpen[i]);
+    if (!up->chanControlsOpen[i]) continue;
+    ImGui::Begin(strbuf,&up->chanControlsOpen[i]);
     ImGui::Toggle("enable", &tc[i].enable);
 
     ImGui::SameLine();
@@ -109,16 +109,6 @@ void USCGUI::drawChanControls() {
     }
     ImGui::EndDisabled();
 
-    ImGui::SameLine();
-    // color picker
-    sprintf(strbuf, "channel %d color", i+1);
-    ImGui::ColorButton(strbuf, tc[i].color);
-    sprintf(strbuf, "##chan%dcol", i+1);
-    if (ImGui::BeginPopupContextItem(strbuf,ImGuiPopupFlags_MouseButtonLeft)) {
-      sprintf(strbuf, "##chan%dcoledit", i+1);
-      ImGui::ColorPicker4(strbuf,(float*)&tc[i].color);
-      ImGui::EndPopup();
-    }
 
     sprintf(strbuf, "##chan%dctrls", i+1);
     if (ImGui::BeginTable(strbuf, 4)) {
@@ -199,18 +189,21 @@ void USCGUI::drawChanControls() {
 }
 
 void USCGUI::drawXYScopeControls() {
-  if (!wo.xyScopeControlsOpen) return;
+  if (!up->xyScopeControlsOpen) return;
   if (channels > 1) {
-    ImGui::Begin("XY Scope Controls",&wo.xyScopeControlsOpen);
+    ImGui::Begin("XY Scope Controls",&up->xyScopeControlsOpen);
     if (ImGui::BeginTable("##xycontrols",3)) {
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
 
-      xyp.persistence = xyp.sampleLen * 1000.0f / sampleRate;
-      if (ImGuiKnobs::Knob("persistence", &xyp.persistence, 0.0f, 1000.0f, 0.0f,"%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
-        xyp.sampleLen = sampleRate * xyp.persistence / 1000;
+      float maxTime = bufferTime;
+      if (maxTime > 1000.0f) maxTime = 1000.0f;
+      xyp.persistence = xyp.sampleLen * maxTime / sampleRate;
+      if (ImGuiKnobs::Knob("persistence", &xyp.persistence, 0.0f, maxTime, 0.0f,"%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
+        xyp.sampleLen = sampleRate * xyp.persistence / 1000.0f;
+        if (xyp.sampleLen > oscDataSize) xyp.sampleLen = oscDataSize;
       }
-      RIGHTCLICK_EXACT_INPUT(&xyp.persistence, ImGuiDataType_Float, {if (xyp.persistence<0.0f) {xyp.persistence=0.0f;} if (xyp.persistence>1000.0f) {xyp.persistence=1000.0f;} xyp.sampleLen = sampleRate * xyp.persistence / 1000;})
+      RIGHTCLICK_EXACT_INPUT(&xyp.persistence, ImGuiDataType_Float, {if (xyp.persistence<0.0f) {xyp.persistence=0.0f;} if (xyp.persistence>maxTime) {xyp.persistence=maxTime;} xyp.sampleLen = sampleRate * (xyp.persistence / maxTime);})
       ImGui::TableNextColumn();
 
       ImGuiKnobs::Knob("x scale", &xyp.xScale, 0.5f, 4.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
@@ -223,7 +216,11 @@ void USCGUI::drawXYScopeControls() {
       ImGui::TableNextRow();
 
       ImGui::TableNextColumn();
-      ImGuiKnobs::Knob("intensity", &xyp.color.w, 0.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
+      int xyAlpha = (up->xyColor&IM_COL32_A_MASK)>>24;
+      if (ImGuiKnobs::KnobInt("intensity", &xyAlpha, 0, 255, 0,"%d", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
+        up->xyColor&=~IM_COL32_A_MASK;
+        up->xyColor|=xyAlpha<<24;
+      }
       ImGui::TableNextColumn();
       ImGuiKnobs::Knob("x offset", &xyp.xOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
       if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.xOffset = 0.0f;
@@ -245,12 +242,6 @@ void USCGUI::drawXYScopeControls() {
       unsigned char temp = xyp.axisChan[0];
       xyp.axisChan[0] = xyp.axisChan[1];
       xyp.axisChan[1] = temp;
-    }
-
-    ImGui::ColorButton("color", xyp.color);
-    if (ImGui::BeginPopupContextItem("##xycol",ImGuiPopupFlags_MouseButtonLeft)) {
-      ImGui::ColorPicker4("##xycoledit",(float*)&xyp.color);
-      ImGui::EndPopup();
     }
 
     ImGui::End();

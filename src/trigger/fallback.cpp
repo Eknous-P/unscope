@@ -1,10 +1,10 @@
 #include "fallback.h"
 
-void TriggerFallback::setupTrigger(unscopeParams* up, float* cb) {
-  uParams = up;
+void TriggerFallback::setupTrigger(unsigned long int bs, float* cb) {
   chanBuf = cb;
+  bufferSize = bs;
 
-  alignBuf = new float[up->audioBufferSize];
+  alignBuf = new float[bufferSize];
 
   oldWindowSize = 0;
 
@@ -28,11 +28,11 @@ bool TriggerFallback::trigger(unsigned long int windowSize) {
   const float delta = 2.0f / windowSize;
 
   // -1.498.... close enough to -1
-  memset(alignBuf, 0xbf, (uParams->audioBufferSize - 2) * sizeof(float));
+  memset(alignBuf, 0xbf, (bufferSize - 2) * sizeof(float));
 
-  alignBuf[uParams->audioBufferSize-1] = 1.0f;
+  alignBuf[bufferSize-1] = 1.0f;
 
-  for (unsigned long int i = uParams->audioBufferSize-2; i > 0; i--) {
+  for (unsigned long int i = bufferSize-2; i > 0; i--) {
     float v = alignBuf[i+1] - delta;
     if (v < -1.0f) break;
     alignBuf[i] = v;

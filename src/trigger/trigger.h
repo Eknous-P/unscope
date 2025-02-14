@@ -114,13 +114,13 @@ class TriggerParam {
 
 class Trigger {
   float *alignBuf, *chanBuf;
-  unscopeParams* uParams;
+  unsigned long int bufferSize;
   std::vector<TriggerParam> params;
 
   bool triggered;
 
   public:
-    virtual void setupTrigger(unscopeParams* up, float* cb);
+    virtual void setupTrigger(unsigned long int bs, float* cb);
     virtual std::vector<TriggerParam> getParams();
     virtual bool trigger(unsigned long int windowSize);
     virtual bool getTriggered();
