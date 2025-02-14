@@ -40,6 +40,7 @@ int main(int argc, char* argv[]) {
   params.aboutOpen           = false;
   params.settingsOpen        = true; // TODO: false
   params.fullscreen          = false;
+  params.enableMultiViewport = false;
 
   params.chanColor[0] = -231278815;
   params.chanColor[1] = -231003155;
@@ -62,26 +63,29 @@ int main(int argc, char* argv[]) {
 #else
   confPath+=getenv("HOME");
   if (confPath.size()==0) {
-    printf(INFO_MSG "failed to get home directory! expect config fails..." MSG_END);
+    printf(INFO_MSG "failed to get home directory! config will be saved next to executable..." MSG_END);
+    // confPath+="./";
+  } else {
+    confPath+="/.config/unscope/";
   }
-  confPath+="/.config/unscope/";
 #endif
 
   confPath+=PROGRAM_CONF_FILE;
 
   USCConfig conf(confPath.c_str(), &params);
-  conf.loadConfig();
+  bool loaded = (conf.loadConfig() == 0);
 
 #define CONF_LOAD_BOOL(x) params.x = conf.getConfig(#x).as<bool>()
-
-  CONF_LOAD_BOOL(mainScopeOpen);
-  params.chanControlsOpen[0] = conf.getConfig("chanControlsOpen1").as<bool>();
-  params.chanControlsOpen[1] = conf.getConfig("chanControlsOpen2").as<bool>();
-  params.chanControlsOpen[2] = conf.getConfig("chanControlsOpen3").as<bool>();
-  CONF_LOAD_BOOL(xyScopeOpen);
-  CONF_LOAD_BOOL(xyScopeControlsOpen);
-  CONF_LOAD_BOOL(globalControlsOpen);
-  CONF_LOAD_BOOL(fullscreen);
+  if (loaded) {
+    CONF_LOAD_BOOL(mainScopeOpen);
+    params.chanControlsOpen[0] = conf.getConfig("chanControlsOpen1").as<bool>();
+    params.chanControlsOpen[1] = conf.getConfig("chanControlsOpen2").as<bool>();
+    params.chanControlsOpen[2] = conf.getConfig("chanControlsOpen3").as<bool>();
+    CONF_LOAD_BOOL(xyScopeOpen);
+    CONF_LOAD_BOOL(xyScopeControlsOpen);
+    CONF_LOAD_BOOL(globalControlsOpen);
+    CONF_LOAD_BOOL(fullscreen);
+  }
 
 #undef CONF_LOAD_BOOL
 

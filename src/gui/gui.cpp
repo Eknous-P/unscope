@@ -157,13 +157,13 @@ int USCGUI::init() {
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-  // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-  ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+  ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard|ImGuiConfigFlags_DockingEnable;
   ImGui::GetIO().IniFilename = NULL;
-  // ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
-  //io.ConfigViewportsNoAutoMerge = true;
-  //io.ConfigViewportsNoTaskBarIcon = true;
+  if (up->enableMultiViewport) {
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
+    io.ConfigViewportsNoAutoMerge = true;
+    io.ConfigViewportsNoTaskBarIcon = true;
+  }
   // Setup Dear ImGui style
   ImGui::StyleColorsDark();
   //ImGui::StyleColorsLight();

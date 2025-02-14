@@ -228,6 +228,7 @@ USCConfig::USCConfig(const char* filePath, unscopeParams* p) {
   } catch (std::exception& xc) {
     printf(ERROR_MSG "config file not found (%s)" MSG_END, xc.what());
     printf(INFO_MSG "new config file will be made at %s" MSG_END, confFile);
+    isEmpty = true;
   }
 
 #define S(...) Setting(__VA_ARGS__)
@@ -282,6 +283,12 @@ USCConfig::USCConfig(const char* filePath, unscopeParams* p) {
       S(SETTING_COLOR,
         "xyCol", "XY scope", "note: the transparency/alpha of this color is the intensity control",
         &(params->xyColor),
+        NULL, 0),
+    }),
+    C("GUI", {
+      S(SETTING_TOGGLE,
+        "enableMultiView", "enable multi viewport", "not very good...",
+        &(params->enableMultiViewport),
         NULL, 0),
     })
   };
@@ -371,7 +378,7 @@ void USCConfig::saveLayout(const char* layout) {
 }
 
 std::string USCConfig::getLayout() {
-  if (!conf["layout"]) return NULL;
+  if (!conf["layout"]) return "";
   return conf["layout"].as<std::string>();
 }
 

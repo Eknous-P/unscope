@@ -1,6 +1,7 @@
 #include "gui.h"
 #include "imgui-knobs.h"
 #include "imgui_toggle.h"
+#include <imgui.h>
 
 void USCGUI::drawGlobalControls() {
   if (!up->globalControlsOpen) return;
@@ -86,13 +87,10 @@ void USCGUI::drawGlobalControls() {
 
 void USCGUI::drawChanControls() {
   for (unsigned char i = 0; i < channels; i++) {
-    char strbuf[32];
-    sprintf(strbuf,"Channel %d Controls",i+1);
     if (!up->chanControlsOpen[i]) continue;
-    ImGui::Begin(strbuf,&up->chanControlsOpen[i]);
-    ImGui::Toggle("enable", &tc[i].enable);
+    // variables that will be used all over here
+    char strbuf[32];
 
-    ImGui::SameLine();
     bool trigShare = shareTrigger > 0;
 
     unsigned char mainCh = 0;
@@ -100,14 +98,19 @@ void USCGUI::drawChanControls() {
 
     bool disable = (trigShare && i != shareTrigger - 1) || (shareParams && i != mainCh);
 
-    ImGui::BeginDisabled(!trigShare);
-    ImGui::SameLine();
-    sprintf(strbuf, "##chan%dtrig", i+1);
-    if (trigShare) if (ImGui::RadioButton(strbuf,shareTrigger==i+1)) shareTrigger=i+1;
-    if (ImGui::IsItemHovered()) {
-      ImGui::SetTooltip("trigger to this channel");
+    sprintf(strbuf,"Channel %d Controls",i+1);
+    ImGui::Begin(strbuf,&up->chanControlsOpen[i]);
+
+    ImGui::Toggle("enable", &tc[i].enable);
+
+    if (trigShare) {
+      ImGui::SameLine();
+      sprintf(strbuf, "##chan%dtrig", i+1);
+      if (ImGui::RadioButton(strbuf,shareTrigger==i+1)) shareTrigger=i+1;
+      if (ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("trigger to this channel");
+      }
     }
-    ImGui::EndDisabled();
 
 
     sprintf(strbuf, "##chan%dctrls", i+1);
@@ -163,11 +166,14 @@ void USCGUI::drawChanControls() {
             }
           }
         }
-        if (p.getType()!=TP_TOGGLE) {
-          if (counter==3) ImGui::TableNextRow();
-          ImGui::TableNextColumn();
+        if (p.getType()==TP_TOGGLE) {
           counter++;
-          counter&=3;
+          counter&=1;
+          if (counter==0) {
+            ImGui::TableNextColumn();
+          }
+        } else {
+          ImGui::TableNextColumn();
         }
       }
       ImGui::EndDisabled();

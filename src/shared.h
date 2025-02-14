@@ -96,6 +96,7 @@ struct unscopeParams {
 
   int renderer;
   bool fullscreen;
+  bool enableMultiViewport;
 
   // colors
   int chanColor[3];

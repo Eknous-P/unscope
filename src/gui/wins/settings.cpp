@@ -5,10 +5,11 @@ void USCGUI::drawSettings() {
   ImGui::OpenPopup("Settings");
   if (ImGui::BeginPopupModal("Settings",&up->settingsOpen,ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoTitleBar)) {
     ImVec2 viewSize = ImGui::GetMainViewport()->Size,
+           viewPos = ImGui::GetMainViewport()->Pos,
            winSize = ImGui::GetWindowSize();
     ImGui::SetWindowPos(ImVec2(
       (viewSize.x - winSize.x)/2.0f,(viewSize.y - winSize.y)/2.0f
-    ));
+    ) + viewPos);
     ImGui::SeparatorText("Settings");
     // ImGui::Separator();
 

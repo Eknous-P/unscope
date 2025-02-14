@@ -134,6 +134,9 @@ class USCGUI {
     ~USCGUI();
 };
 
+extern ImVec2 operator+(ImVec2 lhs, ImVec2 rhs);
+extern ImVec2 operator+(ImVec2 lhs, float rhs);
+
 extern const char *windowLayout;
 extern const char *triggerNames[];
 
