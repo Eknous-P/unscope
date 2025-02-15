@@ -9,8 +9,6 @@
 #include "audio.h"
 #include "config.h"
 
-#define INIFILE "unscope.ini"
-
 enum TriggerModes : unsigned char {
   TRIGGER_NONE, // fixed sweep
   TRIGGER_AUTO, // normal, fixed if not triggering
@@ -135,9 +133,6 @@ class USCGUI {
     USCGUI(unscopeParams *params);
     ~USCGUI();
 };
-
-extern ImVec2 operator+(ImVec2 lhs, ImVec2 rhs);
-extern ImVec2 operator+(ImVec2 lhs, float rhs);
 
 extern const char *windowLayout;
 extern const unsigned long int windowLayoutSize;

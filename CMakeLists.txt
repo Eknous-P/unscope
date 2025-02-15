@@ -11,11 +11,11 @@ else() # linux shall use opengl
   add_compile_definitions(USE_OPENGL)
 endif()
 
-set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-set(imgui_path ./submodules/imgui)
-set(implot_path ./submodules/implot)
-set(srcs_path ./src/)
+set(imgui_path ${CMAKE_SOURCE_DIR}/submodules/imgui)
+set(implot_path ${CMAKE_SOURCE_DIR}/submodules/implot)
+set(srcs_path ${CMAKE_SOURCE_DIR}/src/)
 
 set(cpl_opts "")
 set(lnk_libs "")
@@ -30,6 +30,8 @@ add_subdirectory(submodules/yaml-cpp EXCLUDE_FROM_ALL)
 list(APPEND lnk_libs yaml-cpp)
 
 # gui sources
+add_compile_definitions(IMGUI_USER_CONFIG="${srcs_path}gui/imconfig.h")
+
 set(gui_srcs
 ${imgui_path}/imgui.cpp
 ${imgui_path}/imgui_demo.cpp

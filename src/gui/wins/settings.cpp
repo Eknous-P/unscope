@@ -7,20 +7,26 @@ void USCGUI::drawSettings() {
     ImVec2 viewSize = ImGui::GetMainViewport()->Size,
            viewPos = ImGui::GetMainViewport()->Pos,
            winSize = ImGui::GetWindowSize();
-    ImGui::SetWindowPos(ImVec2(
-      (viewSize.x - winSize.x)/2.0f,(viewSize.y - winSize.y)/2.0f
-    ) + viewPos);
+    ImGui::SetWindowPos((viewSize - winSize) / 2.0f + viewPos);
     ImGui::SeparatorText("Settings");
     // ImGui::Separator();
+    ImGui::Text("you will have to restart to see the changes");
 
-    cf->drawSettings();
+    ImVec2 childSize = ImGui::GetContentRegionAvail() - ImVec2(0.0f, ImGui::GetFrameHeightWithSpacing());
+    if (ImGui::BeginChild("##settingsItems", childSize)) {
+      cf->drawSettings();
+    }
+    ImGui::EndChild();
 
     if (ImGui::Button("Save")) {
       cf->saveConfig();
       up->settingsOpen = false;
     }
     ImGui::SameLine();
-    if (ImGui::Button("Cancel")) up->settingsOpen = false;
+    if (ImGui::Button("Cancel")) {
+      cf->loadConfig();
+      up->settingsOpen = false;
+    }
     ImGui::EndPopup();
   }
 }
