@@ -1,6 +1,7 @@
 #include "config.h"
 #include "extData.h"
 #include "imgui_toggle.h"
+#include <assert.h>
 #include <sys/stat.h>
 
 #define CHAR_BUF_SIZE 4096
@@ -16,9 +17,10 @@ Setting::Setting(SettingTypes t, const char* k, const char* l, const char* d, vo
         if (!data) return;
         *(bool*)data = false;
         break;
+      case SETTING_SELECTABLE_INT:
+        assert(extData && extDataSize > 0 && "SETTING_SELECTABLE_INT has to have extData!");
       case SETTING_NONE:
       case SETTING_INT:
-      case SETTING_SELECTABLE_INT:
       case SETTING_SELECTABLE_STRING:
         data = new int;
         if (!data) return;
@@ -48,6 +50,9 @@ Setting::Setting(SettingTypes t, const char* k, const char* l, const char* d, vo
   desc = d;
   extData = ext;
   extDataSize = es;
+  if (extData) {
+    assert(extDataSize > 0 && "extDataSize not set!");
+  }
 }
 
 bool Setting::passesFilter(ImGuiTextFilter* filter) {
@@ -62,7 +67,18 @@ void Setting::draw() {
       break;
     case SETTING_INT:
     case SETTING_NONE:
-      ImGui::InputScalar(label, ImGuiDataType_S32, data, &step_one, NULL, "%d");
+      if (ImGui::InputScalar(label, ImGuiDataType_S32, data, &step_one, NULL, "%d")) {
+        if (extData) {
+          if (*(int*)data < ((int*)extData)[0]) {
+            *(int*)data = ((int*)extData)[0];
+          }
+          if (extDataSize == 2) {
+            if (*(int*)data > ((int*)extData)[1]) {
+              *(int*)data = ((int*)extData)[1];
+            }
+          }
+        }
+      }
       break;
     case SETTING_FLOAT:
       ImGui::InputScalar(label, ImGuiDataType_Float, data, &step_one, NULL, "%g");
@@ -245,7 +261,7 @@ USCConfig::USCConfig(const char* filePath, unscopeParams* p) {
       S(SETTING_INT,
         "channels", "channels", NULL,
         &(params->channels),
-        NULL, 0),
+        (void*)channelsClamp, 2),
       S(SETTING_SELECTABLE_INT,
         "sampleRate", "sample rate", NULL,
         &(params->sampleRate),
@@ -253,11 +269,11 @@ USCConfig::USCConfig(const char* filePath, unscopeParams* p) {
       S(SETTING_INT,
         "bufferSize", "buffer size", "the number of audio samples to store",
         &(params->audioBufferSize),
-        NULL, 0),
-      S(SETTING_INT,
+        (void*)bufferSizeClamp, 1),
+      S(SETTING_SELECTABLE_INT,
         "frameSize", "frame size", NULL,
         &(params->audioFrameSize),
-        NULL, 0),
+        (void*)frameSizeSelectableData, 7),
     }),
     C("Colors", {
       S(SETTING_COLOR,

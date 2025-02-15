@@ -7,7 +7,7 @@
 
 // program stuff
 #define PROGRAM_NAME "unscope"
-#define PROGRAM_VER "0.3"
+#define PROGRAM_VER "0.4-config-test"
 
 #define PROGRAM_WIDTH 1280
 #define PROGRAM_HEIGHT 720

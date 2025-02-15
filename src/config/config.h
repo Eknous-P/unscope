@@ -38,6 +38,7 @@ struct SettingsCategory {
   const char* name;
   std::vector<Setting> settings;
   // handle recursion later, not needed now
+
   SettingsCategory(const char* n, std::initializer_list<Setting> s) {
     name = n;
     settings = s;

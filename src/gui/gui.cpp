@@ -186,7 +186,6 @@ int USCGUI::init() {
   if (cf) {
     std::string layout = cf->getLayout();
     if (layout.size()>0) {
-      printf("%s\nsize: %lu\n", layout.c_str(), layout.size());
       ImGui::LoadIniSettingsFromMemory(layout.c_str(), layout.size());
     }
   }

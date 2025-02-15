@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
 
   params.audioBufferSize = 65536; // N samples
   params.audioFrameSize  = 512;   // N samples
-  params.channels        = 2;     // N (1-3)
+  params.channels        = 2;     // N (1-3?)
   params.sampleRate      = 48000; // Hz (only common values?)
   params.audioDevice     = 0;     // internal ID, gets overwritten anyway
   params.timebase        = 60;    // ms
