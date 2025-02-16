@@ -29,12 +29,14 @@ bool TriggerAnalog::trigger(unsigned long int windowSize) {
   // locate trigger
   bool triggerHigh = false, triggerLow = false, foundTrigger = false, edge = !*(bool*)params[3].getValue();
   float trigY = *(float*)params[0].getValue(); // temp
-  long int offset = (windowSize / 2) * *(float*)params[1].getValue();
   // is this better than multiplying an int with x.5f?
   long int windowSizeHalf = windowSize / 2;
+  long int offset = windowSizeHalf * *(float*)params[1].getValue();
   triggerIndex = bufferSize - windowSize - windowSizeHalf;
   // -1 offset will reveal the oob area of the buffer
   // so -windowSizeHalf
+  if (triggerIndex<0) triggerIndex += windowSizeHalf;
+  // or maybe not../
 
   memset(alignBuf, 0xbf, bufferSize * sizeof(float));
 

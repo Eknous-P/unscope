@@ -8,7 +8,7 @@ class TriggerAnalog : public Trigger {
   unsigned long int bufferSize;
   std::vector<TriggerParam> params;
 
-  unsigned long int triggerIndex;
+  long int triggerIndex;
 
   bool triggered;
 

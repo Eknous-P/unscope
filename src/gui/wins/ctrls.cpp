@@ -76,20 +76,9 @@ void USCGUI::drawGlobalControls() {
   ImGui::End();
 }
 
-#define UPDATE_TIMEBASE if (tc[i].timebase < 0.0f) tc[i].timebase = 0.0f; \
-          if (tc[i].timebase > (float)oscDataSize/(float)sampleRate*1000.0f) tc[i].timebase = (float)oscDataSize/(float)sampleRate*1000.0f; \
-          tc[i].traceSize = sampleRate * tc[i].timebase / 1000; \
-          // tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize; \
-          // if (tc[i].traceOffset + tc[i].traceSize > oscDataSize) tc[i].traceOffset = oscDataSize - tc[i].traceSize; \
-          // if (tc[i].traceSize != 0) { \
-          //   tc[i].trigOffset = 2*((float)tc[i].traceOffset/(float)tc[i].traceSize)-1.0f; \
-          // } else { \
-          //   tc[i].trigOffset = 0; \
-          // }
-
 void USCGUI::drawChanControls() {
-  for (unsigned char i = 0; i < channels; i++) {
-    if (!up->chanControlsOpen[i]) continue;
+  FOR_RANGE(channels) {
+    if (!up->chanControlsOpen[z]) continue;
     // variables that will be used all over here
     char strbuf[32];
 
@@ -98,24 +87,24 @@ void USCGUI::drawChanControls() {
     unsigned char mainCh = 0;
     if (trigShare) mainCh = shareTrigger - 1;
 
-    bool disable = (trigShare && i != shareTrigger - 1) || (shareParams && i != mainCh);
+    bool disable = (trigShare && z != shareTrigger - 1) || (shareParams && z != mainCh);
 
-    sprintf(strbuf,"Channel %d Controls",i+1);
-    ImGui::Begin(strbuf,&up->chanControlsOpen[i]);
+    sprintf(strbuf,"Channel %d Controls",z+1);
+    ImGui::Begin(strbuf,&up->chanControlsOpen[z]);
 
-    ImGui::Toggle("enable", &tc[i].enable);
+    ImGui::Toggle("enable", &tc[z].enable);
 
     if (trigShare) {
       ImGui::SameLine();
-      sprintf(strbuf, "##chan%dtrig", i+1);
-      if (ImGui::RadioButton(strbuf,shareTrigger==i+1)) shareTrigger=i+1;
+      sprintf(strbuf, "##chan%dtrig", z+1);
+      if (ImGui::RadioButton(strbuf,shareTrigger==z+1)) shareTrigger=z+1;
       if (ImGui::IsItemHovered()) {
         ImGui::SetTooltip("trigger to this channel");
       }
     }
 
 
-    sprintf(strbuf, "##chan%dctrls", i+1);
+    sprintf(strbuf, "##chan%dctrls", z+1);
     if (ImGui::BeginTable(strbuf, 4)) {
       ImGui::TableSetupColumn("c1",ImGuiTableColumnFlags_WidthFixed);
       ImGui::TableSetupColumn("c2",ImGuiTableColumnFlags_WidthFixed);
@@ -125,8 +114,8 @@ void USCGUI::drawChanControls() {
       ImGui::TableNextColumn();
         // timebase knob
         ImGui::BeginDisabled(disable);
-        tc[i].timebase = tc[i].traceSize * 1000.0f / sampleRate;
-        if (ImGuiKnobs::Knob("timebase", &tc[i].timebase, 0, (float)oscDataSize/(float)sampleRate*1000.0f, 0.0f, "%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
+        tc[z].timebase = tc[z].traceSize * 1000.0f / sampleRate;
+        if (ImGuiKnobs::Knob("timebase", &tc[z].timebase, 0, (float)oscDataSize/(float)sampleRate*1000.0f, 0.0f, "%.2f ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
           UPDATE_TIMEBASE;
         }
         if (disable) if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
@@ -139,25 +128,25 @@ void USCGUI::drawChanControls() {
       ImGui::TableNextColumn();
         // y scale knob
         ImGui::EndDisabled();
-        if (ImGuiKnobs::Knob("y scale", &tc[i].yScale, 0.25f, 10.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
-          if (tc[i].yScale < 0.0f) tc[i].yScale = 0.0f;
+        if (ImGuiKnobs::Knob("y scale", &tc[z].yScale, 0.25f, 10.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
+          if (tc[z].yScale < 0.0f) tc[z].yScale = 0.0f;
         }
-        if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) tc[i].yScale = 1.0f;
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) tc[z].yScale = 1.0f;
 
       ImGui::TableNextColumn();
         // y offset knob
-        if (ImGuiKnobs::Knob("y offset", &tc[i].yOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
-          if (tc[i].yOffset < -1.0f) tc[i].yOffset = -1.0f;
-          if (tc[i].yOffset >  1.0f) tc[i].yOffset =  1.0f;
+        if (ImGuiKnobs::Knob("y offset", &tc[z].yOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
+          if (tc[z].yOffset < -1.0f) tc[z].yOffset = -1.0f;
+          if (tc[z].yOffset >  1.0f) tc[z].yOffset =  1.0f;
         }
-        if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) tc[i].yOffset = 0.0f;
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) tc[z].yOffset = 0.0f;
 
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
       // trigger options here
       unsigned char counter=0;
       ImGui::BeginDisabled(disable);
-      for (TriggerParam p : trigger[i]->getParams()) {
+      for (TriggerParam p : trigger[z]->getParams()) {
         p.draw();
         if (disable) {
           if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
@@ -185,11 +174,11 @@ void USCGUI::drawChanControls() {
     
     ImGui::End();
 
-    if (shareParams && i != mainCh) {
-      tc[i].timebase = tc[mainCh].timebase;
+    if (shareParams && z != mainCh) {
+      tc[z].timebase = tc[mainCh].timebase;
       UPDATE_TIMEBASE;
-      for (unsigned char j = 0; j < trigger[i]->getParams().size(); j++) {
-        TriggerParam p = trigger[i]->getParams()[j];
+      for (unsigned char j = 0; j < trigger[z]->getParams().size(); j++) {
+        TriggerParam p = trigger[z]->getParams()[j];
         memcpy(p.getValue(),trigger[mainCh]->getParams()[j].getValue(),TriggerParamTypeSize[p.getType()]);
       }
     }

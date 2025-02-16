@@ -24,16 +24,31 @@ void USCGUI::drawMainScope() {
         if (shareTrigger > 0 && i != shareTrigger - 1) continue;
         double valD = *(float*)p.getValue();
         if (p.bindToDragX) {
-          if (ImPlot::DragLineX(2*i+1, &valD, ImGui::ColorConvertU32ToFloat4(up->chanColor[i]))) *(float*)p.getValue() = valD;
+          if (ImPlot::DragLineX(2*i+1, &valD, ImGui::ColorConvertU32ToFloat4(up->chanColor[i]))) {
+            valD = clamp(valD);
+            *(float*)p.getValue() = valD;
+          }
           // ImPlot::TagX(valD, trigColor, "CH %d", i + 1);
         }
         if (p.bindToDragY) {
-          if (ImPlot::DragLineY(2*i+1, &valD, trigColor)) *(float*)p.getValue() = valD;
+          if (ImPlot::DragLineY(2*i+1, &valD, trigColor)) {
+            valD = clamp(valD);
+            *(float*)p.getValue() = valD;
+          }
           ImPlot::TagY(valD, trigColor, "CH %d", i + 1);
         }
       }
     }
     ImPlot::EndPlot();
+  }
+  if (ImGui::IsItemHovered()) {
+    float v = ImGui::GetIO().MouseWheel * 0.0625f;
+    if (v) {
+      FOR_RANGE(channels) {
+        tc[z].timebase-=v * (tc[z].timebase + 1.0f);
+        UPDATE_TIMEBASE;
+      }
+    }
   }
   ImGui::End();
 }

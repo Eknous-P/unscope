@@ -53,6 +53,11 @@
           ImGui::EndPopup(); \
         }
 
+#define UPDATE_TIMEBASE if (tc[z].timebase < 0.0f) tc[z].timebase = 0.0f; \
+          if (tc[z].timebase > bufferTime*1000.0f) tc[z].timebase = bufferTime*1000.0f; \
+          tc[z].traceSize = sampleRate * tc[z].timebase / 1000.0f; \
+          if (tc[z].traceSize > oscDataSize) tc[z].traceSize = oscDataSize;
+
 enum unscopeErrors {
   UAUDIOERR_NOERR = 0,
   UAUDIOERR_NOINIT,

@@ -11,7 +11,7 @@ USCGUI::USCGUI(unscopeParams *params) {
   err = 0;
   channels = up->channels;
 
-  sc.plotFlags = ImPlotFlags_NoLegend|ImPlotFlags_NoMenus;
+  sc.plotFlags = ImPlotFlags_NoLegend|ImPlotFlags_NoMenus|ImPlotFlags_NoMouseText;
   sc.scopeFlags = ImPlotAxisFlags_AutoFit|ImPlotAxisFlags_Lock|ImPlotAxisFlags_NoMenus|ImPlotAxisFlags_Foreground;
 
   sampleRate = up->sampleRate;
