@@ -147,7 +147,7 @@ int USCGUI::init() {
   setupTrigger(trigNum);
   if (!isGood) return -1;
   if (running) return 0;
-  if (rd->setup()!=0) return UGUIERROR_SETUPFAIL;
+  if (rd->setup(up->winWidth, up->winHeight)!=0) return UGUIERROR_SETUPFAIL;
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -173,7 +173,7 @@ int USCGUI::init() {
   bgColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
   running = true;
   io = ImGui::GetIO();
-  rd->doFullscreen(up->fullscreen);
+  SDL_SetWindowFullscreen(rd->getWindow(),(up->fullscreen)?(SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP):0);
 
   if (cf) {
     std::string layout = cf->getLayout();
@@ -217,7 +217,7 @@ void USCGUI::doFrame() {
 void USCGUI::drawGUI() {
   if (ImGui::IsKeyPressed(ImGuiKey_F11)) {
     up->fullscreen = !up->fullscreen;
-    rd->doFullscreen(up->fullscreen);
+    SDL_SetWindowFullscreen(rd->getWindow(),(up->fullscreen)?(SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP):0);
   }
   // if (devs[device].shouldPassThru) {
   //   ImGui::SameLine();
@@ -351,6 +351,11 @@ void USCGUI::setAudioDeviceSetting(int d) {
 void USCGUI::deinint() {
   const char* layout = ImGui::SaveIniSettingsToMemory();
   cf->saveLayout(layout);
+
+  int winWidth = 0, winHeight = 0;
+  SDL_GetWindowSize(rd->getWindow(), &winWidth, &winHeight);
+  cf->setConfig("winWidth",winWidth);
+  cf->setConfig("winHeight",winHeight);
 }
 
 USCGUI::~USCGUI() {

@@ -1,6 +1,9 @@
 #include "../gui.h"
 
-int USCRender::setup() {
+// TODO: rewrite render
+// its soo messy
+
+int USCRender::setup(int width, int height) {
   return 0;
 }
 
@@ -18,5 +21,6 @@ void USCRender::endFrame(ImGuiIO io, ImVec4 col) {
 void USCRender::deinit() {
 }
 
-void USCRender::doFullscreen(bool f) {
+SDL_Window* USCRender::getWindow() {
+  return NULL;
 }

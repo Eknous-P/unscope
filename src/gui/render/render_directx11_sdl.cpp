@@ -48,7 +48,7 @@ void USCRendDirectX::CleanupRenderTarget() {
 }
 
 
-int USCRendDirectX::setup() {
+int USCRendDirectX::setup(int width, int height) {
   // Setup SDL
   // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
   // depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to the latest version of SDL is recommended!)
@@ -64,7 +64,7 @@ int USCRendDirectX::setup() {
 
   // Setup window
   window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-  window = SDL_CreateWindow(PROGRAM_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, PROGRAM_WIDTH, PROGRAM_HEIGHT, window_flags);
+  window = SDL_CreateWindow(PROGRAM_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, window_flags);
   if (window == nullptr) {
     printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
     return -1;
@@ -137,6 +137,6 @@ void USCRendDirectX::deinit() {
   SDL_Quit();
 }
 
-void USCRendDirectX::doFullscreen(bool f) {
-  SDL_SetWindowFullscreen(window,f?(SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP):0);
+SDL_Window* USCRendDirectX::getWindow() {
+  return window;
 }

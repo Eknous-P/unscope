@@ -30,6 +30,9 @@ int main(int argc, char* argv[]) {
   params.xyPersist       = 40;    // ms
   params.scale           = 1.0f;  // (no unit)
 
+  params.winWidth = 1280;         // px
+  params.winHeight = 720;         // px
+
   params.mainScopeOpen       = true;
   params.chanControlsOpen[0] = true;
   params.chanControlsOpen[1] = params.channels > 1;
@@ -75,18 +78,37 @@ int main(int argc, char* argv[]) {
   USCConfig conf(confPath.c_str(), &params);
   bool loaded = (conf.loadConfig() == 0);
 
-#define CONF_LOAD_BOOL(x) params.x = conf.getConfig(#x).as<bool>()
+  YAML::Node d;
+
+#define LOAD(k,t) { \
+    YAML::Node d = conf.getConfig(#k); \
+      if (d) params.k = d.as<t>(); \
+    }
+
   if (loaded) {
-    CONF_LOAD_BOOL(mainScopeOpen);
-    params.chanControlsOpen[0] = conf.getConfig("chanControlsOpen1").as<bool>();
-    params.chanControlsOpen[1] = conf.getConfig("chanControlsOpen2").as<bool>();
-    params.chanControlsOpen[2] = conf.getConfig("chanControlsOpen3").as<bool>();
-    CONF_LOAD_BOOL(xyScopeOpen);
-    CONF_LOAD_BOOL(xyScopeControlsOpen);
-    CONF_LOAD_BOOL(globalControlsOpen);
-    CONF_LOAD_BOOL(fullscreen);
+    LOAD(mainScopeOpen,bool);
+    {
+      YAML::Node d = conf.getConfig("chanControlsOpen1");
+      if (d) params.chanControlsOpen[0] = d.as<bool>();
+    }
+    {
+      YAML::Node d = conf.getConfig("chanControlsOpen2");
+      if (d) params.chanControlsOpen[1] = d.as<bool>();
+    }
+    {
+      YAML::Node d = conf.getConfig("chanControlsOpen4");
+      if (d) params.chanControlsOpen[2] = d.as<bool>();
+    }
+    LOAD(xyScopeOpen,bool);
+    LOAD(xyScopeControlsOpen,bool);
+    LOAD(globalControlsOpen,bool);
+    LOAD(fullscreen,bool);
+
+    LOAD(winWidth,int);
+    LOAD(winHeight,int);
+
   }
-#undef CONF_LOAD_BOOL
+#undef LOAD
 
   // parse arguments
   if (argc > 1) {

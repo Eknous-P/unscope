@@ -1,6 +1,7 @@
 #ifndef USC_GUI_H
 #define USC_GUI_H
 
+#include <SDL.h>
 #include <imgui.h>
 #include <implot.h>
 #include "imgui_stdlib.h"
@@ -18,12 +19,12 @@ enum TriggerModes : unsigned char {
 
 class USCRender {
   public:
-    virtual int  setup();
+    virtual int  setup(int width, int height);
     virtual int  init();
     virtual bool beginFrame();
     virtual void endFrame(ImGuiIO io, ImVec4 col);
     virtual void deinit();
-    virtual void doFullscreen(bool f);
+    virtual SDL_Window* getWindow();
 };
 
 // renderers

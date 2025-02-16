@@ -26,12 +26,12 @@ class USCRendDirectX : public USCRender {
     void CreateRenderTarget();
     void CleanupRenderTarget();
   public:
-    int setup();
+    int setup(int width, int height);
     int init();
     bool beginFrame();
     void endFrame(ImGuiIO io, ImVec4 col);
     void deinit();
-    void doFullscreen(bool f);
+    SDL_Window* getWindow();
 };
 
 #endif

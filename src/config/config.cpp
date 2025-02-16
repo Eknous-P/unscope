@@ -363,7 +363,7 @@ void USCConfig::setConfig(const char* key, bool data) {
 
 void USCConfig::setConfig(const char* key, int data) {
   if (conf[key]) {
-    conf[key] = data;
+    conf[key] = (int)data;
   } else {
     conf.force_insert(key, data);
   }

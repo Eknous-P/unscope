@@ -1,6 +1,6 @@
 #include "render_opengl_sdl.h"
 
-int USCRendOGL_SDL::setup() {
+int USCRendOGL_SDL::setup(int width, int height) {
   // Setup SDL
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
     printf("Error: %s\n", SDL_GetError());
@@ -17,7 +17,7 @@ int USCRendOGL_SDL::setup() {
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
   window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-  window = SDL_CreateWindow(PROGRAM_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, PROGRAM_WIDTH, PROGRAM_HEIGHT, window_flags);
+  window = SDL_CreateWindow(PROGRAM_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, window_flags);
   if (window == nullptr) {
     printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
     return -1;
@@ -76,6 +76,6 @@ void USCRendOGL_SDL::deinit() {
   SDL_Quit();
 }
 
-void USCRendOGL_SDL::doFullscreen(bool f) {
-  SDL_SetWindowFullscreen(window,f?(SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP):0);
+SDL_Window* USCRendOGL_SDL::getWindow() {
+  return window;
 }
