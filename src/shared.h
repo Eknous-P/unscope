@@ -35,7 +35,6 @@
     delete[] x; \
     x = NULL; \
   }
-
 #define DELETE_DOUBLE_PTR(x,n) \
   if (x) { \
     FOR_RANGE(n) { \

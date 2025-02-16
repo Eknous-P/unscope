@@ -1,3 +1,1 @@
-- configs IN A FILE
-  - layout and settings
-- aux scope and audio processing
+- aux scope and audio processing (unlikely)

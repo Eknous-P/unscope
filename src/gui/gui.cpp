@@ -1,13 +1,5 @@
 #include "gui.h"
 
-// ImVec2 operator+(ImVec2 lhs, ImVec2 rhs) {
-//   return ImVec2(lhs.x+rhs.x,lhs.y+rhs.y);
-// }
-
-// ImVec2 operator+(ImVec2 lhs, float rhs) {
-//   return ImVec2(lhs.x+rhs,lhs.y+rhs);
-// }
-
 bool USCGUI::isRunning() {
   return running;
 }

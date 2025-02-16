@@ -21,7 +21,10 @@ void USCGUI::drawGlobalControls() {
     ImGui::EndCombo();
   }
   
+  ImGui::BeginDisabled(trigNum==TRIG_FALLBACK);
   ImGui::Toggle("enable fallback trigger", &doFallback);
+  ImGui::EndDisabled();
+
   if (ImGui::Toggle("single shot trigger", &singleShot)) {
     updateAudio = true;
   }
