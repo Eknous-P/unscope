@@ -24,7 +24,13 @@ std::vector<TriggerParam> TriggerAnalog::getParams() {
   return params;
 }
 
+// MASSIVE TODO: FIX MEM CORRUPTION HERE
+// windowSize > bufferSize/2; extend trigger; positive offset
+
 bool TriggerAnalog::trigger(unsigned long int windowSize) {
+  // because you cant align that
+  if (windowSize == bufferSize) return false;
+
   triggered = false;
   // locate trigger
   bool triggerHigh = false, triggerLow = false, foundTrigger = false, edge = !*(bool*)params[3].getValue();
@@ -58,6 +64,8 @@ bool TriggerAnalog::trigger(unsigned long int windowSize) {
   }
 
   triggerIndex-=offset;
+
+  if (triggerIndex > bufferSize) {}
 
   alignBuf[triggerIndex] = -1.0f;
 
