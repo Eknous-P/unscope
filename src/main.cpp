@@ -192,7 +192,7 @@ const char* helpMsg =
 
 const char* aboutMsg = 
 "Audio oscilloscope for Linux"
-#ifdef IS_WIN
+#ifdef _WIN32
 " and Windows" // i may someday setup crosscompiling
 #endif
 "\n\n"
