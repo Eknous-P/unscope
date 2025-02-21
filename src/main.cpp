@@ -30,9 +30,9 @@ int main(int argc, char* argv[]) {
   params.scale           = 1.0f;  // (no unit)
   params.trigger         = 0.0f;  // (no unit)
 #ifdef _WIN32
-  params.renderer = USC_REND_DIRECTX11_SDL;
+  params.renderer = USC_RENDER_DIRECTX11;
 #else
-  params.renderer = USC_REND_OPENGL_SDL;
+  params.renderer = USC_RENDER_OPENGL2;
 #endif
 
   // parse arguments

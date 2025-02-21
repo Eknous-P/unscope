@@ -1,6 +1,7 @@
 #ifndef USC_GUI_H
 #define USC_GUI_H
 
+#include <SDL.h>
 #include <imgui.h>
 #include <implot.h>
 #include "imgui_stdlib.h"
@@ -18,18 +19,23 @@ enum TriggerModes : unsigned char {
 };
 
 class USCRender {
+  SDL_Window* win;
+  SDL_WindowFlags winFlags;
+  SDL_Event event;
   public:
-    virtual int  setup();
-    virtual int  init();
-    virtual bool beginFrame();
-    virtual void endFrame(ImGuiIO io, ImVec4 col);
-    virtual void deinit();
-    virtual void doFullscreen(bool f);
+    virtual int initRender();
+    virtual int setupRender(SDL_WindowFlags _winFlags, const char* winName, ImVec2 winPos, ImVec2 winSize);
+    virtual int renderPreLoop();
+    virtual int renderPostLoop();
+    virtual void destroyRender();
+
+    virtual SDL_Window* getWindow();
+    virtual ~USCRender();
 };
 
 // renderers
 #ifdef USE_OPENGL
-#include "render/render_opengl_sdl.h"
+#include "render/render_opengl2.h"
 #endif
 #ifdef USE_DIRECTX
 #include "render/render_directx11_sdl.h"

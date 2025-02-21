@@ -75,8 +75,9 @@ enum unscopeArgs {
 };
 
 enum USCRenderers {
-  USC_REND_OPENGL_SDL = 0,
-  USC_REND_DIRECTX11_SDL
+  USC_RENDER_NONE=0,
+  USC_RENDER_OPENGL2,
+  USC_RENDER_DIRECTX11,
 };
 
 struct unscopeParams {

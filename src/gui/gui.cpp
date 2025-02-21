@@ -1,4 +1,6 @@
 #include "gui.h"
+#include <render_opengl2.h>
+#include <shared.h>
 
 ImVec2 operator+(ImVec2 lhs, ImVec2 rhs) {
   return ImVec2(lhs.x+rhs.x,lhs.y+rhs.y);
@@ -119,15 +121,16 @@ void USCGUI::attachAudioInput(USCAudioInput *i) {
 void USCGUI::setupRenderer(USCRenderers r) {
   switch (r) {
 #ifdef USE_OPENGL
-    case USC_REND_OPENGL_SDL:
-      rd = new USCRendOGL_SDL;
+    case USC_RENDER_OPENGL2:
+      rd = new USCRenderOpenGL2;
       break;
 #endif
 #ifdef USE_DIRECTX
-    case USC_REND_DIRECTX11_SDL:
+    case USC_RENDER_DIRECTX11:
         rd = new USCRendDirectX;
         break;
 #endif
+    case USC_RENDER_NONE:
     default: break;
   }
 }
@@ -168,7 +171,7 @@ int USCGUI::init() {
   setupTrigger(trigNum);
   if (!isGood) return -1;
   if (running) return 0;
-  if (rd->setup()!=0) return UGUIERROR_SETUPFAIL;
+  if (rd->initRender()!=0) return UGUIERROR_INITFAIL;
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -191,7 +194,11 @@ int USCGUI::init() {
   ImGui::LoadIniSettingsFromMemory(windowLayout);
   // ImGui::LoadIniSettingsFromDisk(INIFILE);
   // Setup Platform/Renderer backends
-  if (rd->init()!=0) return UGUIERROR_INITFAIL;
+  if (rd->setupRender(
+    (SDL_WindowFlags)(SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE|SDL_WINDOW_ALLOW_HIGHDPI),
+    PROGRAM_NAME,
+    ImVec2(0,0),
+    ImVec2(PROGRAM_WIDTH,PROGRAM_HEIGHT))!=0) return UGUIERROR_SETUPFAIL;
   bgColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
   running = true;
   io = ImGui::GetIO();
@@ -203,7 +210,7 @@ void USCGUI::getDevices(std::vector<DeviceEntry> d) {
 }
 
 void USCGUI::doFrame() {
-  running = rd->beginFrame();
+  running = rd->renderPreLoop()==0;
   if (!running) return;
   ImGui::NewFrame();
   
@@ -212,13 +219,13 @@ void USCGUI::doFrame() {
   USCGUI::drawGUI();
 
   ImGui::Render();
-  rd->endFrame(io,bgColor);
+  running = rd->renderPostLoop()==0;
 }
 
 void USCGUI::drawGUI() {
   if (ImGui::IsKeyPressed(ImGuiKey_F11)) {
     fullscreen = !fullscreen;
-    rd->doFullscreen(fullscreen);
+    SDL_SetWindowFullscreen(rd->getWindow(),fullscreen?(SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP):0);
   }
   // if (devs[device].shouldPassThru) {
   //   ImGui::SameLine();
@@ -345,7 +352,7 @@ void USCGUI::setAudioDeviceSetting(int d) {
 USCGUI::~USCGUI() {
   // ImGui::SaveIniSettingsToDisk(INIFILE);
   // Cleanup
-  if (isGood) rd->deinit();
+  if (isGood) rd->destroyRender();
   if (rd) {
     delete rd;
     rd = NULL;

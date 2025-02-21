@@ -1,22 +1,32 @@
 #include "../gui.h"
 
-int USCRender::setup() {
+int USCRender::initRender() {
   return 0;
 }
 
-int USCRender::init() {
+int USCRender::setupRender(SDL_WindowFlags _winFlags, const char* winName, ImVec2 winPos, ImVec2 winSize) {
+  win=NULL;
+  winFlags=_winFlags;
+  (void)winName;
+  (void)winPos;
+  (void)winSize;
   return 0;
 }
 
-bool USCRender::beginFrame() {
-  return true;
+int USCRender::renderPreLoop() {
+  return 0;
 }
 
-void USCRender::endFrame(ImGuiIO io, ImVec4 col) {
+int USCRender::renderPostLoop() {
+  return 0;
 }
 
-void USCRender::deinit() {
+void USCRender::destroyRender() {
 }
 
-void USCRender::doFullscreen(bool f) {
+SDL_Window* USCRender::getWindow() {
+  return win;
+}
+
+USCRender::~USCRender() {
 }

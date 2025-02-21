@@ -1,81 +1,85 @@
-#include "render_opengl_sdl.h"
+#include "render_opengl2.h"
 
-int USCRendOGL_SDL::setup() {
-  // Setup SDL
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
-    printf("Error: %s\n", SDL_GetError());
-    return -1;
-  }
-  // Decide GL+GLSL versions
-  // GL 3.0 + GLSL 130
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-  // Create window with graphics context
+int USCRenderOpenGL2::initRender() {
+  return 0;
+}
+
+int USCRenderOpenGL2::setupRender(SDL_WindowFlags _winFlags, const char* winName, ImVec2 winPos, ImVec2 winSize) {
+#ifdef SDL_HINT_IME_SHOW_UI
+  SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
+#endif
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-  window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-  window = SDL_CreateWindow(PROGRAM_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, PROGRAM_WIDTH, PROGRAM_HEIGHT, window_flags);
-  if (window == nullptr) {
-    printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
-    return -1;
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+  winFlags=_winFlags;
+  win=SDL_CreateWindow(winName, winPos.x, winPos.y ,winSize.x, winSize.y, _winFlags);
+  if (win==NULL) {
+    return 1;
   }
-  gl_context = SDL_GL_CreateContext(window);
-  SDL_GL_MakeCurrent(window, gl_context);
+
+  glContext=SDL_GL_CreateContext(win);
+  SDL_GL_MakeCurrent(win, glContext);
   SDL_GL_SetSwapInterval(1); // Enable vsync
+
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGui_ImplSDL2_InitForOpenGL(win, glContext);
+  ImGui_ImplOpenGL2_Init();
   return 0;
 }
 
-int USCRendOGL_SDL::init() {
-  const char* glsl_version = "#version 130";
-  ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
-  ImGui_ImplOpenGL3_Init(glsl_version);
-  return 0;
-}
-
-bool USCRendOGL_SDL::beginFrame() {
+int USCRenderOpenGL2::renderPreLoop() {
   while (SDL_PollEvent(&event)) {
     ImGui_ImplSDL2_ProcessEvent(&event);
-    if (event.type == SDL_QUIT)
-      return false;
-    if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
-      return false;
+    if (event.type==SDL_QUIT)
+      return -1;
+    if (event.type==SDL_WINDOWEVENT && event.window.event==SDL_WINDOWEVENT_CLOSE && event.window.windowID==SDL_GetWindowID(win))
+      return -1;
   }
-  ImGui_ImplOpenGL3_NewFrame();
+  if (SDL_GetWindowFlags(win) & SDL_WINDOW_MINIMIZED) {
+    SDL_Delay(10);
+    return 1; // continue
+  }
+
+  ImGui_ImplOpenGL2_NewFrame();
   ImGui_ImplSDL2_NewFrame();
-  return true;
+  return 0;
 }
 
-void USCRendOGL_SDL::endFrame(ImGuiIO io, ImVec4 col) {
-  glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-  glClearColor(col.x * col.w, col.y * col.w, col.z * col.w, col.w);
+int USCRenderOpenGL2::renderPostLoop() {
+  ImGuiIO io=ImGui::GetIO();
+  ImGui::Render();
+  glViewport(0, 0, (int)ImGui::GetIO().DisplaySize.x, (int)io.DisplaySize.y);
   glClear(GL_COLOR_BUFFER_BIT);
-  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-  // Update and Render additional Platform Windows
-  // (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
-  //  For this specific demo app we could also call SDL_GL_MakeCurrent(window, gl_context) directly)
-  if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-  {
-      SDL_Window* backup_current_window = SDL_GL_GetCurrentWindow();
-      SDL_GLContext backup_current_context = SDL_GL_GetCurrentContext();
-      ImGui::UpdatePlatformWindows();
-      ImGui::RenderPlatformWindowsDefault();
-      SDL_GL_MakeCurrent(backup_current_window, backup_current_context);
+  ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+  if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+    SDL_Window* backup_current_window = SDL_GL_GetCurrentWindow();
+    SDL_GLContext backup_current_context = SDL_GL_GetCurrentContext();
+    ImGui::UpdatePlatformWindows();
+    ImGui::RenderPlatformWindowsDefault();
+    SDL_GL_MakeCurrent(backup_current_window, backup_current_context);
   }
-  SDL_GL_SwapWindow(window);
+
+  SDL_GL_SwapWindow(win);
+  return 0;
 }
 
-void USCRendOGL_SDL::deinit() {
-  ImGui_ImplOpenGL3_Shutdown();
+void USCRenderOpenGL2::destroyRender() {
+  ImGui_ImplOpenGL2_Shutdown();
   ImGui_ImplSDL2_Shutdown();
   ImGui::DestroyContext();
-  SDL_GL_DeleteContext(gl_context);
-  SDL_DestroyWindow(window);
+
+  SDL_GL_DeleteContext(glContext);
+  SDL_DestroyWindow(win);
   SDL_Quit();
 }
 
-void USCRendOGL_SDL::doFullscreen(bool f) {
-  SDL_SetWindowFullscreen(window,f?(SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP):0);
+SDL_Window* USCRenderOpenGL2::getWindow() {
+  return win;
+}
+
+
+USCRenderOpenGL2::~USCRenderOpenGL2() {
 }
