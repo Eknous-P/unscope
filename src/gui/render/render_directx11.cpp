@@ -108,7 +108,7 @@ int USCRenderDirectX11::renderPreLoop() {
 }
 
 int USCRenderDirectX11::renderPostLoop() {
-    float col[4] = { 0,0,0,0 };
+  float col[4] = {0.f, 0.f, 0.f, 0.f};
   ImGuiIO io = ImGui::GetIO();
   g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, NULL);
   g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, col);
