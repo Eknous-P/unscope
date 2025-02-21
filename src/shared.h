@@ -17,7 +17,7 @@
 #define INFO_MSG "\033[35;1m"
 #define SUCCESS_MSG "\033[32;1m"
 #define MISC_MSG "\033[34;1m"
-#define MSG_END "\033[0m"
+#define MSG_END "\033[0m\n"
 
 // frequently used stuff
 #define FOR_RANGE(c) for (unsigned char z = 0; z < c; z++)

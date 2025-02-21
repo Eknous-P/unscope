@@ -292,7 +292,7 @@ void USCGUI::drawGUI() {
   
   // drawAlignDebug();
   
-  // ImGui::ShowMetricsWindow();
+  ImGui::ShowMetricsWindow();
 }
 
 void USCGUI::drawAlignDebug() {

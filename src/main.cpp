@@ -59,13 +59,13 @@ int main(int argc, char* argv[]) {
             default: break;
           }
           if (i + 1 == argc) {
-            printf("no value for argument %s given\n", argv[i]);
+            printf(ERROR_MSG "no value for argument %s given" MSG_END, argv[i]);
             continue;
           }
           try {
             value = std ::stoi(argv[i + 1]);
           } catch (...) {
-            printf("invalid argument for %s given: %s\n", argv[i], argv[i + 1]);
+            printf(ERROR_MSG "invalid argument for %s given: %s" MSG_END, argv[i], argv[i + 1]);
             continue;
           }
           switch (argv[i][flagStartIndex]) {
@@ -75,12 +75,22 @@ int main(int argc, char* argv[]) {
             case UPARAM_FRAMESIZE:
               params.audioFrameSize = value;
               break;
-            case UPARAM_CHANNELCOUNT:
+            case UPARAM_CHANNELCOUNT: {
+              if (value > 3) {
+                printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
+                continue;
+              }
               params.channels = value;
               break;
-            case UPARAM_SAMPLERATE:
+            }
+            case UPARAM_SAMPLERATE: {
+              if ((value%8000)!=0 && (value%11025)!=0) {
+                printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
+                continue;
+              }
               params.sampleRate = value;
               break;
+            }
             default: break;
           }
         } else {
@@ -95,31 +105,43 @@ int main(int argc, char* argv[]) {
             return 0;
           }
           if (i + 1 == argc) {
-            printf("no value for argument %s given\n", argv[i]);
+            printf(ERROR_MSG "no value for argument %s given" MSG_END, argv[i]);
             continue;
           }
           try {
             value = std::stoi(argv[i + 1]);
           } catch (...) {
-            printf("invalid argument for %s given: %s\n", argv[i], argv[i + 1]);
+            printf(ERROR_MSG "invalid argument for %s given: %s" MSG_END, argv[i], argv[i + 1]);
+            continue;
+          }
+          if (value < 0) {
+            printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
             continue;
           }
           if (strcmp(argv[i] + flagStartIndex, "bufsize") == 0) {
             params.audioBufferSize = value;
-            break;
+            continue;
           } else if (strcmp(argv[i] + flagStartIndex, "framesize") == 0) {
             params.audioFrameSize = value;
-            break;
+            continue;
           } else if (strcmp(argv[i] + flagStartIndex, "channels") == 0) {
+            if (value > 3) {
+              printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
+              continue;
+            }
             params.channels = value;
-            break;
+            continue;
           } else if (strcmp(argv[i] + flagStartIndex, "samplerate") == 0) {
+            if ((value%8000)!=0 && (value%11025)!=0) {
+              printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
+              continue;
+            }
             params.sampleRate = value;
-            break;
+            continue;
           }
         }
       } else {
-        printf("cannot parse argument %s\n", argv[i]);
+        printf(ERROR_MSG "cannot parse argument %s" MSG_END, argv[i]);
       }
     }
   };
@@ -128,7 +150,7 @@ int main(int argc, char* argv[]) {
 
   e = g.init();
   if (e != 0) {
-    printf(ERROR_MSG "error in initializing GUI! %s\n" MSG_END, getErrorMsg(e));
+    printf(ERROR_MSG "error in initializing GUI! %s" MSG_END, getErrorMsg(e));
     return -1;
   }
 
@@ -141,17 +163,17 @@ int main(int argc, char* argv[]) {
   g.getDevices(i.enumerateDevs());
   g.setAudioDeviceSetting(params.audioDevice);
 
-  printf(INFO_MSG "opening device %d: %s...%s\n",params.audioDevice,Pa_GetDeviceInfo(params.audioDevice)->name, MSG_END);
+  printf(INFO_MSG "opening device %d: %s..." MSG_END,params.audioDevice,Pa_GetDeviceInfo(params.audioDevice)->name);
   e = i.init(params.audioDevice,0);
   if (e != paNoError) {
     printf(ERROR_MSG "%d: cant init audio! %s" MSG_END, e, getErrorMsg(e));
     // try again
-    printf(INFO_MSG "trying again...\n" MSG_END);
+    printf(INFO_MSG "trying again..." MSG_END);
     if (e != paInvalidDevice) {
       printf(ERROR_MSG "%d: cant init audio! %s" MSG_END, e, getErrorMsg(e));
       return e;
     }
-    printf(INFO_MSG "trying default device...\n" MSG_END);
+    printf(INFO_MSG "trying default device..." MSG_END);
     params.audioDevice = Pa_GetDefaultInputDevice();
     e = i.init(params.audioDevice,0);
     if (e != paNoError) {
@@ -166,7 +188,7 @@ int main(int argc, char* argv[]) {
   }
 
   e = i.stop();
-  printf( "%s%s%s\n", (e==paNoError)?SUCCESS_MSG:ERROR_MSG, Pa_GetErrorText(e), MSG_END);
+  printf( "%s%s" MSG_END, (e==paNoError)?SUCCESS_MSG:ERROR_MSG, Pa_GetErrorText(e));
   return e!=paNoError;
 }
 
@@ -178,7 +200,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 }
 #endif
 
-const char* verMsg = MISC_MSG PROGRAM_NAME " (version " PROGRAM_VER ")\n" MSG_END;
+const char* verMsg = MISC_MSG PROGRAM_NAME " (version " PROGRAM_VER ")" MSG_END;
 
 const char* helpMsg =
 "Program arguments\n"
@@ -193,7 +215,7 @@ const char* helpMsg =
 const char* aboutMsg = 
 "Audio oscilloscope for Linux"
 #ifdef _WIN32
-" and Windows" // i may someday setup crosscompiling
+" and Windows"
 #endif
 "\n\n"
 PROGRAM_NAME " is made using these libraries:\n\n"

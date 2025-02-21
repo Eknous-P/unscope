@@ -52,19 +52,19 @@ void USCGUI::drawGlobalControls() {
   }
   if (ImGui::Button("restart audio")) {
     err = ai->stop();
-    printf(INFO_MSG "opening device %d: %s ...\n" MSG_END,device,Pa_GetDeviceInfo(device)->name);
+    printf(INFO_MSG "opening device %d: %s ..." MSG_END,device,Pa_GetDeviceInfo(device)->name);
     err = ai->init(device,/*audioLoopback*/0);
     channels = ai->getChannelCount();
     if (err != paNoError) {
-      printf(ERROR_MSG "%d:cant init audio!\n%s" MSG_END, err, getErrorMsg(err));
+      printf(ERROR_MSG "%d:cant init audio!%s" MSG_END, err, getErrorMsg(err));
       // try again
       if (err != paInvalidDevice) throw err;
-      printf(INFO_MSG "trying default device...\n" MSG_END);
+      printf(INFO_MSG "trying default device..." MSG_END);
       device = Pa_GetDefaultInputDevice();
       err = ai->init(device,0);
       channels = ai->getChannelCount();
       if (err != paNoError) {
-        printf(ERROR_MSG "%d:cant init audio!\n%s" MSG_END, err, getErrorMsg(err));
+        printf(ERROR_MSG "%d:cant init audio!\n" MSG_END, err, getErrorMsg(err));
         throw err;
       }
       setAudioDeviceSetting(device);

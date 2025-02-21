@@ -120,7 +120,7 @@ std::vector<DeviceEntry> USCAudioInput::enumerateDevs() {
       std::string(Pa_GetHostApiInfo(info->hostApi)->name) + " | " + 
       std::string(info->name)));
   }
-  printf(INFO_MSG "%lu devices found\n" MSG_END, devs.size());
+  printf(INFO_MSG "%lu devices found" MSG_END, devs.size());
   return devs;
 }
 
@@ -153,7 +153,7 @@ int USCAudioInput::init(PaDeviceIndex dev, bool loopback) {
       running = err==paNoError;
       return err;
     }
-    printf(INFO_MSG "trying with device-preferred channel count...\n" MSG_END);
+    printf(INFO_MSG "trying with device-preferred channel count..." MSG_END);
     streamParams.channelCount = Pa_GetDeviceInfo(dev)->maxInputChannels;
     conf.channels = streamParams.channelCount;
     err = Pa_OpenStream(
@@ -172,7 +172,7 @@ int USCAudioInput::init(PaDeviceIndex dev, bool loopback) {
         running = err==paNoError;
         return err;
       }
-      printf(ERROR_MSG "retry failed!\n" MSG_END);
+      printf(ERROR_MSG "retry failed!" MSG_END);
       return err;
     }
   }
