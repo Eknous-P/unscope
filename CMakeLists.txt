@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.2)
-find_package(PkgConfig REQUIRED)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -38,6 +37,7 @@ if (WIN32)
 else()
   set(IS_WIN FALSE)
   message(STATUS "building for linux")
+  find_package(PkgConfig REQUIRED)
 endif()
 
 # flags

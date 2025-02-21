@@ -108,9 +108,10 @@ int USCRenderDirectX11::renderPreLoop() {
 }
 
 int USCRenderDirectX11::renderPostLoop() {
+    float col[4] = { 0,0,0,0 };
   ImGuiIO io = ImGui::GetIO();
   g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, NULL);
-  g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, NULL);
+  g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, col);
   ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
   // Update and Render additional Platform Windows
