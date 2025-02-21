@@ -38,7 +38,7 @@ class USCRender {
 #include "render/render_opengl2.h"
 #endif
 #ifdef USE_DIRECTX
-#include "render/render_directx11_sdl.h"
+#include "render/render_directx11.h"
 #endif
 
 #include "trigger.h"

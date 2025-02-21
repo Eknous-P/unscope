@@ -1,4 +1,5 @@
 #include "gui.h"
+#include <SDL.h>
 #include <render_opengl2.h>
 #include <shared.h>
 
@@ -127,7 +128,7 @@ void USCGUI::setupRenderer(USCRenderers r) {
 #endif
 #ifdef USE_DIRECTX
     case USC_RENDER_DIRECTX11:
-        rd = new USCRendDirectX;
+        rd = new USCRenderDirectX11;
         break;
 #endif
     case USC_RENDER_NONE:
@@ -167,6 +168,7 @@ void USCGUI::setupTrigger(Triggers t) {
 
 
 int USCGUI::init() {
+  if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER)!=0) return UGUIERROR_INITFAIL;
   setupRenderer(renderer);
   setupTrigger(trigNum);
   if (!isGood) return -1;
@@ -195,7 +197,7 @@ int USCGUI::init() {
   // ImGui::LoadIniSettingsFromDisk(INIFILE);
   // Setup Platform/Renderer backends
   if (rd->setupRender(
-    (SDL_WindowFlags)(SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE|SDL_WINDOW_ALLOW_HIGHDPI),
+    (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE|SDL_WINDOW_ALLOW_HIGHDPI),
     PROGRAM_NAME,
     ImVec2(0,0),
     ImVec2(PROGRAM_WIDTH,PROGRAM_HEIGHT))!=0) return UGUIERROR_SETUPFAIL;

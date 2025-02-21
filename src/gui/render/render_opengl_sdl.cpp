@@ -13,8 +13,11 @@ int USCRenderOpenGL2::setupRender(SDL_WindowFlags _winFlags, const char* winName
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-  winFlags=_winFlags;
-  win=SDL_CreateWindow(winName, winPos.x, winPos.y ,winSize.x, winSize.y, _winFlags);
+  winFlags=_winFlags|SDL_WINDOW_OPENGL;
+  int winX = winPos.x, winY = winPos.y;
+  if (winX==0) winX = SDL_WINDOWPOS_CENTERED;
+  if (winY==0) winY = SDL_WINDOWPOS_CENTERED;
+  win=SDL_CreateWindow(winName, winX, winY ,winSize.x, winSize.y, _winFlags);
   if (win==NULL) {
     return 1;
   }

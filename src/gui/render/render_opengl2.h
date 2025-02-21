@@ -15,8 +15,8 @@ class USCRenderOpenGL2: public USCRender {
   public:
     int initRender();
     int setupRender(SDL_WindowFlags _winFlags, const char* winName, ImVec2 winPos, ImVec2 winSize);
-    virtual int renderPreLoop();
-    virtual int renderPostLoop();
+    int renderPreLoop();
+    int renderPostLoop();
     void destroyRender();
 
     SDL_Window* getWindow();

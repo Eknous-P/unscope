@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.2)
 find_package(PkgConfig REQUIRED)
 
+set(CMAKE_CXX_STANDARD 11)
+
 project(unscope)
 set(CMAKE_PROJECT_VERSION_MAJOR 0)
 set(CMAKE_PROJECT_VERSION_MINOR 3)
@@ -147,7 +149,7 @@ if(RENDER_DIRECTX)
   list(APPEND gui_sources
   ${imgui_path}/backends/imgui_impl_dx11.cpp
   ${imgui_path}/backends/imgui_impl_sdl2.cpp
-  ${sources_path}/gui/render/render_directx11_sdl.cpp)
+  ${sources_path}/gui/render/render_directx11.cpp)
   list(APPEND linked_libraries "d3dcompiler")
 endif()
 

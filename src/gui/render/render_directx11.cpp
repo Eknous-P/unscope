@@ -1,6 +1,7 @@
-#include "render_directx11_sdl.h"
+#include "render_directx11.h"
+#include <imgui.h>
 
-bool USCRendDirectX::CreateDeviceD3D(HWND hWnd) {
+bool USCRenderDirectX11::CreateDeviceD3D(HWND hWnd) {
   // Setup swap chain
   DXGI_SWAP_CHAIN_DESC sd;
   ZeroMemory(&sd, sizeof(sd));
@@ -29,50 +30,48 @@ bool USCRendDirectX::CreateDeviceD3D(HWND hWnd) {
   return true;
 }
 
-void USCRendDirectX::CleanupDeviceD3D() {
+void USCRenderDirectX11::CleanupDeviceD3D() {
   CleanupRenderTarget();
   if (g_pSwapChain) { g_pSwapChain->Release(); g_pSwapChain = nullptr; }
   if (g_pd3dDeviceContext) { g_pd3dDeviceContext->Release(); g_pd3dDeviceContext = nullptr; }
   if (g_pd3dDevice) { g_pd3dDevice->Release(); g_pd3dDevice = nullptr; }
 }
 
-void USCRendDirectX::CreateRenderTarget() {
+void USCRenderDirectX11::CreateRenderTarget() {
   ID3D11Texture2D* pBackBuffer;
   g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
   g_pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, &g_mainRenderTargetView);
   pBackBuffer->Release();
 }
 
-void USCRendDirectX::CleanupRenderTarget() {
+void USCRenderDirectX11::CleanupRenderTarget() {
   if (g_mainRenderTargetView) { g_mainRenderTargetView->Release(); g_mainRenderTargetView = nullptr; }
 }
 
+int USCRenderDirectX11::initRender() {
+  return 0;
+}
 
-int USCRendDirectX::setup() {
-  // Setup SDL
-  // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
-  // depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to the latest version of SDL is recommended!)
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
-  {
-      printf("Error: %s\n", SDL_GetError());
-      return -1;
-  }
+int USCRenderDirectX11::setupRender(SDL_WindowFlags _winFlags, const char* winName, ImVec2 winPos, ImVec2 winSize) {
   // From 2.0.18: Enable native IME.
 #ifdef SDL_HINT_IME_SHOW_UI
   SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
 #endif
-
   // Setup window
-  window_flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-  window = SDL_CreateWindow(PROGRAM_NAME, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, PROGRAM_WIDTH, PROGRAM_HEIGHT, window_flags);
-  if (window == nullptr) {
-    printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
-    return -1;
+  winFlags = _winFlags;
+
+  int winX = winPos.x, winY = winPos.y;
+  if (winX==0) winX = SDL_WINDOWPOS_CENTERED;
+  if (winY==0) winY = SDL_WINDOWPOS_CENTERED;
+
+  win = SDL_CreateWindow(winName, winX, winY ,winSize.x, winSize.y, _winFlags);
+  if (win == NULL) {
+    return 1;
   }
 
   SDL_SysWMinfo wmInfo;
   SDL_VERSION(&wmInfo.version);
-  SDL_GetWindowWMInfo(window, &wmInfo);
+  SDL_GetWindowWMInfo(win, &wmInfo);
   HWND hwnd = (HWND)wmInfo.info.win.window;
 
   // Initialize Direct3D
@@ -80,23 +79,21 @@ int USCRendDirectX::setup() {
     CleanupDeviceD3D();
     return 1;
   }
-  return 0;
-}
 
-int USCRendDirectX::init() {
-  ImGui_ImplSDL2_InitForD3D(window);
+  ImGui_ImplSDL2_InitForD3D(win);
   ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
+
   return 0;
 }
 
-bool USCRendDirectX::beginFrame() {
+int USCRenderDirectX11::renderPreLoop() {
   while (SDL_PollEvent(&event)) {
     ImGui_ImplSDL2_ProcessEvent(&event);
     if (event.type == SDL_QUIT)
-      return false;
-    if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
-      return false;
-    if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED && event.window.windowID == SDL_GetWindowID(window)) {
+      return -1;
+    if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(win))
+      return -1;
+    if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED && event.window.windowID == SDL_GetWindowID(win)) {
       // Release all outstanding references to the swap chain's buffers before resizing.
       CleanupRenderTarget();
       g_pSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
@@ -107,36 +104,32 @@ bool USCRendDirectX::beginFrame() {
   // Start the Dear ImGui frame
   ImGui_ImplDX11_NewFrame();
   ImGui_ImplSDL2_NewFrame();
-  return true;
+  return 0;
 }
 
-void USCRendDirectX::endFrame(ImGuiIO io, ImVec4 col) {
-  const float clear_color_with_alpha[4] = { col.x * col.w, col.y * col.w, col.z * col.w, col.w };
-  g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
-  g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, clear_color_with_alpha);
+int USCRenderDirectX11::renderPostLoop() {
+  ImGuiIO io = ImGui::GetIO();
+  g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, NULL);
+  g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, NULL);
   ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
   // Update and Render additional Platform Windows
-  if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-  {
+  if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
     ImGui::UpdatePlatformWindows();
     ImGui::RenderPlatformWindowsDefault();
   }
 
   g_pSwapChain->Present(1, 0); // Present with vsync
   //g_pSwapChain->Present(0, 0); // Present without vsync
+  return 0;
 }
 
-void USCRendDirectX::deinit() {
+void USCRenderDirectX11::destroyRender() {
   ImGui_ImplDX11_Shutdown();
   ImGui_ImplSDL2_Shutdown();
   ImGui::DestroyContext();
 
   CleanupDeviceD3D();
-  SDL_DestroyWindow(window);
+  SDL_DestroyWindow(win);
   SDL_Quit();
-}
-
-void USCRendDirectX::doFullscreen(bool f) {
-  SDL_SetWindowFullscreen(window,f?(SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP):0);
 }
