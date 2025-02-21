@@ -1,67 +1,83 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.2)
+find_package(PkgConfig REQUIRED)
 
-if(WIN32) # windows shall use directx
-  set(USE_OPENGL FALSE)
-  set(USE_DIRECTX TRUE)
-  add_compile_definitions(USE_DIRECTX)
-else() # linux shall use opengl
-  find_package(PkgConfig REQUIRED)
-  set(USE_OPENGL TRUE)
-  set(USE_DIRECTX FALSE)
-  add_compile_definitions(USE_OPENGL)
+project(unscope)
+set(CMAKE_PROJECT_VERSION_MAJOR 0)
+set(CMAKE_PROJECT_VERSION_MINOR 3)
+
+set(linked_libraries)
+set(compiler_options)
+
+set(gui_sources)
+set(audio_sources)
+set(trigger_sources)
+
+# paths
+set(sources_path    ${CMAKE_SOURCE_DIR}/src/)
+set(submodules_path ${CMAKE_SOURCE_DIR}/submodules)
+
+set(imgui_path        ${submodules_path}/imgui)
+set(implot_path       ${submodules_path}/implot)
+set(imgui_toggle_path ${submodules_path}/imgui_toggle)
+set(imgui_knobs_path  ${submodules_path}/imgui-knobs)
+set(sdl_path          ${submodules_path}/SDL)
+
+# target os detect
+if(CMAKE_TOOLCHAIN_FILE)
+  message(STATUS "toolcahin file set!")
 endif()
 
-set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+if (WIN32)
+  set(IS_WIN TRUE)
+  message(STATUS "building for windows")
+  if (MINGW)
+    message(STATUS "using mingw")
+  endif()
+else()
+  set(IS_WIN FALSE)
+  message(STATUS "building for linux")
+endif()
 
-set(imgui_path ./submodules/imgui)
-set(implot_path ./submodules/implot)
-set(srcs_path ./src/)
+# flags
+if (IS_WIN)
+  set(SYSTEM_SDL_DEF FALSE)
+  set(DIRECTX_DEF TRUE)
+  set(OPENGL_DEF FALSE)
+else()
+  set(SYSTEM_SDL_DEF TRUE)
+  set(DIRECTX_DEF FALSE)
+  set(OPENGL_DEF TRUE)
+endif()
 
-set(cpl_opts "")
-set(lnk_libs "")
+option(SYSTEM_SDL "use system sdl" ${SYSTEM_SDL_DEF})
+option(RENDER_DIRECTX "use directx" ${DIRECTX_DEF})
+option(RENDER_OPENGL "use opengl" ${OPENGL_DEF})
 
-# AUDIO LIBRARY
-set(PA_BUILD_SHARED_LIBS OFF CACHE BOOL "Build dynamic library" FORCE)
-add_subdirectory(submodules/portaudio EXCLUDE_FROM_ALL)
-list(APPEND lnk_libs PortAudio)
-
-# GUI SOURCES
-set(gui_srcs
-${imgui_path}/imgui.cpp
-${imgui_path}/imgui_demo.cpp
-${imgui_path}/imgui_draw.cpp
-${imgui_path}/imgui_tables.cpp
-${imgui_path}/imgui_widgets.cpp
-${imgui_path}/misc/cpp/imgui_stdlib.cpp
-
-${implot_path}/implot.cpp
-${implot_path}/implot_demo.cpp
-${implot_path}/implot_items.cpp
-
-./submodules/imgui-knobs/imgui-knobs.cpp
-
-./submodules/imgui_toggle/imgui_toggle_palette.cpp
-./submodules/imgui_toggle/imgui_toggle_presets.cpp
-./submodules/imgui_toggle/imgui_toggle_renderer.cpp
-./submodules/imgui_toggle/imgui_toggle.cpp)
-
-pkg_check_modules(SDL sdl2 REQUIRED)
-list(APPEND cpl_opts ${SDL_CFLAGS_OTHER})
-list(APPEND lnk_libs ${SDL_LIBRARIES})
-
-if(USE_OPENGL)
+# render
+if (RENDER_OPENGL)
+  message(STATUS "using opengl")
   pkg_check_modules(OPENGL opengl REQUIRED)
-  list(APPEND cpl_opts ${OPENGL_CFLAGS_OTHER})
-  list(APPEND lnk_libs ${OPENGL_LIBRARIES})
-  set(SDL_OPENGL ON)
-else()
-  set(SDL_OPENGL OFF)
+  list(APPEND compiler_options ${OPENGL_CFLAGS})
+  list(APPEND linked_libraries ${OPENGL_LIBRARIES})
 endif()
-if(USE_DIRECTX)
-  set(SDL_DIRECTX ON)
-  list(APPEND lnk_libs "d3d11.lib")
+
+if(RENDER_DIRECTX)
+  message(STATUS "using directx")
+  list(APPEND linked_libraries "d3d11.lib")
+endif()
+
+# sdl
+if (SYSTEM_SDL)
+  pkg_check_modules(SDL sdl2 REQUIRED)
+  list(APPEND compiler_options ${SDL_CFLAGS} ${SDL_CFLAGS_OTHER})
+  list(APPEND linked_libraries ${SDL_LINK_LIBRARIES})
 else()
-  set(SDL_DIRECTX OFF)
+  set(SDL_STATIC TRUE)
+  add_subdirectory(${sdl_path} EXCLUDE_FROM_ALL)
+  set(SDL_INCLUDE_DIRS ${sdl_path}/include)
+  list(APPEND linked_libraries SDL2::SDL2main SDL2::SDL2)
+  # list(APPEND linked_libraries SDL2)
+  add_compile_definitions(NON_SYS_SDL)
 endif()
 
 set(SDL_AUDIO OFF)
@@ -73,53 +89,80 @@ set(SDL_FILE OFF)
 set(SDL_FILESYSTEM OFF)
 set(SDL_SENSOR OFF)
 set(SDL_LOCALE OFF)
+set(SDL_OPENGL ${RENDER_OPENGL})
+set(SDL_DIRECTX ${RENDER_DIRECTX})
 
-# SOURCES
+# portaudio
+set(PA_BUILD_SHARED_LIBS OFF CACHE BOOL "Build dynamic library" FORCE)
+add_subdirectory(${submodules_path}/portaudio EXCLUDE_FROM_ALL)
+list(APPEND linked_libraries PortAudio)
 
-set(unscope_srcs)
+# sources
+list(APPEND audio_sources
+${sources_path}/audio/audioInput.cpp
+)
 
-if(USE_OPENGL)
-  list(APPEND unscope_srcs ${srcs_path}/gui/render/render_opengl_sdl.cpp)
-  list(APPEND gui_srcs
+list(APPEND trigger_sources
+${sources_path}/trigger/abstract.cpp
+${sources_path}/trigger/fallback.cpp
+${sources_path}/trigger/analog.cpp
+)
+
+list(APPEND gui_sources
+${imgui_path}/imgui.cpp
+${imgui_path}/imgui_demo.cpp
+${imgui_path}/imgui_draw.cpp
+${imgui_path}/imgui_tables.cpp
+${imgui_path}/imgui_widgets.cpp
+${imgui_path}/misc/cpp/imgui_stdlib.cpp
+
+${implot_path}/implot.cpp
+${implot_path}/implot_demo.cpp
+${implot_path}/implot_items.cpp
+
+${imgui_knobs_path}/imgui-knobs.cpp
+
+${imgui_toggle_path}/imgui_toggle_palette.cpp
+${imgui_toggle_path}/imgui_toggle_presets.cpp
+${imgui_toggle_path}/imgui_toggle_renderer.cpp
+${imgui_toggle_path}/imgui_toggle.cpp
+
+${sources_path}/gui/consts.cpp
+${sources_path}/gui/gui.cpp
+${sources_path}/gui/wins/about.cpp
+${sources_path}/gui/wins/ctrls.cpp
+${sources_path}/gui/wins/oscs.cpp
+
+${sources_path}/gui/render/abstract.cpp)
+
+if(RENDER_OPENGL)
+  add_compile_definitions(USE_OPENGL)
+  list(APPEND gui_sources
   ${imgui_path}/backends/imgui_impl_sdl2.cpp
-  ${imgui_path}/backends/imgui_impl_opengl3.cpp)
+  ${imgui_path}/backends/imgui_impl_opengl3.cpp
+  ${sources_path}/gui/render/render_opengl_sdl.cpp)
 endif()
-if(USE_DIRECTX)
-  list(APPEND unscope_srcs ${srcs_path}/gui/render/render_directx11_sdl.cpp)
-  list(APPEND gui_srcs
+if(RENDER_DIRECTX)
+  add_compile_definitions(USE_DIRECTX)
+  list(APPEND gui_sources
   ${imgui_path}/backends/imgui_impl_dx11.cpp
-  ${imgui_path}/backends/imgui_impl_sdl2.cpp)
+  ${imgui_path}/backends/imgui_impl_sdl2.cpp
+  ${sources_path}/gui/render/render_directx11_sdl.cpp)
+  list(APPEND linked_libraries "d3dcompiler")
 endif()
 
-list(APPEND unscope_srcs ${aud_srcs} ${gui_srcs})
-list(APPEND unscope_srcs 
-${srcs_path}/trigger/abstract.cpp
-${srcs_path}/trigger/fallback.cpp
-${srcs_path}/trigger/analog.cpp
+list(APPEND unscope_srcs ${gui_sources} ${audio_sources} ${trigger_sources} ${sources_path}/main.cpp)
 
-${srcs_path}/audio/audioInput.cpp
+# project
 
-${srcs_path}/gui/render/abstract.cpp
-)
-
-list(APPEND unscope_srcs 
-${srcs_path}/gui/consts.cpp
-${srcs_path}/gui/gui.cpp
-${srcs_path}/gui/wins/about.cpp
-${srcs_path}/gui/wins/ctrls.cpp
-${srcs_path}/gui/wins/oscs.cpp
-
-${srcs_path}/main.cpp
-)
-
-project(unscope)
-set(CMAKE_PROJECT_VERSION_MAJOR 0)
-set(CMAKE_PROJECT_VERSION_MINOR 2)
-
-if (NOT WIN32)
-  add_executable(unscope ${unscope_srcs})
-else()
+if (IS_WIN)
   add_executable(unscope WIN32 ${unscope_srcs})
+else()
+  add_executable(unscope ${unscope_srcs})
+endif()
+
+if (MINGW)
+  set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
 endif()
 
 target_include_directories(unscope SYSTEM PRIVATE
@@ -128,16 +171,14 @@ ${imgui_path}
 ${imgui_path}/misc/cpp
 ${imgui_path}/backends
 ${implot_path}
-./submodules/imgui-knobs
-./submodules/imgui_toggle/
-${srcs_path}
-${srcs_path}/trigger
-${srcs_path}/audio
-${srcs_path}/gui)
+${imgui_toggle_path}
+${imgui_knobs_path}
+${sources_path}
+${sources_path}/audio
+${sources_path}/trigger
+${sources_path}/gui
+${sources_path}/gui/render)
 
-target_compile_options(unscope PRIVATE ${cpl_opts})
-target_link_libraries(unscope PRIVATE ${lnk_libs})
+target_compile_options(unscope PRIVATE ${compiler_options})
+target_link_libraries(unscope PRIVATE ${linked_libraries})
 
-if (MINGW)
-  target_link_options(unscope PRIVATE "-static -static-libgcc -static-libstdc++")
-endif()

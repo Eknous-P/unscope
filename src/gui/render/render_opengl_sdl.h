@@ -1,11 +1,11 @@
+#ifndef USCRENDERER_OGL_SDL
+#define USCRENDERER_OGL_SDL
+
 #include "../gui.h"
 #include <SDL.h>
 #include <SDL_opengl.h>
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
-
-#ifndef USCRENDERER_OGL_SDL
-#define USCRENDERER_OGL_SDL
 
 class USCRendOGL_SDL: public USCRender {
   private:

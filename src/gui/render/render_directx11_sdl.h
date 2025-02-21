@@ -1,3 +1,6 @@
+#ifndef USCRENDERER_DIRECTX_SDL
+#define USCRENDERER_DIRECTX_SDL
+
 #include "../gui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_dx11.h"
@@ -5,9 +8,6 @@
 #include <stdio.h>
 #include <SDL.h>
 #include <SDL_syswm.h>
-
-#ifndef USCRENDERER_DIRECTX_SDL
-#define USCRENDERER_DIRECTX_SDL
 
 class USCRendDirectX : public USCRender {
   private:

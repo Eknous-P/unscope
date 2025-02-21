@@ -14,3 +14,7 @@
 [submodule "submodules/imgui_toggle"]
 	path = submodules/imgui_toggle
 	url = https://github.com/cmdwtf/imgui_toggle.git
+[submodule "submodules/SDL"]
+	path = submodules/SDL
+	url = https://github.com/libsdl-org/SDL.git
+	branch = release-2.30.x

@@ -1,6 +1,6 @@
 # unscope
 
-Audio oscilloscope for Linux
+Audio oscilloscope for Linux _and Windows?_
 ![screenshot](assets/scr1.png)
 
 ## Reporting issues
@@ -32,7 +32,7 @@ Currently unscope requires the OpenGL, SDL, ALSA and PulseAudio dev libraries to
 sudo apt install libasound2-dev libpulse-dev libopengl-dev libxext-dev
 ```
 
-### Building
+### Building (Linux build)
 
 ```
 mkdir build
@@ -41,6 +41,13 @@ cmake ..
 make
 ```
 
-## Building (Windows)
+### Building (Windows build, MinGW)
+- note: the Windows build is not tested thouroughly!
 
-Currently I use Visual Studio 2022 and its fancy features to build.
+```
+mkdir build
+cd build
+cmake .. --toolchain ../tc_mingw.cmake
+make
+cp submodules/SDL/SDL2.dll .
+```

@@ -170,13 +170,13 @@ int main(int argc, char* argv[]) {
   return e!=paNoError;
 }
 
-// #ifdef _WIN32
-// int APIENTRY WinMain(HINSTANCE hInstance,
-//     HINSTANCE hPrevInstance,
-//     LPSTR lpCmdLine, int nCmdShow) {
-//   return main(__argc, __argv);
-// }
-// #endif
+#ifdef _WIN32
+int APIENTRY WinMain(HINSTANCE hInstance,
+    HINSTANCE hPrevInstance,
+    LPSTR lpCmdLine, int nCmdShow) {
+  return main(__argc, __argv);
+}
+#endif
 
 const char* verMsg = MISC_MSG PROGRAM_NAME " (version " PROGRAM_VER ")\n" MSG_END;
 
@@ -192,12 +192,15 @@ const char* helpMsg =
 
 const char* aboutMsg = 
 "Audio oscilloscope for Linux"
-#ifdef _WIN32
+#ifdef IS_WIN
 " and Windows" // i may someday setup crosscompiling
 #endif
 "\n\n"
 PROGRAM_NAME " is made using these libraries:\n\n"
 "PortAudio (https://github.com/PortAudio/portaudio)\n"
+#ifdef NON_SYS_SDL
+"SDL (https://github.com/libsdl-org/SDL)\n"
+#endif
 "Dear ImGui (https://github.com/ocornut/imgui)\n"
 "ImPlot (https://github.com/epezent/implot)\n"
 "ImGui Knobs (https://github.com/altschuler/imgui-knobs)\n"
