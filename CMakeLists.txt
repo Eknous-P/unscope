@@ -142,7 +142,7 @@ if(RENDER_OPENGL)
   list(APPEND gui_sources
   ${imgui_path}/backends/imgui_impl_sdl2.cpp
   ${imgui_path}/backends/imgui_impl_opengl2.cpp
-  ${sources_path}/gui/render/render_opengl_sdl.cpp)
+  ${sources_path}/gui/render/render_opengl2.cpp)
 endif()
 if(RENDER_DIRECTX)
   add_compile_definitions(USE_DIRECTX)

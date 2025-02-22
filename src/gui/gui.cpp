@@ -209,7 +209,7 @@ void USCGUI::getDevices(std::vector<DeviceEntry> d) {
 }
 
 void USCGUI::doFrame() {
-  running = rd->renderPreLoop()==0;
+  running = rd->renderPreLoop()>=0;
   if (!running) return;
   ImGui::NewFrame();
   
@@ -218,7 +218,7 @@ void USCGUI::doFrame() {
   USCGUI::drawGUI();
 
   ImGui::Render();
-  running = rd->renderPostLoop()==0;
+  running = rd->renderPostLoop()>=0;
 }
 
 void USCGUI::drawGUI() {
