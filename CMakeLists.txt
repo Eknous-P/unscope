@@ -157,6 +157,8 @@ list(APPEND unscope_srcs ${gui_sources} ${audio_sources} ${trigger_sources} ${so
 
 # project
 
+add_compile_definitions(IMGUI_USER_CONFIG="gui/user_config.h")
+
 if (IS_WIN)
   add_executable(unscope WIN32 ${unscope_srcs})
 else()
