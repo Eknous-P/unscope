@@ -245,9 +245,9 @@ const char* errMsgs[] = {
 
 const char* renderers[] = {
 #ifdef USE_OPENGL
-  "OpenGL + SDL",
+  "OpenGL",
 #endif
 #ifdef USE_DIRECTX
-  "DirectX 11 + SDL",
+  "DirectX 11",
 #endif
 };

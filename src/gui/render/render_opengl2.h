@@ -1,5 +1,5 @@
-#ifndef USCRENDERER_OGL_SDL
-#define USCRENDERER_OGL_SDL
+#ifndef USC_RENDER_OPENGL2_H
+#define USC_RENDER_OPENGL2_H
 
 #include "../gui.h"
 #include <SDL_opengl.h>
@@ -8,13 +8,13 @@
 
 class USCRenderOpenGL2: public USCRender {
   SDL_Window* win;
-  SDL_WindowFlags winFlags;
+  int winFlags;
   SDL_Event event;
 
   SDL_GLContext glContext;
   public:
     int initRender();
-    int setupRender(SDL_WindowFlags _winFlags, const char* winName, ImVec2 winPos, ImVec2 winSize);
+    int setupRender(int _winFlags, const char* winName, int winX, int winY, int winW, int winH);
     int renderPreLoop();
     int renderPostLoop();
     void destroyRender();

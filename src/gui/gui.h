@@ -20,11 +20,11 @@ enum TriggerModes : unsigned char {
 
 class USCRender {
   SDL_Window* win;
-  SDL_WindowFlags winFlags;
+  int winFlags;
   SDL_Event event;
   public:
     virtual int initRender();
-    virtual int setupRender(SDL_WindowFlags _winFlags, const char* winName, ImVec2 winPos, ImVec2 winSize);
+    virtual int setupRender(int _winFlags, const char* winName, int winX, int winY, int winW, int winH);
     virtual int renderPreLoop();
     virtual int renderPostLoop();
     virtual void destroyRender();

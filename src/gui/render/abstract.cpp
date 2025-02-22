@@ -4,12 +4,14 @@ int USCRender::initRender() {
   return 0;
 }
 
-int USCRender::setupRender(SDL_WindowFlags _winFlags, const char* winName, ImVec2 winPos, ImVec2 winSize) {
+int USCRender::setupRender(int _winFlags, const char* winName, int winX, int winY, int winW, int winH) {
   win=NULL;
   winFlags=_winFlags;
   (void)winName;
-  (void)winPos;
-  (void)winSize;
+  (void)winX;
+  (void)winY;
+  (void)winW;
+  (void)winH;
   return 0;
 }
 

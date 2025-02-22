@@ -1,5 +1,4 @@
 #include "render_directx11.h"
-#include <imgui.h>
 
 bool USCRenderDirectX11::CreateDeviceD3D(HWND hWnd) {
   // Setup swap chain
@@ -52,7 +51,7 @@ int USCRenderDirectX11::initRender() {
   return 0;
 }
 
-int USCRenderDirectX11::setupRender(SDL_WindowFlags _winFlags, const char* winName, ImVec2 winPos, ImVec2 winSize) {
+int USCRenderDirectX11::setupRender(int _winFlags, const char* winName, int winX, int winY, int winW, int winH) {
   // From 2.0.18: Enable native IME.
 #ifdef SDL_HINT_IME_SHOW_UI
   SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
@@ -60,11 +59,7 @@ int USCRenderDirectX11::setupRender(SDL_WindowFlags _winFlags, const char* winNa
   // Setup window
   winFlags = _winFlags;
 
-  int winX = winPos.x, winY = winPos.y;
-  if (winX==0) winX = SDL_WINDOWPOS_CENTERED;
-  if (winY==0) winY = SDL_WINDOWPOS_CENTERED;
-
-  win = SDL_CreateWindow(winName, winX, winY ,winSize.x, winSize.y, _winFlags);
+  win = SDL_CreateWindow(winName, winX, winY ,winW, winH, winFlags);
   if (win == NULL) {
     return 1;
   }

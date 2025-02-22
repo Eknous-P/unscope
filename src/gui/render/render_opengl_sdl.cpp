@@ -1,10 +1,11 @@
 #include "render_opengl2.h"
+#include <SDL_video.h>
 
 int USCRenderOpenGL2::initRender() {
   return 0;
 }
 
-int USCRenderOpenGL2::setupRender(SDL_WindowFlags _winFlags, const char* winName, ImVec2 winPos, ImVec2 winSize) {
+int USCRenderOpenGL2::setupRender(int _winFlags, const char* winName, int winX, int winY, int winW, int winH) {
 #ifdef SDL_HINT_IME_SHOW_UI
   SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
 #endif
@@ -13,11 +14,8 @@ int USCRenderOpenGL2::setupRender(SDL_WindowFlags _winFlags, const char* winName
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-  winFlags=_winFlags|SDL_WINDOW_OPENGL;
-  int winX = winPos.x, winY = winPos.y;
-  if (winX==0) winX = SDL_WINDOWPOS_CENTERED;
-  if (winY==0) winY = SDL_WINDOWPOS_CENTERED;
-  win=SDL_CreateWindow(winName, winX, winY ,winSize.x, winSize.y, _winFlags);
+  winFlags = _winFlags|SDL_WINDOW_OPENGL;
+  win=SDL_CreateWindow(winName, winX, winY, winW, winH, winFlags);
   if (win==NULL) {
     return 1;
   }

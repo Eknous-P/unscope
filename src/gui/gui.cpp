@@ -1,7 +1,4 @@
 #include "gui.h"
-#include <SDL.h>
-#include <render_opengl2.h>
-#include <shared.h>
 
 ImVec2 operator+(ImVec2 lhs, ImVec2 rhs) {
   return ImVec2(lhs.x+rhs.x,lhs.y+rhs.y);
@@ -199,8 +196,8 @@ int USCGUI::init() {
   if (rd->setupRender(
     (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE|SDL_WINDOW_ALLOW_HIGHDPI),
     PROGRAM_NAME,
-    ImVec2(0,0),
-    ImVec2(PROGRAM_WIDTH,PROGRAM_HEIGHT))!=0) return UGUIERROR_SETUPFAIL;
+    SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+    PROGRAM_WIDTH, PROGRAM_HEIGHT)!=0) return UGUIERROR_SETUPFAIL;
   bgColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
   running = true;
   io = ImGui::GetIO();
