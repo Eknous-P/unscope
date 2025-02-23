@@ -78,5 +78,5 @@ bool TriggerAnalog::getTriggered() {
 
 TriggerAnalog::~TriggerAnalog() {
   for (TriggerParam i:params) i.destroy();
-  DELETE_PTR(alignBuf)
+  DELETE_PTR_ARR(alignBuf)
 }

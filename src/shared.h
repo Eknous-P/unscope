@@ -30,6 +30,12 @@
   }
 #define DELETE_PTR(x) \
   if (x) { \
+    delete x; \
+    x = NULL; \
+  }
+
+#define DELETE_PTR_ARR(x) \
+  if (x) { \
     delete[] x; \
     x = NULL; \
   }
@@ -38,6 +44,15 @@
   if (x) { \
     FOR_RANGE(n) { \
       DELETE_PTR(x[z]) \
+    } \
+    delete[] x; \
+    x = NULL; \
+  }
+
+#define DELETE_DOUBLE_PTR_ARR(x,n) \
+  if (x) { \
+    FOR_RANGE(n) { \
+      DELETE_PTR_ARR(x[z]) \
     } \
     delete[] x; \
     x = NULL; \

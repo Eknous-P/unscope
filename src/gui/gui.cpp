@@ -1,4 +1,5 @@
 #include "gui.h"
+#include <shared.h>
 
 bool USCGUI::isRunning() {
   return running;
@@ -341,37 +342,13 @@ void USCGUI::setAudioDeviceSetting(int d) {
 }
 
 USCGUI::~USCGUI() {
-  // ImGui::SaveIniSettingsToDisk(INIFILE);
-  // Cleanup
   if (isGood) rd->destroyRender();
-  if (rd) {
-    delete rd;
-    rd = NULL;
-  }
-  if (trigger) {
-    for (unsigned char z = 0; z < channels; z++) {
-      if (trigger[z]) {
-        delete trigger[z];
-        trigger[z] = NULL;
-      }
-    }
-    delete[] trigger;
-    trigger = NULL;
-  }
-  if (fallbackTrigger) {
-    for (unsigned char z = 0; z < channels; z++) {
-      if (fallbackTrigger[z]) {
-        delete fallbackTrigger[z];
-        fallbackTrigger[z] = NULL;
-      }
-    }
-    delete[] fallbackTrigger;
-    fallbackTrigger = NULL;
-  }
-
-  DELETE_DOUBLE_PTR(oscData, channels)
-  DELETE_PTR(oscAlign)
+  DELETE_PTR(rd)
+  DELETE_DOUBLE_PTR(trigger, channels)
+  DELETE_DOUBLE_PTR(fallbackTrigger, channels)
+  DELETE_DOUBLE_PTR_ARR(oscData, channels)
+  DELETE_PTR_ARR(oscAlign)
   ai = NULL;
 
-  DELETE_PTR(tc)
+  DELETE_PTR_ARR(tc)
 }

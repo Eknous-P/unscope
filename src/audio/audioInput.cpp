@@ -220,6 +220,6 @@ unsigned char USCAudioInput::getChannelCount() {
 
 USCAudioInput::~USCAudioInput() {
   if (isGood) Pa_Terminate();
-  DELETE_DOUBLE_PTR(buffer.data, conf.channels)
-  DELETE_DOUBLE_PTR(buffer.dataCopy, conf.channels)
+  DELETE_DOUBLE_PTR_ARR(buffer.data, conf.channels)
+  DELETE_DOUBLE_PTR_ARR(buffer.dataCopy, conf.channels)
 }
