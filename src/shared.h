@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <memory.h>
+#include <math.h>
 
 // program stuff
 #define PROGRAM_NAME "unscope"

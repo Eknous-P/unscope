@@ -25,7 +25,7 @@ DockId=0x00000009,0\n\
 \n\
 [Window][Scope (XY)]\n\
 Pos=980,19\n\
-Size=300,318\n\
+Size=300,316\n\
 Collapsed=0\n\
 DockId=0x0000000B,0\n\
 \n\
@@ -34,6 +34,12 @@ Pos=980,500\n\
 Size=300,220\n\
 Collapsed=0\n\
 DockId=0x00000004,0\n\
+\n\
+[Window][Cursors]\n\
+Pos=980,500\n\
+Size=300,220\n\
+Collapsed=0\n\
+DockId=0x00000004,1\n\
 \n\
 [Window][Channel 1 Controls]\n\
 Pos=0,500\n\
@@ -53,11 +59,6 @@ Size=300,161\n\
 Collapsed=0\n\
 DockId=0x0000000C,0\n\
 \n\
-[Window][Dear ImGui Metrics/Debugger]\n\
-Pos=60,60\n\
-Size=676,484\n\
-Collapsed=0\n\
-\n\
 [Docking][Data]\n\
 DockSpace         ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,19 Size=1280,701 Split=X Selected=0x7C3EDFF1\n\
   DockNode        ID=0x00000001 Parent=0x8B93E3BD SizeRef=578,371 Split=Y Selected=0x7C3EDFF1\n\
@@ -70,7 +71,7 @@ DockSpace         ID=0x8B93E3BD Window=0xA787BDB4 Pos=0,19 Size=1280,701 Split=X
       DockNode    ID=0x00000007 Parent=0x00000006 SizeRef=488,207 Selected=0x5E07700B\n\
       DockNode    ID=0x00000008 Parent=0x00000006 SizeRef=790,207 Split=X Selected=0x226655D0\n\
         DockNode  ID=0x00000003 Parent=0x00000008 SizeRef=488,207 Selected=0x226655D0\n\
-        DockNode  ID=0x00000004 Parent=0x00000008 SizeRef=300,207 Selected=0xDFE49EEC\n\
+        DockNode  ID=0x00000004 Parent=0x00000008 SizeRef=300,207 Selected=0x226655D0\n\
   DockNode        ID=0x00000002 Parent=0x8B93E3BD SizeRef=275,371 HiddenTabBar=1 Selected=0x67284010\n\
 ";
 

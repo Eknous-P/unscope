@@ -134,6 +134,7 @@ ${sources_path}/gui/gui.cpp
 ${sources_path}/gui/wins/about.cpp
 ${sources_path}/gui/wins/ctrls.cpp
 ${sources_path}/gui/wins/oscs.cpp
+${sources_path}/gui/wins/cursors.cpp
 
 ${sources_path}/gui/render/abstract.cpp)
 

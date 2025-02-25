@@ -1,5 +1,4 @@
 #include "gui.h"
-#include <shared.h>
 
 bool USCGUI::isRunning() {
   return running;
@@ -12,7 +11,7 @@ USCGUI::USCGUI(unscopeParams *params) {
   err = 0;
   channels = up->channels;
 
-  sc.plotFlags = ImPlotFlags_NoLegend|ImPlotFlags_NoMenus;
+  sc.plotFlags = ImPlotFlags_NoLegend|ImPlotFlags_NoMenus|ImPlotFlags_NoMouseText;
   sc.scopeFlags = ImPlotAxisFlags_AutoFit|ImPlotAxisFlags_Lock|ImPlotAxisFlags_NoMenus|ImPlotAxisFlags_Foreground;
 
   sampleRate = up->sampleRate;
@@ -50,6 +49,7 @@ USCGUI::USCGUI(unscopeParams *params) {
   wo.xyScopeControlsOpen = true;
   wo.globalControlsOpen = true;
   wo.aboutOpen=false;
+  wo.cursorsOpen=true;
 
   oscDataSize = up->audioBufferSize;
 
@@ -100,6 +100,13 @@ USCGUI::USCGUI(unscopeParams *params) {
     fallbackTrigger[z] = t;
   }
 
+  HCursors[0]=plotCursor("X1",-.5f);
+  HCursors[1]=plotCursor("X2",.5f);
+  VCursors[0]=plotCursor("Y1",-.5f);
+  VCursors[1]=plotCursor("Y2",.5f);
+
+  showHCursors = false;
+  showVCursors = false;
 
   ai = NULL;
   isGood = true;
@@ -242,6 +249,7 @@ void USCGUI::drawGUI() {
       }
       ImGui::MenuItem("XY Scope Controls",NULL,&wo.xyScopeControlsOpen);
       ImGui::MenuItem("Global Controls",NULL,&wo.globalControlsOpen);
+      ImGui::MenuItem("Cursors",NULL,&wo.cursorsOpen);
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("About")) {
@@ -255,6 +263,7 @@ void USCGUI::drawGUI() {
   drawXYScopeControls();
 
   drawAbout();
+  drawCursors();
 
   ai->setUpdateState(updateAudio);
   setOscData(ai->getData());
@@ -291,7 +300,7 @@ void USCGUI::drawGUI() {
   
   // drawAlignDebug();
   
-  ImGui::ShowMetricsWindow();
+  // ImGui::ShowMetricsWindow();
 }
 
 void USCGUI::drawAlignDebug() {

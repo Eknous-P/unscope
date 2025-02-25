@@ -6,8 +6,8 @@
 #include <implot.h>
 #include "imgui_stdlib.h"
 
-#include "../shared.h"
-#include "../audio/audio.h"
+#include "shared.h"
+#include "audio.h"
 
 #define INIFILE "unscope.ini"
 
@@ -45,7 +45,6 @@ class USCRender {
 #include "fallback.h"
 #include "analog.h"
 
-
 class USCGUI {
   private:
     struct scopeParams {
@@ -78,10 +77,19 @@ class USCGUI {
       bool xyScopeControlsOpen;
       bool globalControlsOpen;
       bool aboutOpen;
+      bool cursorsOpen;
     };
 
-    struct settings {
-      bool doSetting;
+    struct plotCursor {
+      const char* label;
+      double pos;
+      plotCursor():
+        label(NULL),
+        pos(0.0f) {}
+      plotCursor(const char* l, float p) {
+        label = l;
+        pos = p;
+      }
     };
 
     int err;
@@ -107,7 +115,6 @@ class USCGUI {
     traceParams   *tc;
     xyParams       xyp;
     windowsOpen    wo;
-    settings       st;
 
     bool showTrigger, shareParams;
     signed char shareTrigger; // abs part - which channel, sign - do/don't
@@ -116,6 +123,9 @@ class USCGUI {
 
     Triggers trigNum;
     Trigger **trigger, **fallbackTrigger;
+
+    plotCursor HCursors[2], VCursors[2];
+    bool showHCursors, showVCursors;
 
   public:
     void setupRenderer(USCRenderers r);
@@ -142,6 +152,7 @@ class USCGUI {
 
     void drawAbout();
     void drawSettings();
+    void drawCursors();
 
     bool doRestartAudio();
 
