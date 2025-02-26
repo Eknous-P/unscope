@@ -1,11 +1,10 @@
-#include <portaudio.h>
-
-#include "../shared.h"
-
 #ifndef USC_AUDIO_H
 #define USC_AUDIO_H
 
-class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
+#include <portaudio.h>
+#include "shared.h"
+
+class USCAudioInput { // get audio into a buffer
   private:
     struct AudioConfig{
       PaDeviceIndex device;
@@ -30,7 +29,6 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
     PaStreamParameters streamParams;
 
     bool isGood, running, updateAudio;
-    unsigned long int holdoffTimer;
 
     int bufferGetCallback(
       const void *inputBuffer, void *outputBuffer,
@@ -45,8 +43,6 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
       PaStreamCallbackFlags statusFlags,
       void *userData );
 
-      void align(unsigned char chan);
-
   public:
     std::vector<DeviceEntry> enumerateDevs();
     int init(PaDeviceIndex dev, bool loopback);
@@ -55,7 +51,6 @@ class USCAudioInput { // get audio into a buffer and generate "alignment ramp"
     unsigned char getChannelCount();
     float **getData();
     const PaDeviceInfo* getDeviceInfo();
-    bool didTrigger(unsigned char chan);
     void setUpdateState(bool u);
 
     USCAudioInput(unscopeParams *params);

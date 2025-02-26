@@ -1,7 +1,5 @@
 #include "audio.h"
 
-#define CHECK_TRIGGERED triggered[j]=triggerLow[j]&&triggerHigh[j]
-
 USCAudioInput::USCAudioInput(unscopeParams *params) {
   isGood = Pa_Initialize()==paNoError;
   running = false;
@@ -15,8 +13,6 @@ USCAudioInput::USCAudioInput(unscopeParams *params) {
   buffer.size = params->audioBufferSize;
   buffer.data = new float*[conf.channels];
   buffer.dataCopy = new float*[conf.channels];
-
-  holdoffTimer = 0;
 
   if (!buffer.data) {
     isGood = false;
@@ -61,15 +57,6 @@ int USCAudioInput::bufferGetCallback(
 
     const int nChans = conf.channels;
   
-    unsigned int *triggerPoint = new unsigned int[nChans];
-    memset(triggerPoint,0,conf.channels*sizeof(int));
-  
-    bool *triggerLow = new bool[nChans];
-    bool *triggerHigh = new bool[nChans];
-
-    memset(triggerLow,0,conf.channels*sizeof(bool));
-    memset(triggerHigh,0,conf.channels*sizeof(bool));
-
     if (inputBuffer==NULL) {
       for (buffer.index = 0; buffer.index < buffer.size*conf.channels; buffer.index++) {
         buffer.data[buffer.index] = 0;
@@ -93,15 +80,8 @@ int USCAudioInput::bufferGetCallback(
       if (updateAudio) {
         for (j = 0; j < conf.channels; j++) memcpy(buffer.dataCopy[j],buffer.data[j],buffer.size*sizeof(float));
       }
-      // for (j = 0; j < conf.channels; j++) {
-      //   if(!trigger->trigger(j, alignParams->waveLen)) {}
-      // }
-      // buffer.alignRamp = trigger->getAlignBuffer();
     }
 
-    delete[] triggerPoint;
-    delete[] triggerLow;
-    delete[] triggerHigh;
 
     return paContinue;
 }
@@ -115,10 +95,10 @@ std::vector<DeviceEntry> USCAudioInput::enumerateDevs() {
     // if (info->maxInputChannels < conf.channels) continue;
     if (info->maxOutputChannels > 0) continue;
     if (info->defaultSampleRate < conf.sampleRate) continue;
-    devs.push_back(DeviceEntry(i, info->maxInputChannels == info->maxOutputChannels,
-      std::to_string(i) + ": " +
-      std::string(Pa_GetHostApiInfo(info->hostApi)->name) + " | " + 
-      std::string(info->name)));
+
+    char buf[256];
+    snprintf(buf, 256, "%d: %s | %s", i, Pa_GetHostApiInfo(info->hostApi)->name, info->name);
+    devs.push_back(DeviceEntry(i, info->maxInputChannels == info->maxOutputChannels, buf));
   }
   printf(INFO_MSG "%lu devices found" MSG_END, devs.size());
   return devs;
@@ -191,15 +171,6 @@ int USCAudioInput::stop() {
   if (!running) return 0;
   running = false;
   return Pa_CloseStream(stream);
-}
-
-bool USCAudioInput::didTrigger(unsigned char chan) {
-  // if (chan == 255) {
-  //   for (unsigned char i = 0; i < conf.channels; i++) if (triggered[i]) return true;
-  //   return false;
-  // }
-  // return triggered[chan];
-  return false;
 }
 
 void USCAudioInput::setUpdateState(bool u) {

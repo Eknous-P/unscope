@@ -115,11 +115,12 @@ struct unscopeParams {
 struct DeviceEntry {
   int dev;
   bool shouldPassThru;
-  std::string devName;
-  DeviceEntry(int d, bool p, std::string dn) {
+  char* devName;
+  DeviceEntry(int d, bool p, const char* dn) {
     dev = d;
     shouldPassThru = p;
-    devName = dn;
+    devName = new char[256];
+    memcpy(devName, dn, 256);
   }
 };
 

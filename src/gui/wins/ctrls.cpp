@@ -40,9 +40,9 @@ void USCGUI::drawGlobalControls() {
   }
 
   if (devs.size() > 0) {
-    if (ImGui::BeginCombo("device",devs[deviceNum].devName.c_str())) {
+    if (ImGui::BeginCombo("device",devs[deviceNum].devName)) {
       for (int i = 0; i < devs.size(); i++) {
-        if (ImGui::Selectable(devs[i].devName.c_str(), deviceNum == i)) {
+        if (ImGui::Selectable(devs[i].devName, deviceNum == i)) {
           deviceNum = i;
           device = devs[i].dev;
         }

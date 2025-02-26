@@ -11,13 +11,6 @@
 
 #define INIFILE "unscope.ini"
 
-enum TriggerModes : unsigned char {
-  TRIGGER_NONE, // fixed sweep
-  TRIGGER_AUTO, // normal, fixed if not triggering
-  TRIGGER_NORMAL,
-  TRIGGER_SINGLE
-};
-
 class USCRender {
   SDL_Window* win;
   int winFlags;
