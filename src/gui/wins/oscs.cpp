@@ -1,4 +1,5 @@
 #include "gui.h"
+#include <implot.h>
 
 void USCGUI::drawMainScope() {
   if (!wo.mainScopeOpen) return;
@@ -36,12 +37,14 @@ void USCGUI::drawMainScope() {
       if (showHCursors) {
         ImVec4 cursorColor = ImVec4(.24f, .13f, .98f, 1.f);
         char buf[256];
-        ImGui::PushID("HCURSORS");
+        ImGui::PushID("HCURSOR0");
         if (ImPlot::DragLineX(ImAxis_X1, &HCursors[0].pos, cursorColor)) {
           HCursors[0].pos = clamp(HCursors[0].pos);
         }
         ImPlot::SetAxis(ImAxis_X1);
         ImPlot::TagX(HCursors[0].pos, cursorColor, "%s", HCursors[0].label);
+        ImGui::PopID();
+        ImGui::PushID("HCURSOR1");
         if (ImPlot::DragLineX(ImAxis_X2, &HCursors[1].pos, cursorColor)) {
           HCursors[1].pos = clamp(HCursors[1].pos);
         }
@@ -66,17 +69,21 @@ void USCGUI::drawMainScope() {
       if (showVCursors) {
         ImVec4 cursorColor = ImVec4(.94f, .73f, .18f, 1.f);
         char buf[256];
-        ImGui::PushID("VCURSORS");
+        ImGui::PushID("VCURSOR0");
         if (ImPlot::DragLineY(ImAxis_Y1, &VCursors[0].pos, cursorColor)) {
           VCursors[0].pos = clamp(VCursors[0].pos);
         }
-        ImPlot::SetAxis(ImAxis_Y1);
+        // ImPlot::SetAxis(ImAxis_Y1);
         ImPlot::TagY(VCursors[0].pos, cursorColor, "%s", VCursors[0].label);
+        ImGui::PopID();
+        ImGui::PushID("VCURSOR1");
+        // ImPlot::SetAxis(ImAxis_Y2);
         if (ImPlot::DragLineY(ImAxis_Y2, &VCursors[1].pos, cursorColor)) {
           VCursors[1].pos = clamp(VCursors[1].pos);
         }
-        ImPlot::SetAxis(ImAxis_Y1);
+        // ImPlot::SetAxis(ImAxis_Y1);
         ImPlot::TagY(VCursors[1].pos, cursorColor, "%s", VCursors[1].label);
+        ImGui::PopID();
 
         FOR_RANGE(channels) {
           const float vDiff = fabsf(VCursors[1].pos - VCursors[0].pos); // TODO: v cal
@@ -88,7 +95,6 @@ void USCGUI::drawMainScope() {
           );
           ImPlot::PlotText(buf, -0.65f, -0.7f - z / 8.f);
         }
-        ImGui::PopID();
       }
 
     }

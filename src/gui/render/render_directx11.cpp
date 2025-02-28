@@ -1,6 +1,6 @@
 #include "render_directx11.h"
 
-bool USCRenderDirectX11::CreateDeviceD3D(HWND hWnd) {
+bool USCRenderDirectX11::CreateDeviceD3D(HWND _hwnd) {
   // Setup swap chain
   DXGI_SWAP_CHAIN_DESC sd;
   ZeroMemory(&sd, sizeof(sd));
@@ -12,17 +12,17 @@ bool USCRenderDirectX11::CreateDeviceD3D(HWND hWnd) {
   sd.BufferDesc.RefreshRate.Denominator = 1;
   sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
   sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-  sd.OutputWindow = hWnd;
+  sd.OutputWindow = _hwnd;
   sd.SampleDesc.Count = 1;
   sd.SampleDesc.Quality = 0;
   sd.Windowed = TRUE;
   sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
   UINT createDeviceFlags = 0;
-  //createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+  // createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
   D3D_FEATURE_LEVEL featureLevel;
   const D3D_FEATURE_LEVEL featureLevelArray[2] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_10_0, };
-  if (D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext) != S_OK)
+  if (D3D11CreateDeviceAndSwapChain(NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, createDeviceFlags, featureLevelArray, 2, D3D11_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice, &featureLevel, &g_pd3dDeviceContext) != S_OK)
     return false;
 
   CreateRenderTarget();
@@ -31,23 +31,39 @@ bool USCRenderDirectX11::CreateDeviceD3D(HWND hWnd) {
 
 void USCRenderDirectX11::CleanupDeviceD3D() {
   CleanupRenderTarget();
-  if (g_pSwapChain) { g_pSwapChain->Release(); g_pSwapChain = nullptr; }
-  if (g_pd3dDeviceContext) { g_pd3dDeviceContext->Release(); g_pd3dDeviceContext = nullptr; }
-  if (g_pd3dDevice) { g_pd3dDevice->Release(); g_pd3dDevice = nullptr; }
+  if (g_pSwapChain) {
+    g_pSwapChain->Release();
+    g_pSwapChain = NULL;
+  }
+  if (g_pd3dDeviceContext) {
+    g_pd3dDeviceContext->Release();
+    g_pd3dDeviceContext = NULL;
+  }
+  if (g_pd3dDevice) {
+    g_pd3dDevice->Release();
+    g_pd3dDevice = NULL;
+  }
 }
 
 void USCRenderDirectX11::CreateRenderTarget() {
   ID3D11Texture2D* pBackBuffer;
   g_pSwapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer));
-  g_pd3dDevice->CreateRenderTargetView(pBackBuffer, nullptr, &g_mainRenderTargetView);
+  g_pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &g_mainRenderTargetView);
   pBackBuffer->Release();
 }
 
 void USCRenderDirectX11::CleanupRenderTarget() {
-  if (g_mainRenderTargetView) { g_mainRenderTargetView->Release(); g_mainRenderTargetView = nullptr; }
+  if (g_mainRenderTargetView) {
+    g_mainRenderTargetView->Release();
+    g_mainRenderTargetView = NULL;
+  }
 }
 
 int USCRenderDirectX11::initRender() {
+  clearColor[0] = 0.f;
+  clearColor[1] = 0.f;
+  clearColor[2] = 0.f;
+  clearColor[3] = 0.f;
   return 0;
 }
 
@@ -103,10 +119,9 @@ int USCRenderDirectX11::renderPreLoop() {
 }
 
 int USCRenderDirectX11::renderPostLoop() {
-  float col[4] = {0.f, 0.f, 0.f, 0.f};
   ImGuiIO io = ImGui::GetIO();
   g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, NULL);
-  g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, col);
+  g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, clearColor);
   ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
   // Update and Render additional Platform Windows

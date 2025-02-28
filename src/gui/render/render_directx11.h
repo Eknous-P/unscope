@@ -19,7 +19,9 @@ class USCRenderDirectX11 : public USCRender {
   HWND hwnd;
   WNDCLASSEXW wc;
 
-  bool CreateDeviceD3D(HWND hWnd);
+  float clearColor[4];
+
+  bool CreateDeviceD3D(HWND _hwnd);
   void CleanupDeviceD3D();
   void CreateRenderTarget();
   void CleanupRenderTarget();

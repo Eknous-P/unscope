@@ -24,8 +24,8 @@ void USCGUI::drawCursors() {
       if (showVCursors) {
         const float vDiff = fabsf(VCursors[1].pos - VCursors[0].pos); // TODO: v cal
         ImGui::Text("Y1: %.3f, Y2: %.3f\nvoltage (p-p):%2.4fV",
-          HCursors[0].pos,
-          HCursors[1].pos,
+          VCursors[0].pos,
+          VCursors[1].pos,
           vDiff
         );
       }

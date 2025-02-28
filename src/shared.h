@@ -116,12 +116,20 @@ struct DeviceEntry {
   int dev;
   bool shouldPassThru;
   char* devName;
+  DeviceEntry():
+    dev(0),
+    shouldPassThru(false),
+    devName(NULL) {}
   DeviceEntry(int d, bool p, const char* dn) {
     dev = d;
     shouldPassThru = p;
     devName = new char[256];
     memcpy(devName, dn, 256);
   }
+  // ~DeviceEntry() {
+  //   printf("%p\n",(void*)devName);
+  //   DELETE_PTR(devName);
+  // }
 };
 
 struct AlignParams {

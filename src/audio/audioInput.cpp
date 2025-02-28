@@ -49,7 +49,6 @@ int USCAudioInput::bufferGetCallback(
     const float *audIn = (const float*)inputBuffer;
     float *audOut = (float*)outputBuffer;
   
-    (void) outputBuffer;
     (void) timeInfo;
     (void) statusFlags;
 
@@ -88,7 +87,7 @@ int USCAudioInput::bufferGetCallback(
 
 std::vector<DeviceEntry> USCAudioInput::enumerateDevs() {
   devs.clear();
-  devs.push_back(DeviceEntry(Pa_GetDefaultInputDevice(),true,"Default device"));
+  devs.push_back(DeviceEntry(Pa_GetDefaultInputDevice(), true, "Default device"));
   for (int i = 0; i < Pa_GetDeviceCount(); i++) {
     const PaDeviceInfo *info = Pa_GetDeviceInfo(i);
     if (info == NULL) continue;
@@ -97,6 +96,7 @@ std::vector<DeviceEntry> USCAudioInput::enumerateDevs() {
     if (info->defaultSampleRate < conf.sampleRate) continue;
 
     char buf[256];
+    memset(buf, 0, 256);
     snprintf(buf, 256, "%d: %s | %s", i, Pa_GetHostApiInfo(info->hostApi)->name, info->name);
     devs.push_back(DeviceEntry(i, info->maxInputChannels == info->maxOutputChannels, buf));
   }
