@@ -15,29 +15,37 @@ You should have received a copy of the GNU General Public License along with
 unscope. If not, see <https://www.gnu.org/licenses/>. 
 */
 
-#ifndef USC_RENDER_OPENGL2_H
-#define USC_RENDER_OPENGL2_H
+#ifndef TRIGGER_SMOOTH_H
+#define TRIGGER_SMOOTH_H
 
-#include "../gui.h"
-#include <SDL_opengl.h>
-#include "imgui_impl_sdl2.h"
-#include "imgui_impl_opengl2.h"
+#include "trigger.h"
 
-class USCRenderOpenGL2: public USCRender {
-  SDL_Window* win;
-  int winFlags;
-  SDL_Event event;
+class TriggerSmooth : public Trigger {
+  float *alignBuf, *chanBuf;
+  unscopeParams* uParams;
+  vector<TriggerParam> params;
 
-  SDL_GLContext glContext;
+  nint triggerIndex;
+
+  bool triggered;
+  nint alignRegionSize;
+  float* smoothBuf, triggerLevel;
+
+  float prevSmooth, logSmooth;
+
   public:
-    int initRender();
-    int setupRender(int _winFlags, const char* winName, int winX, int winY, int winW, int winH);
-    int renderPreLoop();
-    int renderPostLoop();
-    void destroyRender();
-
-    SDL_Window* getWindow();
-    ~USCRenderOpenGL2();
+    void setupTrigger(unscopeParams* up, float* cb);
+    vector<TriggerParam> getParams();
+    bool trigger(nint windowSize);
+    bool getTriggered();
+    float* getAlignBuffer();
+    nint getAlignRegionSize();
+#ifdef TRIGGER_DEBUG
+    float* getSmoothBuffer();
+    float getTriggerLevel();
+    nint getTriggerIndex();
+#endif
+    ~TriggerSmooth();
 };
 
 #endif

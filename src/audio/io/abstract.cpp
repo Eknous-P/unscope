@@ -15,37 +15,58 @@ You should have received a copy of the GNU General Public License along with
 unscope. If not, see <https://www.gnu.org/licenses/>. 
 */
 
-#include "../gui.h"
+#include "audio.h"
 
-int USCRender::initRender() {
+int AudioIO::setup(USCAudio* p) {
+  parent = p;
+  conf = p->getConfig();
+  buf  = p->getBuffer();
+  devs = p->getDevices();
+  callbackFunction = p->getCallbackFunction();
+
+  running = false;
+  outputting = false;
   return 0;
 }
 
-int USCRender::setupRender(int _winFlags, const char* winName, int winX, int winY, int winW, int winH) {
-  win=NULL;
-  winFlags=_winFlags;
-  (void)winName;
-  (void)winX;
-  (void)winY;
-  (void)winW;
-  (void)winH;
+int AudioIO::init() {
   return 0;
 }
 
-int USCRender::renderPreLoop() {
+int AudioIO::deinit() {
   return 0;
 }
 
-int USCRender::renderPostLoop() {
+int AudioIO::start() {
+  running = true;
   return 0;
 }
 
-void USCRender::destroyRender() {
+int AudioIO::stop() {
+  running = false;
+  return 0;
 }
 
-SDL_Window* USCRender::getWindow() {
-  return win;
+bool AudioIO::isRunning() {
+  return running;
 }
 
-USCRender::~USCRender() {
+bool AudioIO::isOutputting() {
+  return outputting;
+}
+
+int AudioIO::getAvailDevices() {
+  return 0;
+}
+
+int AudioIO::getDefaultInputDevice() {
+  return 0;
+}
+
+int AudioIO::getDefaultOutputDevice() {
+  return 0;
+}
+
+const char* AudioIO::getLastError() {
+  return NULL;
 }

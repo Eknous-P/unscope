@@ -1,3 +1,20 @@
+/*
+unscope - an audio oscilloscope
+Copyright (C) 2025 Eknous
+
+unscope is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 2 of the License, or (at your option) any later
+version.
+
+unscope is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+unscope. If not, see <https://www.gnu.org/licenses/>. 
+*/
+
 #include "analog.h"
 
 #define CHECK_TRIGGERED foundTrigger=triggerLow&&triggerHigh
@@ -18,47 +35,64 @@ void TriggerAnalog::setupTrigger(unscopeParams* up, float* cb) {
   triggerIndex = 0;
 
   triggered = true;
+  alignRegionSize = 0;
 }
 
-std::vector<TriggerParam> TriggerAnalog::getParams() {
+vector<TriggerParam> TriggerAnalog::getParams() {
   return params;
 }
 
-bool TriggerAnalog::trigger(unsigned long int windowSize) {
+bool TriggerAnalog::trigger(nint windowSize) {
+  if (!chanBuf) return false;
   triggered = false;
   // locate trigger
-  bool triggerHigh = false, triggerLow = false, foundTrigger = false, edge = !*(bool*)params[3].getValue();
-  float trigY = *(float*)params[0].getValue(); // temp
-  long int offset = (windowSize / 2) * *(float*)params[1].getValue();
+  bool triggerHigh = false, triggerLow = false, foundTrigger = false, edge = !params[3].getValue<bool>();
+  float trigY = params[0].getValue<float>(); // temp
+  long int offset = (windowSize / 2) * params[1].getValue<float>();
   triggerIndex = uParams->audioBufferSize - windowSize;
 
   memset(alignBuf, 0xbf, uParams->audioBufferSize * sizeof(float));
 
   while (triggerIndex > 0) {
     triggerIndex--;
-    if (chanBuf[triggerIndex + windowSize/2 + offset] < trigY) {
+    if (chanBuf[triggerIndex + windowSize/2] < trigY) {
       triggerLow = true;
       CHECK_TRIGGERED;
       if (foundTrigger && edge) break;
     }
-    if (chanBuf[triggerIndex + windowSize/2 + offset] > trigY) {
+    if (chanBuf[triggerIndex + windowSize/2] > trigY) {
       triggerHigh = true;
       CHECK_TRIGGERED;
       if (foundTrigger && !edge) break;
     }
-    if (!*(bool*)params[2].getValue()) {
+    if (!params[2].getValue<bool>()) {
       if (triggerIndex < uParams->audioBufferSize - 2 * windowSize) return false; // out of window
     }
   }
 
+  // handle offset
+  if (
+    (triggerIndex - offset > uParams->audioBufferSize) ||
+    ((int)triggerIndex - offset < 0)
+  ) {
+    offset = 0;
+  }
+
+  triggerIndex -= offset;
   alignBuf[triggerIndex] = -1.0f;
 
   const float delta = 2.0f / windowSize;
-  unsigned long int i = triggerIndex + 1;
+  nint i = triggerIndex + 1;
   for (; i < uParams->audioBufferSize; i++) {
     float v = alignBuf[i-1] + delta;
     if (v > 1.0f) break;
     alignBuf[i] = v;
+  }
+
+  if (triggerIndex > uParams->audioBufferSize - windowSize) {
+    alignRegionSize = uParams->audioBufferSize - triggerIndex;
+  } else {
+    alignRegionSize = windowSize;
   }
 
   // 3.003...... not quite 1...
@@ -71,6 +105,16 @@ bool TriggerAnalog::trigger(unsigned long int windowSize) {
 float* TriggerAnalog::getAlignBuffer() {
   return alignBuf;
 }
+
+nint TriggerAnalog::getAlignRegionSize() {
+  return alignRegionSize;
+}
+
+#ifdef TRIGGER_DEBUG
+nint TriggerAnalog::getTriggerIndex() {
+  return triggerIndex;
+}
+#endif
 
 bool TriggerAnalog::getTriggered() {
   return triggered;

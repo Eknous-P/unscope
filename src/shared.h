@@ -1,14 +1,41 @@
+/*
+unscope - an audio oscilloscope
+Copyright (C) 2025 Eknous
+
+unscope is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 2 of the License, or (at your option) any later
+version.
+
+unscope is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+unscope. If not, see <https://www.gnu.org/licenses/>. 
+*/
+
 #ifndef USC_SHARED_H
 #define USC_SHARED_H
 
 #include <vector>
-#include <string>
+using std::vector;
+extern "C" {
+#include <stdio.h>
 #include <memory.h>
 #include <math.h>
+}
+
+typedef float AudioSample;
+typedef unsigned long long int nint;
 
 // program stuff
+#define TRIGGER_DEBUG
+
 #define PROGRAM_NAME "unscope"
-#define PROGRAM_VER "0.3"
+#define PROGRAM_VER "1.0rc1"
+
+#define PROGRAM_NAME_AND_VER PROGRAM_NAME " " PROGRAM_VER
 
 #define PROGRAM_WIDTH 1280
 #define PROGRAM_HEIGHT 720
@@ -69,24 +96,18 @@
         }
 
 enum unscopeErrors {
-  UAUDIOERR_NOERR = 0,
-  UAUDIOERR_NOINIT,
-  UAUDIOERR_NODEVS,
-  UAUDIOERR_NODEV,
-  UAUDIOERR_NOSTART,
-  UAUDIOERR_NOGOOD,
-
   UGUIERROR_SETUPFAIL,
   UGUIERROR_INITFAIL
 };
 
-enum unscopeArgs {
+enum unscopeArgs : char {
   UPARAM_BUFFERSIZE   = 'b',
   UPARAM_FRAMESIZE    = 'f',
   UPARAM_CHANNELCOUNT = 'c',
   UPARAM_SAMPLERATE   = 's',
   UPARAM_ABOUT        = 'a',
   UPARAM_HELP         = 'h',
+  UPARAM_LICENSE      = 'l',
   UPARAM_VERSION      = 'v'
 };
 
@@ -97,11 +118,7 @@ enum USCRenderers {
 };
 
 struct unscopeParams {
-  unsigned long int audioBufferSize;
-  unsigned int audioFrameSize;
-  unsigned char channels;
-  unsigned int sampleRate;
-  int audioDevice;
+  nint audioBufferSize;
 
   // gui ...
   float timebase;
@@ -112,59 +129,38 @@ struct unscopeParams {
   int renderer;
 };
 
-struct DeviceEntry {
-  int dev;
-  bool shouldPassThru;
-  char* devName;
-  DeviceEntry():
-    dev(0),
-    shouldPassThru(false),
-    devName(NULL) {}
-  DeviceEntry(int d, bool p, const char* dn) {
-    dev = d;
-    shouldPassThru = p;
-    devName = new char[256];
-    memcpy(devName, dn, 256);
-  }
-  // ~DeviceEntry() {
-  //   printf("%p\n",(void*)devName);
-  //   DELETE_PTR(devName);
-  // }
+struct AudioConfig {
+  int inputDevice, outputDevice;
+  int inputChannels, outputChannels;
+  int sampleRate;
+  int frameSize;
 };
 
-struct AlignParams {
-  float trigger;
-  unsigned long int waveLen;
-  long int offset;
-  bool edge; // true -> falling, false -> rising
-  unsigned long int holdoff;
-  bool fallback; // use fixed sweep if not triggering
-  AlignParams():
-    trigger(0.0f),
-    waveLen(0),
-    offset(0),
-    edge(false),
-    holdoff(0),
-    fallback(false)
-  {}
-  
-  AlignParams(float t,
-              unsigned long int wl,
-              long int of,
-              bool e,
-              unsigned long int ho,
-              bool fb) {
-    trigger  = t;
-    waveLen  = wl;
-    offset   = of;
-    edge     = e;
-    holdoff  = ho;
-    fallback = fb;
+enum AudioDeviceDirections {
+  DIR_IN  = 1<<0,
+  DIR_OUT = 1<<1,
+};
+
+struct AudioDevice {
+  unsigned char direction; // bit 0 - in, bit 1 - out
+  int dev;
+  int host;
+  char devName[256];
+  AudioDevice():
+    direction(0),
+    dev(0),
+    host(0)
+    {memset(devName, 0, 256);}
+  AudioDevice(unsigned char di, int dv, int h, const char* dn) {
+    direction = di;
+    dev = dv;
+    host = h;
+    memcpy(devName, dn, 256);
   }
 };
 
 float clamp(float a);
-extern const char *helpMsg, *verMsg, *aboutMsg, *errMsgs[], *renderers[];
+extern const char *helpMsg, *verMsg, *aboutMsg, *thirdPartyMsg, *licenseMsg, *errMsgs[], *renderers[];
 const char* getErrorMsg(int e);
 
 #endif

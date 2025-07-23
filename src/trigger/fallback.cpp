@@ -1,3 +1,20 @@
+/*
+unscope - an audio oscilloscope
+Copyright (C) 2025 Eknous
+
+unscope is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 2 of the License, or (at your option) any later
+version.
+
+unscope is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+unscope. If not, see <https://www.gnu.org/licenses/>. 
+*/
+
 #include "fallback.h"
 
 void TriggerFallback::setupTrigger(unscopeParams* up, float* cb) {
@@ -6,25 +23,24 @@ void TriggerFallback::setupTrigger(unscopeParams* up, float* cb) {
 
   alignBuf = new float[up->audioBufferSize];
 
-  oldWindowSize = 0;
-
   params = {
 
   };
 
   triggered = true;
+  alignRegionSize = 0;
 }
 
-std::vector<TriggerParam> TriggerFallback::getParams() {
+vector<TriggerParam> TriggerFallback::getParams() {
   return params;
 }
 
-bool TriggerFallback::trigger(unsigned long int windowSize) {
+bool TriggerFallback::trigger(nint windowSize) {
   // theres no need to run this loop every time once its set,
   // since it doesnt change unless the window size does
-  if (oldWindowSize==windowSize) return true;
+  if (alignRegionSize==windowSize) return true;
 
-  oldWindowSize = windowSize;
+  alignRegionSize = windowSize;
   const float delta = 2.0f / windowSize;
 
   // -1.498.... close enough to -1
@@ -32,7 +48,7 @@ bool TriggerFallback::trigger(unsigned long int windowSize) {
 
   alignBuf[uParams->audioBufferSize-1] = 1.0f;
 
-  for (unsigned long int i = uParams->audioBufferSize-2; i > 0; i--) {
+  for (nint i = uParams->audioBufferSize-2; i > 0; i--) {
     float v = alignBuf[i+1] - delta;
     if (v < -1.0f) break;
     alignBuf[i] = v;
@@ -43,6 +59,10 @@ bool TriggerFallback::trigger(unsigned long int windowSize) {
 
 float* TriggerFallback::getAlignBuffer() {
   return alignBuf;
+}
+
+nint TriggerFallback::getAlignRegionSize() {
+  return alignRegionSize;
 }
 
 bool TriggerFallback::getTriggered() {

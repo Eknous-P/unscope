@@ -1,3 +1,20 @@
+/*
+unscope - an audio oscilloscope
+Copyright (C) 2025 Eknous
+
+unscope is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 2 of the License, or (at your option) any later
+version.
+
+unscope is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+unscope. If not, see <https://www.gnu.org/licenses/>. 
+*/
+
 #ifndef USC_GUI_H
 #define USC_GUI_H
 
@@ -37,6 +54,7 @@ class USCRender {
 #include "trigger.h"
 #include "fallback.h"
 #include "analog.h"
+#include "smooth.h"
 
 class USCGUI {
   private:
@@ -71,6 +89,7 @@ class USCGUI {
       bool globalControlsOpen;
       bool aboutOpen;
       bool cursorsOpen;
+      bool audioConfigOpen;
     };
 
     struct plotCursor {
@@ -85,8 +104,6 @@ class USCGUI {
       }
     };
 
-    int err;
-
     bool fullscreen;
     ImGuiIO io;
     ImGuiStyle style;
@@ -96,14 +113,15 @@ class USCGUI {
     USCRenderers renderer;
   
     float **oscData, **oscAlign;
-    unsigned long int oscDataSize, sampleRate;
+    nint oscDataSize, sampleRate;
     USCRender *rd;
-    USCAudioInput *ai;
+    USCAudio *ai;
 
-    std::vector<DeviceEntry> devs;
-    int device, deviceNum;
+    vector<AudioDevice>* devs;
+    int inputDeviceS, outputDeviceS; // selectabe selection
 
     unscopeParams *up;
+    AudioConfig   *audConf;
     scopeParams    sc;
     traceParams   *tc;
     xyParams       xyp;
@@ -113,6 +131,7 @@ class USCGUI {
     signed char shareTrigger; // abs part - which channel, sign - do/don't
 
     bool doFallback, singleShot;
+    float loopbackVolume;
 
     Triggers trigNum;
     Trigger **trigger, **fallbackTrigger;
@@ -120,24 +139,32 @@ class USCGUI {
     plotCursor HCursors[2], VCursors[2];
     bool showHCursors, showVCursors;
 
+#ifdef TRIGGER_DEBUG
+    nint triggerDebugBegin, triggerDebugEnd;
+#endif
+    char errorText[2048];
+
+    void doFullscreen();
+
   public:
     void setupRenderer(USCRenderers r);
     void setupTrigger(Triggers t);
 
-    void attachAudioInput(USCAudioInput* i);
+    void attachAudioInput(USCAudio* i);
 
     void setOscData(float** d);
   
     bool isRunning();
     int  init();
-    void getDevices(std::vector<DeviceEntry> d);
     void doFrame();
     void drawGUI();
   
     void drawMainScope();
     void drawXYScope();
 
-    void drawAlignDebug();
+#ifdef TRIGGER_DEBUG
+    void drawTriggerDebug();
+#endif
 
     void drawGlobalControls();
     void drawChanControls();
@@ -146,18 +173,24 @@ class USCGUI {
     void drawAbout();
     void drawSettings();
     void drawCursors();
+    void drawAudioConfig();
+
+    void errorPopup(const char* errorTxt, ...);
 
     bool doRestartAudio();
 
-    int  getAudioDeviceSetting();
-    void setAudioDeviceSetting(int d);
+    int  getAudioInputDevice();
+    int  getAudioOutputDevice();
+    void updateAudioDevices();
   
-    USCGUI(unscopeParams *params);
+    USCGUI(unscopeParams *params, AudioConfig *aConf);
     ~USCGUI();
 };
 
 extern const unsigned char step_one;
 extern const char *windowLayout;
 extern const char *triggerNames[];
+extern const int sampleRates[];
+extern const int frameSizes[];
 
 #endif

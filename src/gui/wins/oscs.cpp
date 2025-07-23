@@ -1,3 +1,20 @@
+/*
+unscope - an audio oscilloscope
+Copyright (C) 2025 Eknous
+
+unscope is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 2 of the License, or (at your option) any later
+version.
+
+unscope is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+unscope. If not, see <https://www.gnu.org/licenses/>. 
+*/
+
 #include "gui.h"
 #include <implot.h>
 
@@ -17,19 +34,19 @@ void USCGUI::drawMainScope() {
       ImPlot::SetAxes(i,i+ImAxis_Y1);
       ImPlot::SetNextLineStyle(tc[i].color,0.25f);
       unsigned char trigChan = (shareTrigger>0)?(shareTrigger-1):i;
-      if (oscAlign[i] && oscData[i] && oscDataSize) {
+      if (oscAlign[i] && oscData[i] && oscDataSize) { // TODO: handle OOB when rewriting this
         ImPlot::PlotLine("##scopeplot", oscAlign[trigChan], oscData[i], oscDataSize,ImPlotFlags_NoLegend);
       }
       ImVec4 trigColor = trigger[i]->getTriggered()?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
       for (TriggerParam p : trigger[i]->getParams()) {
         if (shareTrigger > 0 && i != shareTrigger - 1) continue;
-        double valD = *(float*)p.getValue();
+        double valD = p.getValue<float>();
         if (p.bindToDragX) {
-          if (ImPlot::DragLineX(2*i+1, &valD, tc[i].color)) *(float*)p.getValue() = valD;
+          if (ImPlot::DragLineX(2*i+1, &valD, tc[i].color)) p.setValue<float>(valD);
           // ImPlot::TagX(valD, trigColor, "CH %d", i + 1);
         }
         if (p.bindToDragY) {
-          if (ImPlot::DragLineY(2*i+1, &valD, trigColor)) *(float*)p.getValue() = valD;
+          if (ImPlot::DragLineY(2*i+1, &valD, trigColor)) p.setValue<float>(valD);
           ImPlot::TagY(valD, trigColor, "CH %d", i + 1);
         }
       }

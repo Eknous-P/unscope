@@ -8,3 +8,4 @@ release/
 imgui.ini
 unscope.ini
 CMakeSettings.json
+.clangd

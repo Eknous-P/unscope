@@ -1,3 +1,20 @@
+/*
+unscope - an audio oscilloscope
+Copyright (C) 2025 Eknous
+
+unscope is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 2 of the License, or (at your option) any later
+version.
+
+unscope is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+unscope. If not, see <https://www.gnu.org/licenses/>. 
+*/
+
 #include "gui.h"
 #include "imgui-knobs.h"
 #include "imgui_toggle.h"
@@ -39,35 +56,9 @@ void USCGUI::drawGlobalControls() {
     ImGui::Toggle("update audio",&updateAudio);
   }
 
-  if (devs.size() > 0) {
-    if (ImGui::BeginCombo("device",devs[deviceNum].devName)) {
-      for (int i = 0; i < devs.size(); i++) {
-        if (ImGui::Selectable(devs[i].devName, deviceNum == i)) {
-          deviceNum = i;
-          device = devs[i].dev;
-        }
-      }
-      ImGui::EndCombo();
-    }
-  }
-  if (ImGui::Button("restart audio")) {
-    err = ai->stop();
-    printf(INFO_MSG "opening device %d: %s ..." MSG_END,device,Pa_GetDeviceInfo(device)->name);
-    err = ai->init(device,/*audioLoopback*/0);
-    channels = ai->getChannelCount();
-    if (err != paNoError) {
-      printf(ERROR_MSG "%d:cant init audio!%s" MSG_END, err, getErrorMsg(err));
-      // try again
-      if (err != paInvalidDevice) throw err;
-      printf(INFO_MSG "trying default device..." MSG_END);
-      device = Pa_GetDefaultInputDevice();
-      err = ai->init(device,0);
-      channels = ai->getChannelCount();
-      if (err != paNoError) {
-        printf(ERROR_MSG "%d:cant init audio!\n" MSG_END, err, getErrorMsg(err));
-        throw err;
-      }
-      setAudioDeviceSetting(device);
+  if (ai->isOutputting()) {
+    if (ImGui::SliderFloat("loopback volume", &loopbackVolume, 0.0f, 1.0f)) {
+      ai->setLoopback(loopbackVolume);
     }
   }
   ImGui::End();
@@ -75,14 +66,7 @@ void USCGUI::drawGlobalControls() {
 
 #define UPDATE_TIMEBASE if (tc[i].timebase < 0.0f) tc[i].timebase = 0.0f; \
           if (tc[i].timebase > (float)oscDataSize/(float)sampleRate*1000.0f) tc[i].timebase = (float)oscDataSize/(float)sampleRate*1000.0f; \
-          tc[i].traceSize = sampleRate * tc[i].timebase / 1000; \
-          // tc[i].traceOffset = ((tc[i].trigOffset + 1.0f)/2) * tc[i].traceSize; \
-          // if (tc[i].traceOffset + tc[i].traceSize > oscDataSize) tc[i].traceOffset = oscDataSize - tc[i].traceSize; \
-          // if (tc[i].traceSize != 0) { \
-          //   tc[i].trigOffset = 2*((float)tc[i].traceOffset/(float)tc[i].traceSize)-1.0f; \
-          // } else { \
-          //   tc[i].trigOffset = 0; \
-          // }
+          tc[i].traceSize = sampleRate * tc[i].timebase / 1000;
 
 void USCGUI::drawChanControls() {
   for (unsigned char i = 0; i < channels; i++) {
@@ -192,67 +176,69 @@ void USCGUI::drawChanControls() {
       UPDATE_TIMEBASE;
       for (unsigned char j = 0; j < trigger[i]->getParams().size(); j++) {
         TriggerParam p = trigger[i]->getParams()[j];
-        memcpy(p.getValue(),trigger[mainCh]->getParams()[j].getValue(),TriggerParamTypeSize[p.getType()]);
+        memcpy(p.getValuePtr(),trigger[mainCh]->getParams()[j].getValuePtr(),TriggerParamTypeSize[p.getType()]);
       }
     }
   }
 }
 
 void USCGUI::drawXYScopeControls() {
-  if (!wo.xyScopeControlsOpen) return;
-  if (channels > 1) {
-    ImGui::Begin("XY Scope Controls",&wo.xyScopeControlsOpen);
-    if (ImGui::BeginTable("##xycontrols",3)) {
-      ImGui::TableNextRow();
-      ImGui::TableNextColumn();
+  if (!wo.xyScopeControlsOpen || channels < 2) return;
+  ImGui::Begin("XY Scope Controls",&wo.xyScopeControlsOpen);
+  if (ImGui::BeginTable("##xycontrols",3)) {
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
 
-      xyp.persistence = xyp.sampleLen * 1000.0f / sampleRate;
-      if (ImGuiKnobs::Knob("persistence", &xyp.persistence, 0.0f, 1000.0f, 0.0f,"%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
-        xyp.sampleLen = sampleRate * xyp.persistence / 1000;
-      }
-      RIGHTCLICK_EXACT_INPUT(&xyp.persistence, ImGuiDataType_Float, {if (xyp.persistence<0.0f) {xyp.persistence=0.0f;} if (xyp.persistence>1000.0f) {xyp.persistence=1000.0f;} xyp.sampleLen = sampleRate * xyp.persistence / 1000;})
-      ImGui::TableNextColumn();
+    float maxTime = ((float)up->audioBufferSize / sampleRate) * 1000.0f;
+    if (maxTime > 1000.0f) maxTime = 1000.0f;
+    int maxBuf = sampleRate * maxTime / 1000.0f;
+    xyp.persistence = ((float)xyp.sampleLen / sampleRate) * 1000.0f;
+    if (ImGuiKnobs::Knob("persistence", &xyp.persistence, 0.0f, maxTime, 0.0f,NULL, ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
+      xyp.sampleLen = sampleRate * xyp.persistence / 1000.0f;
+      if (xyp.sampleLen > maxBuf) xyp.sampleLen = maxBuf;
+    }
+    RIGHTCLICK_EXACT_INPUT(&xyp.persistence, ImGuiDataType_Float, {if (xyp.persistence<0.0f) {xyp.persistence=0.0f;} if (xyp.persistence>maxTime) {xyp.persistence=maxTime;} xyp.sampleLen = sampleRate * xyp.persistence / 1000.0f;})
+    ImGui::TableNextColumn();
 
-      ImGuiKnobs::Knob("x scale", &xyp.xScale, 0.5f, 4.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
-      if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.xScale = 1.0f;
-      RIGHTCLICK_EXACT_INPUT(&xyp.yScale, ImGuiDataType_Float, {if (xyp.yScale<0.25f) {xyp.yScale=0.25f;} if (xyp.yScale>4.0f) {xyp.yScale=4.0f;}})
-      ImGui::TableNextColumn();
-      ImGuiKnobs::Knob("y scale", &xyp.yScale, 0.5f, 4.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
-      if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.yScale = 1.0f;
-      RIGHTCLICK_EXACT_INPUT(&xyp.xScale, ImGuiDataType_Float, {if (xyp.xScale<0.25f) {xyp.xScale=0.25f;} if (xyp.xScale>4.0f) {xyp.xScale=4.0f;}})
-      ImGui::TableNextRow();
+    ImGuiKnobs::Knob("x scale", &xyp.xScale, 0.5f, 4.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.xScale = 1.0f;
+    RIGHTCLICK_EXACT_INPUT(&xyp.yScale, ImGuiDataType_Float, {if (xyp.yScale<0.25f) {xyp.yScale=0.25f;} if (xyp.yScale>4.0f) {xyp.yScale=4.0f;}})
+    ImGui::TableNextColumn();
+    ImGuiKnobs::Knob("y scale", &xyp.yScale, 0.5f, 4.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.yScale = 1.0f;
+    RIGHTCLICK_EXACT_INPUT(&xyp.xScale, ImGuiDataType_Float, {if (xyp.xScale<0.25f) {xyp.xScale=0.25f;} if (xyp.xScale>4.0f) {xyp.xScale=4.0f;}})
+    ImGui::TableNextRow();
 
-      ImGui::TableNextColumn();
-      ImGuiKnobs::Knob("intensity", &xyp.color.w, 0.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
-      ImGui::TableNextColumn();
-      ImGuiKnobs::Knob("x offset", &xyp.xOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
-      if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.xOffset = 0.0f;
-      ImGui::TableNextColumn();
-      ImGuiKnobs::Knob("y offset", &xyp.yOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
-      if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.yOffset = 0.0f;
+    ImGui::TableNextColumn();
+    ImGuiKnobs::Knob("intensity", &xyp.color.w, 0.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
+    ImGui::TableNextColumn();
+    ImGuiKnobs::Knob("x offset", &xyp.xOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.xOffset = 0.0f;
+    ImGui::TableNextColumn();
+    ImGuiKnobs::Knob("y offset", &xyp.yOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.yOffset = 0.0f;
     ImGui::EndTable();
-    }
-
-    ImGui::Text("axis channels (x/y):");
-    if (ImGui::InputScalarN("##axisChan", ImGuiDataType_U8, xyp.axisChan, 2, &step_one, NULL, "ch %d", 0)) {
-      if (xyp.axisChan[0] < 1) xyp.axisChan[0] = 1;
-      if (xyp.axisChan[0] > channels) xyp.axisChan[0] = channels;
-      if (xyp.axisChan[1] < 1) xyp.axisChan[1] = 1;
-      if (xyp.axisChan[1] > channels) xyp.axisChan[1] = channels;
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("swap")) {
-      unsigned char temp = xyp.axisChan[0];
-      xyp.axisChan[0] = xyp.axisChan[1];
-      xyp.axisChan[1] = temp;
-    }
-
-    ImGui::ColorButton("color", xyp.color);
-    if (ImGui::BeginPopupContextItem("##xycol",ImGuiPopupFlags_MouseButtonLeft)) {
-      ImGui::ColorPicker4("##xycoledit",(float*)&xyp.color);
-      ImGui::EndPopup();
-    }
-
-    ImGui::End();
   }
+
+  ImGui::Text("axis channels (x/y):");
+  if (ImGui::InputScalarN("##axisChan", ImGuiDataType_U8, xyp.axisChan, 2, &step_one, NULL, "ch %d", 0)) {
+    if (xyp.axisChan[0] < 1) xyp.axisChan[0] = 1;
+    if (xyp.axisChan[0] > channels) xyp.axisChan[0] = channels;
+    if (xyp.axisChan[1] < 1) xyp.axisChan[1] = 1;
+    if (xyp.axisChan[1] > channels) xyp.axisChan[1] = channels;
+  }
+  ImGui::SameLine();
+  if (ImGui::Button("swap")) {
+    unsigned char temp = xyp.axisChan[0];
+    xyp.axisChan[0] = xyp.axisChan[1];
+    xyp.axisChan[1] = temp;
+  }
+
+  ImGui::ColorButton("color", xyp.color);
+  if (ImGui::BeginPopupContextItem("##xycol",ImGuiPopupFlags_MouseButtonLeft)) {
+    ImGui::ColorPicker4("##xycoledit",(float*)&xyp.color);
+    ImGui::EndPopup();
+  }
+
+  ImGui::End();
 }
