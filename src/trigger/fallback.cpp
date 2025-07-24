@@ -21,8 +21,6 @@ void TriggerFallback::setupTrigger(unscopeParams* up, float* cb) {
   uParams = up;
   chanBuf = cb;
 
-  alignBuf = new float[up->audioBufferSize];
-
   params = {
 
   };
@@ -41,28 +39,17 @@ bool TriggerFallback::trigger(nint windowSize) {
   if (alignRegionSize==windowSize) return true;
 
   alignRegionSize = windowSize;
-  const float delta = 2.0f / windowSize;
+  triggerIndex = uParams->audioBufferSize - windowSize;
 
-  // -1.498.... close enough to -1
-  memset(alignBuf, 0xbf, (uParams->audioBufferSize - 2) * sizeof(float));
-
-  alignBuf[uParams->audioBufferSize-1] = 1.0f;
-
-  for (nint i = uParams->audioBufferSize-2; i > 0; i--) {
-    float v = alignBuf[i+1] - delta;
-    if (v < -1.0f) break;
-    alignBuf[i] = v;
-  }
 
   return true;
 }
-
-float* TriggerFallback::getAlignBuffer() {
-  return alignBuf;
-}
-
 nint TriggerFallback::getAlignRegionSize() {
   return alignRegionSize;
+}
+
+nint TriggerFallback::getTriggerIndex() {
+  return triggerIndex;
 }
 
 bool TriggerFallback::getTriggered() {
@@ -71,5 +58,4 @@ bool TriggerFallback::getTriggered() {
 
 TriggerFallback::~TriggerFallback() {
   for (TriggerParam i:params) i.destroy();
-  DELETE_PTR_ARR(alignBuf)
 }

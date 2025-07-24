@@ -21,9 +21,11 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #include "trigger.h"
 
 class TriggerFallback : public Trigger {
-  float *alignBuf, *chanBuf;
+  float *chanBuf;
   unscopeParams* uParams;
   vector<TriggerParam> params;
+
+  nint triggerIndex;
 
   bool triggered;
   nint alignRegionSize;
@@ -33,8 +35,8 @@ class TriggerFallback : public Trigger {
     vector<TriggerParam> getParams();
     bool trigger(nint windowSize);
     bool getTriggered();
-    float* getAlignBuffer();
     nint getAlignRegionSize();
+    nint getTriggerIndex();
     ~TriggerFallback();
 };
 

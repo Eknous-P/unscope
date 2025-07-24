@@ -21,7 +21,7 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #include "trigger.h"
 
 class TriggerAnalog : public Trigger {
-  float *alignBuf, *chanBuf;
+  float *chanBuf;
   unscopeParams* uParams;
   vector<TriggerParam> params;
 
@@ -35,11 +35,8 @@ class TriggerAnalog : public Trigger {
     vector<TriggerParam> getParams();
     bool trigger(nint windowSize);
     bool getTriggered();
-    float* getAlignBuffer();
     nint getAlignRegionSize();
-#ifdef TRIGGER_DEBUG
     nint getTriggerIndex();
-#endif
     ~TriggerAnalog();
 };
 

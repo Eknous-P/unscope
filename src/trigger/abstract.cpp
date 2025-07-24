@@ -19,7 +19,6 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 
 void Trigger::setupTrigger(unscopeParams* up, float* cb) {
   uParams  = up;
-  alignBuf = NULL;
   chanBuf  = cb;
 
   params = {
@@ -42,12 +41,12 @@ bool Trigger::getTriggered() {
   return triggered;
 }
 
-float* Trigger::getAlignBuffer() {
-  return alignBuf;
-}
-
 nint Trigger::getAlignRegionSize() {
   return alignRegionSize;
+}
+
+nint Trigger::getTriggerIndex() {
+  return triggerIndex;
 }
 
 Trigger::~Trigger(){

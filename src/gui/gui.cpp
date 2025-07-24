@@ -105,17 +105,7 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
 
   fullscreen = false;
 
-  fallbackTrigger = new Trigger*[channels];
   trigger = new Trigger*[channels];
-
-  if (!fallbackTrigger) return;
-  FOR_RANGE(channels) {
-    Trigger* t = new TriggerFallback;
-    if (!t) return;
-    t->setupTrigger(up, oscData[z]);
-
-    fallbackTrigger[z] = t;
-  }
 
   HCursors[0]=plotCursor("X1",-.5f);
   HCursors[1]=plotCursor("X2",.5f);
@@ -294,20 +284,6 @@ void USCGUI::drawGUI() {
 
   if (updateAudio) setOscData(ai->getAudioBuffer());
 
-  if (trigger) FOR_RANGE(channels) {
-    Trigger* t = trigger[z];
-    if (!t) {
-      continue;
-    }
-    if (!t->trigger(tc[z].traceSize)) {
-      if (doFallback) {
-        t = fallbackTrigger[z];
-        t->trigger(tc[z].traceSize);
-      }
-    }
-    oscAlign[z] = t->getAlignBuffer();
-  }
-
   if (singleShot) {
     if (shareTrigger>0) {
       if (trigger[shareTrigger-1]->getTriggered()) updateAudio = false;
@@ -357,7 +333,7 @@ void USCGUI::drawTriggerDebug() {
     if (al && ol && sl) {
       float x=0.0f;
       for (nint i = 0; i < count; i++) {
-        al[i] = ImVec2(x,winSize.y*clamp((1.0f-oscAlign[chan][triggerDebugBegin+i*DIV])/2.f))+winPos;
+        // al[i] = ImVec2(x,winSize.y*clamp((1.0f-oscAlign[chan][triggerDebugBegin+i*DIV])/2.f))+winPos;
         ol[i] = ImVec2(x,winSize.y*(1.0f-oscData[chan][triggerDebugBegin+i*DIV])/2.0f)+winPos;
         if (trigNum == TRIG_SMOOTH && sl) {
           sl[i] = ImVec2(x,winSize.y*clamp((1.0f-(((TriggerSmooth**)trigger)[chan]->getSmoothBuffer())[triggerDebugBegin+i*DIV])/2.f))+winPos;
@@ -365,7 +341,7 @@ void USCGUI::drawTriggerDebug() {
         x+=winSize.x/count;
       }
       dl->AddPolyline(ol, count, 0x7f7777ff, ImDrawFlags_None, 1.0f);
-      dl->AddPolyline(al, count, 0xff77ffff, ImDrawFlags_None, 1.0f);
+      // dl->AddPolyline(al, count, 0xff77ffff, ImDrawFlags_None, 1.0f);
       switch (trigNum) {
         case TRIG_ANALOG: {
           float trigIdx = (float)(((TriggerAnalog**)trigger)[chan]->getTriggerIndex() - triggerDebugBegin)/(count*DIV);
@@ -444,7 +420,6 @@ USCGUI::~USCGUI() {
   if (isGood) rd->destroyRender();
   DELETE_PTR(rd)
   DELETE_DOUBLE_PTR(trigger, channels)
-  DELETE_DOUBLE_PTR(fallbackTrigger, channels)
   DELETE_DOUBLE_PTR_ARR(oscData, channels)
   DELETE_PTR_ARR(oscAlign)
   DELETE_PTR_ARR(tc)

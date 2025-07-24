@@ -155,9 +155,11 @@ class TriggerParam {
 };
 
 class Trigger {
-  float *alignBuf, *chanBuf;
+  float *chanBuf;
   unscopeParams* uParams;
   vector<TriggerParam> params;
+
+  nint triggerIndex;
 
   bool triggered;
   nint alignRegionSize;
@@ -167,8 +169,8 @@ class Trigger {
     virtual vector<TriggerParam> getParams();
     virtual bool trigger(nint windowSize);
     virtual bool getTriggered();
-    virtual float* getAlignBuffer();
     virtual nint getAlignRegionSize();
+    virtual nint getTriggerIndex();
     virtual ~Trigger();
 };
 

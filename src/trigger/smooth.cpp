@@ -25,7 +25,6 @@ void TriggerSmooth::setupTrigger(unscopeParams* up, float* cb) {
   uParams = up;
   chanBuf = cb;
 
-  alignBuf = new float[up->audioBufferSize];
   smoothBuf = new float[up->audioBufferSize];
 
   triggerLevel = 0.0f;
@@ -104,8 +103,6 @@ bool TriggerSmooth::trigger(nint windowSize) {
   long int offset = (windowSize / 2) * params[2].getValue<float>();
   triggerIndex = begin;
 
-  memset(alignBuf, 0xbf, uParams->audioBufferSize * sizeof(float));
-
   while (triggerIndex > 0) {
     triggerIndex--;
     if (smoothBuf[triggerIndex + windowSize/2] < triggerLevel) {
@@ -130,30 +127,14 @@ bool TriggerSmooth::trigger(nint windowSize) {
 
   triggerIndex-=offset;
 
-  alignBuf[triggerIndex] = -1.0f;
-
-  const float delta = 2.0f / windowSize;
-  nint i = triggerIndex + 1;
-  for (; i < uParams->audioBufferSize; i++) {
-    float v = alignBuf[i-1] + delta;
-    if (v > 1.0f) break;
-    alignBuf[i] = v;
-  }
   if (triggerIndex > begin) {
     alignRegionSize = uParams->audioBufferSize - triggerIndex;
   } else {
     alignRegionSize = windowSize;
   }
 
-  // 3.003...... not quite 1...
-  memset(&alignBuf[i], 0x40, (uParams->audioBufferSize-i)*sizeof(float));
-
   triggered = true;
   return true;
-}
-
-float* TriggerSmooth::getAlignBuffer() {
-  return alignBuf;
 }
 
 nint TriggerSmooth::getAlignRegionSize() {
@@ -168,11 +149,11 @@ float* TriggerSmooth::getSmoothBuffer() {
 float TriggerSmooth::getTriggerLevel() {
   return triggerLevel;
 }
+#endif
 
 nint TriggerSmooth::getTriggerIndex() {
   return triggerIndex;
 }
-#endif
 
 bool TriggerSmooth::getTriggered() {
   return triggered;
@@ -180,6 +161,5 @@ bool TriggerSmooth::getTriggered() {
 
 TriggerSmooth::~TriggerSmooth() {
   for (TriggerParam i:params) i.destroy();
-  DELETE_PTR_ARR(alignBuf)
   DELETE_PTR_ARR(smoothBuf)
 }

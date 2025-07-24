@@ -134,7 +134,7 @@ class USCGUI {
     float loopbackVolume;
 
     Triggers trigNum;
-    Trigger **trigger, **fallbackTrigger;
+    Trigger **trigger;
 
     plotCursor HCursors[2], VCursors[2];
     bool showHCursors, showVCursors;

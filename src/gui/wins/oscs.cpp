@@ -16,15 +16,11 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "gui.h"
-#include <analog.h>
-#include <cstdio>
-#include <imgui.h>
-#include <implot.h>
 
 void USCGUI::drawMainScope() {
   if (!wo.mainScopeOpen) return;
   if (!(oscAlign && oscData)) return;
-  ImGui::Begin("Scope",&wo.mainScopeOpen);
+  /*ImGui::Begin("Scope",&wo.mainScopeOpen);
   if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
     for (unsigned char i = 0; i < channels; i++) {
       ImPlot::SetupAxis(ImAxis(i),"t",ImPlotAxisFlags_NoLabel|ImPlotAxisFlags_NoTickLabels|sc.scopeFlags);
@@ -120,9 +116,9 @@ void USCGUI::drawMainScope() {
     }
     ImPlot::EndPlot();
   }
-  ImGui::End();
+  ImGui::End();*/
 
-  ImGui::Begin("newosc", NULL);
+  ImGui::Begin("Scope", NULL);
   ImDrawList* dl = ImGui::GetWindowDrawList();
   ImVec2 origin = ImGui::GetWindowPos(), size = ImGui::GetWindowSize();
   float titleBar = ImGui::GetStyle().FramePadding.x*2.f + ImGui::CalcTextSize("newosc").y;
@@ -133,11 +129,17 @@ void USCGUI::drawMainScope() {
     ImVec2 p1, textSize = ImGui::CalcTextSize("-1.000");
     textSize.x += 5.f;
     char buf[16];
+    FOR_RANGE(channels) {
+      snprintf(buf, 16, " CH.%.2d", z+1);
+      p1.y = origin.y + 5.f;
+      p1.x = origin.x + textSize.x * z;
+      dl->AddText(p1, 0xffffffff, buf);
+    }
     FOR_RANGE(9) {
       for (unsigned char c=0; c<channels; c++) {
         p1.y = origin.y + size.y * ((z+1)/10.f) - textSize.y/2;
         p1.x = origin.x + textSize.x * c;
-        float v = -((signed char)z-4)/4.f / tc[c].yScale;
+        float v = -((signed char)z-4)/4.f / tc[c].yScale - tc[c].yOffset;
         snprintf(buf, 16, v>=0?" %1.3f":"%1.3f", v);
         dl->AddText(p1, 0xffffffff, buf);
       }
@@ -165,19 +167,33 @@ void USCGUI::drawMainScope() {
   }
 
   // waveforms
-  ImVec2 *scaledWave=NULL;
-  FOR_RANGE(channels) {
-    nint len = tc[z].traceSize;
-    scaledWave = new ImVec2[len];
+  // ImVec2 *scaledWave=NULL;
+  ImVec2 scaledWave[65536];
+  for (int c = channels-1; c >= 0; c--) {
+    if (!tc[c].enable) continue;
+    // draw channels in reverse order so channel 1 is always on top
+    nint len = tc[c].traceSize;
+    // scaledWave = new ImVec2[len];
     nint i=0;
+    unsigned char trigChan = (shareTrigger>0)?(shareTrigger-1):c;
+    bool triggered = false;
+    if (shareTrigger>0 && trigChan == c) triggered = trigger[c]->trigger(tc[c].traceSize);
+    else triggered = trigger[c]->trigger(tc[c].traceSize);
     for (; i < len; i++) {
       scaledWave[i].x = origin.x + size.x*((float)i/(float)len);
-      nint cur = ((TriggerAnalog**)trigger)[z]->getTriggerIndex() + i;
+
+      nint cur = i;
+      if (triggered) {
+        cur += trigger[c]->getTriggerIndex();
+      }
+      else if (doFallback) cur += oscDataSize - tc[c].traceSize;
+      else continue;
+
       if (cur > oscDataSize) break;
-      scaledWave[i].y = origin.y - (oscData[z][cur] * tc[z].yScale + tc[z].yOffset - 1.f) * size.y/2.f;
+      scaledWave[i].y = origin.y - (oscData[c][cur] * tc[c].yScale + tc[c].yOffset - 1.f) * size.y/2.f;
     }
-    dl->AddPolyline(scaledWave, i, ImGui::ColorConvertFloat4ToU32(tc[z].color), 0, .4f);
-    delete[] scaledWave;
+    dl->AddPolyline(scaledWave, i, ImGui::ColorConvertFloat4ToU32(tc[c].color), 0, .4f);
+    // delete[] scaledWave;
   }
 
   ImGui::End();

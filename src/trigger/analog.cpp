@@ -23,8 +23,6 @@ void TriggerAnalog::setupTrigger(unscopeParams* up, float* cb) {
   uParams = up;
   chanBuf = cb;
 
-  alignBuf = new float[up->audioBufferSize];
-
   params = {
     TriggerParam(TP_KNOBNORM,false,"level",false,true),
     TriggerParam(TP_KNOBNORM,false,"x offset",true,false),
@@ -50,8 +48,6 @@ bool TriggerAnalog::trigger(nint windowSize) {
   float trigY = params[0].getValue<float>(); // temp
   long int offset = (windowSize / 2) * params[1].getValue<float>();
   triggerIndex = uParams->audioBufferSize - windowSize;
-
-  memset(alignBuf, 0xbf, uParams->audioBufferSize * sizeof(float));
 
   while (triggerIndex > 0) {
     triggerIndex--;
@@ -79,15 +75,6 @@ bool TriggerAnalog::trigger(nint windowSize) {
   }
 
   triggerIndex -= offset;
-  alignBuf[triggerIndex] = -1.0f;
-
-  const float delta = 2.0f / windowSize;
-  nint i = triggerIndex + 1;
-  for (; i < uParams->audioBufferSize; i++) {
-    float v = alignBuf[i-1] + delta;
-    if (v > 1.0f) break;
-    alignBuf[i] = v;
-  }
 
   if (triggerIndex > uParams->audioBufferSize - windowSize) {
     alignRegionSize = uParams->audioBufferSize - triggerIndex;
@@ -95,15 +82,8 @@ bool TriggerAnalog::trigger(nint windowSize) {
     alignRegionSize = windowSize;
   }
 
-  // 3.003...... not quite 1...
-  memset(&alignBuf[i], 0x40, (uParams->audioBufferSize-i)*sizeof(float));
-
   triggered = true;
   return true;
-}
-
-float* TriggerAnalog::getAlignBuffer() {
-  return alignBuf;
 }
 
 nint TriggerAnalog::getAlignRegionSize() {
@@ -122,5 +102,4 @@ bool TriggerAnalog::getTriggered() {
 
 TriggerAnalog::~TriggerAnalog() {
   for (TriggerParam i:params) i.destroy();
-  DELETE_PTR_ARR(alignBuf)
 }
