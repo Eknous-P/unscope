@@ -16,6 +16,9 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "gui.h"
+#include <analog.h>
+#include <cstdio>
+#include <imgui.h>
 #include <implot.h>
 
 void USCGUI::drawMainScope() {
@@ -117,6 +120,66 @@ void USCGUI::drawMainScope() {
     }
     ImPlot::EndPlot();
   }
+  ImGui::End();
+
+  ImGui::Begin("newosc", NULL);
+  ImDrawList* dl = ImGui::GetWindowDrawList();
+  ImVec2 origin = ImGui::GetWindowPos(), size = ImGui::GetWindowSize();
+  float titleBar = ImGui::GetStyle().FramePadding.x*2.f + ImGui::CalcTextSize("newosc").y;
+  origin.y += titleBar;
+  size.y -= titleBar;
+  // v scale labels
+  {
+    ImVec2 p1, textSize = ImGui::CalcTextSize("-1.000");
+    textSize.x += 5.f;
+    char buf[16];
+    FOR_RANGE(9) {
+      for (unsigned char c=0; c<channels; c++) {
+        p1.y = origin.y + size.y * ((z+1)/10.f) - textSize.y/2;
+        p1.x = origin.x + textSize.x * c;
+        float v = -((signed char)z-4)/4.f / tc[c].yScale;
+        snprintf(buf, 16, v>=0?" %1.3f":"%1.3f", v);
+        dl->AddText(p1, 0xffffffff, buf);
+      }
+    }
+    origin.x += textSize.x * channels;
+    size.x -= textSize.x * channels;
+  }
+  // grid
+  {
+    ImVec2 p1, p2;
+    FOR_RANGE(9) {
+      // veritcal lines
+      p1.x = origin.x + size.x * ((z+1)/10.f);
+      p2.x = p1.x;
+      p1.y = origin.y;
+      p2.y = p1.y + size.y;
+      dl->AddLine(p1, p2, 0x44ffffff);
+      // horizontal lines
+      p1.y = origin.y + size.y * ((z+1)/10.f);
+      p2.y = p1.y;
+      p1.x = origin.x;
+      p2.x = p1.x + size.x;
+      dl->AddLine(p1, p2, 0x44ffffff);
+    }
+  }
+
+  // waveforms
+  ImVec2 *scaledWave=NULL;
+  FOR_RANGE(channels) {
+    nint len = tc[z].traceSize;
+    scaledWave = new ImVec2[len];
+    nint i=0;
+    for (; i < len; i++) {
+      scaledWave[i].x = origin.x + size.x*((float)i/(float)len);
+      nint cur = ((TriggerAnalog**)trigger)[z]->getTriggerIndex() + i;
+      if (cur > oscDataSize) break;
+      scaledWave[i].y = origin.y - (oscData[z][cur] * tc[z].yScale + tc[z].yOffset - 1.f) * size.y/2.f;
+    }
+    dl->AddPolyline(scaledWave, i, ImGui::ColorConvertFloat4ToU32(tc[z].color), 0, .4f);
+    delete[] scaledWave;
+  }
+
   ImGui::End();
 }
 
