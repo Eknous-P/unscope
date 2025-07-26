@@ -65,11 +65,10 @@ class USCGUI {
 
     struct traceParams {
       bool   enable;
-      float  yOffset;
-      float  yScale;
+      float  xOffset, yOffset;
+      float  timebase, yScale;
       ImVec4 color;
       int    traceSize;
-      float  timebase;
     };
 
     struct xyParams {
@@ -138,6 +137,9 @@ class USCGUI {
 
     plotCursor HCursors[2], VCursors[2];
     bool showHCursors, showVCursors;
+
+    bool plotDragX(float* v, const char* label, ImDrawList* dl, ImVec4 rect, float v_min=-1.f, float v_max=1.f);
+    float mapToRange(ImVec2 src, ImVec2 dest, float v);
 
 #ifdef TRIGGER_DEBUG
     nint triggerDebugBegin, triggerDebugEnd;

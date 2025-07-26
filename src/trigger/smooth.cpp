@@ -32,7 +32,6 @@ void TriggerSmooth::setupTrigger(unscopeParams* up, float* cb) {
   params = {
     TriggerParam(TP_KNOBUNIT,false,"smoothing"),
     TriggerParam(TP_KNOBUNIT,false,"level ratio"),
-    TriggerParam(TP_KNOBNORM,false,"x offset",true),
     TriggerParam(TP_TOGGLE,false,"trigger on minimum"),
   };
 
@@ -57,7 +56,7 @@ bool TriggerSmooth::trigger(nint windowSize) {
   triggered = false;
   int PRECALC_RANGE = windowSize;
   nint begin = uParams->audioBufferSize - windowSize;
-  const bool useMin = params[3].getValue<bool>();
+  const bool useMin = params[2].getValue<bool>();
   if (begin < PRECALC_RANGE) PRECALC_RANGE = 0;
   float smoothLvl = params[0].getValue<float>();
   if (prevSmooth != smoothLvl) {
@@ -100,7 +99,6 @@ bool TriggerSmooth::trigger(nint windowSize) {
   // locate trigger
   bool triggerHigh = false, triggerLow = false, foundTrigger = false;
   triggerLevel = smoothPeak * params[1].getValue<float>();
-  long int offset = (windowSize / 2) * params[2].getValue<float>();
   triggerIndex = begin;
 
   while (triggerIndex > 0) {
@@ -116,16 +114,6 @@ bool TriggerSmooth::trigger(nint windowSize) {
     }
     if (triggerIndex < uParams->audioBufferSize - 2 * windowSize) return false; // out of window
   }
-
-  // handle offset
-  if (
-    (triggerIndex - offset > uParams->audioBufferSize) ||
-    ((int)triggerIndex - offset < 0)
-  ) {
-    offset = 0;
-  }
-
-  triggerIndex-=offset;
 
   if (triggerIndex > begin) {
     alignRegionSize = uParams->audioBufferSize - triggerIndex;

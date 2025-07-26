@@ -16,6 +16,9 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "gui.h"
+#include <imgui.h>
+#include <shared.h>
+#include "plotOsc.cpp"
 
 void USCGUI::drawMainScope() {
   if (!wo.mainScopeOpen) return;
@@ -121,7 +124,7 @@ void USCGUI::drawMainScope() {
   ImGui::Begin("Scope", NULL);
   ImDrawList* dl = ImGui::GetWindowDrawList();
   ImVec2 origin = ImGui::GetWindowPos(), size = ImGui::GetWindowSize();
-  float titleBar = ImGui::GetStyle().FramePadding.x*2.f + ImGui::CalcTextSize("newosc").y;
+  float titleBar = ImGui::GetStyle().FramePadding.x*2.f + ImGui::CalcTextSize("Scope").y;
   origin.y += titleBar;
   size.y -= titleBar;
   // v scale labels
@@ -168,35 +171,81 @@ void USCGUI::drawMainScope() {
 
   // waveforms
   // ImVec2 *scaledWave=NULL;
-  ImVec2 scaledWave[65536];
+  ImVec2* scaledWave;
+  bool* triggered = new bool[channels];
   for (int c = channels-1; c >= 0; c--) {
     if (!tc[c].enable) continue;
     // draw channels in reverse order so channel 1 is always on top
     nint len = tc[c].traceSize;
-    // scaledWave = new ImVec2[len];
+    long int offset = (tc[c].traceSize / 2.f) * tc[c].xOffset;
+    scaledWave = new ImVec2[len];
     nint i=0;
-    unsigned char trigChan = (shareTrigger>0)?(shareTrigger-1):c;
-    bool triggered = false;
-    if (shareTrigger>0 && trigChan == c) triggered = trigger[c]->trigger(tc[c].traceSize);
-    else triggered = trigger[c]->trigger(tc[c].traceSize);
+    unsigned char trigChan = (shareTrigger>0)?(shareTrigger-1):(shareParams?0:c);
+    if (shareTrigger>0) {
+      if (trigChan == c) {
+        memset(triggered, trigger[trigChan]->trigger(tc[trigChan].traceSize), channels);
+      }
+    }
+    else triggered[c] = trigger[c]->trigger(tc[trigChan].traceSize);
     for (; i < len; i++) {
       scaledWave[i].x = origin.x + size.x*((float)i/(float)len);
 
       nint cur = i;
-      if (triggered) {
-        cur += trigger[c]->getTriggerIndex();
+      if (triggered[c]) {
+        cur += trigger[trigChan]->getTriggerIndex();
       }
       else if (doFallback) cur += oscDataSize - tc[c].traceSize;
       else continue;
+
+      cur-=offset;
 
       if (cur > oscDataSize) break;
       scaledWave[i].y = origin.y - (oscData[c][cur] * tc[c].yScale + tc[c].yOffset - 1.f) * size.y/2.f;
     }
     dl->AddPolyline(scaledWave, i, ImGui::ColorConvertFloat4ToU32(tc[c].color), 0, .4f);
-    // delete[] scaledWave;
+    delete[] scaledWave;
+  }
+  // drags
+  {
+    FOR_RANGE(channels) {
+      ImVec4 trigColor = trigger[z]->getTriggered()?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
+      plotDragX((float*)&tc[z].xOffset, "test", dl, ImVec4(origin.x, origin.y, size.x, size.y));
+      for (TriggerParam p : trigger[z]->getParams()) {
+        if (shareTrigger > 0 && z != shareTrigger - 1) continue;
+        if (p.bindToDragX) {
+          plotDragX((float*)p.getValuePtr(), "test", dl, ImVec4(origin.x, origin.y, size.x, size.y));
+        }
+        if (p.bindToDragY) {
+          // if (ImPlot::DragLineY(2*i+1, &valD, trigColor)) p.setValue<float>(valD);
+          // ImPlot::TagY(valD, trigColor, "CH %d", i + 1);
+        }
+      }
+    }
   }
 
   ImGui::End();
+}
+
+bool USCGUI::plotDragX(float* v, const char* label, ImDrawList* dl, ImVec4 rect, float v_min, float v_max) {
+  ImVec2 p1, p2;
+  p1.x = rect.x + (*v + 1.f) * rect.z/2.f;
+  p2.x = p1.x;
+  p1.y = rect.y;
+  p2.y = p1.y + rect.w;
+  dl->AddLine(p1, p2, 0xff0000ff);
+  ImGui::SetCursorPosX(p1.x-2.5f - rect.x);
+  ImGui::Dummy(ImVec2(5.f, rect.w));
+  if (ImGui::IsItemHovered()) {
+    ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+  if (ImGui::IsItemClicked()) {
+    float mouseX = ImGui::GetMousePos().x;
+    *v = mapToRange(ImVec2(rect.z,rect.w), ImVec2(v_min,v_max), mouseX-rect.x);
+    if (*v < v_min) *v = v_min;
+    if (*v > v_max) *v = v_max;
+    return true;
+  }
+  }
+  return false;
 }
 
 void USCGUI::drawXYScope() {
@@ -204,13 +253,45 @@ void USCGUI::drawXYScope() {
   if (!wo.xyScopeOpen) return;
   if (channels < 2) return;
   ImGui::Begin("Scope (XY)",&wo.xyScopeOpen);
-  if (ImPlot::BeginPlot("##scopexy", ImGui::GetContentRegionAvail(),sc.plotFlags|ImPlotFlags_Equal)) {
-    ImPlot::SetupAxes("##x","##y",ImPlotAxisFlags_NoTickLabels|ImPlotAxisFlags_Lock,sc.scopeFlags|ImPlotAxisFlags_NoTickLabels);
-    ImPlot::SetupAxisLimits(ImAxis_X1,-1.0f/xyp.xScale-xyp.xOffset,1.0f/xyp.xScale-xyp.xOffset);
-    ImPlot::SetupAxisLimits(ImAxis_Y1,-1.0f/xyp.yScale-xyp.yOffset,1.0f/xyp.yScale-xyp.yOffset);
-    ImPlot::SetNextLineStyle(xyp.color,0.125f);
-    ImPlot::PlotLine("##scopeplot", oscData[xyp.axisChan[0]-1] + (oscDataSize - xyp.sampleLen), oscData[xyp.axisChan[1]-1] + (oscDataSize - xyp.sampleLen), xyp.sampleLen,ImPlotFlags_NoLegend);
-    ImPlot::EndPlot();
+  ImDrawList* dl = ImGui::GetWindowDrawList();
+  ImVec2 origin = ImGui::GetWindowPos(), size = ImGui::GetWindowSize();
+  float titleBar = ImGui::GetStyle().FramePadding.x*2.f + ImGui::CalcTextSize("Scope (XY)").y;
+  origin.y += titleBar;
+  size.y -= titleBar;
+  ImVec2 sizeHalf = size/2;
+  float sizeMin = size.x<size.y?size.x:size.y;
+  // grid
+  {
+    ImVec2 p1, p2;
+    p1.x = origin.x + sizeHalf.x - sizeMin/2.f;
+    p1.y = origin.y + sizeHalf.y - sizeMin/2.f;
+    p2.x = origin.x + sizeHalf.x + sizeMin/2.f;
+    p2.y = origin.y + sizeHalf.y + sizeMin/2.f;
+    dl->AddRect(p1, p2, 0x44ffffff);
+    FOR_RANGE(9) {
+      // veritcal lines
+      p1.x = origin.x + sizeHalf.x - sizeMin * ((z-4)/10.f);
+      p2.x = p1.x;
+      p1.y = origin.y + sizeHalf.y - sizeMin/2.f;
+      p2.y = origin.y + sizeHalf.y + sizeMin/2.f;
+      dl->AddLine(p1, p2, 0x44ffffff);
+      // horizontal lines
+      p1.y = origin.y + sizeHalf.y - sizeMin * ((z-4)/10.f);
+      p2.y = p1.y;
+      p1.x = origin.x + sizeHalf.x - sizeMin/2.f;
+      p2.x = origin.x + sizeHalf.x + sizeMin/2.f;
+      dl->AddLine(p1, p2, 0x44ffffff);
+    }
   }
+  sizeMin/=2.f;
+  ImVec2* scaledPlot = new ImVec2[xyp.sampleLen];
+  for (nint i=0; i<xyp.sampleLen; i++) {
+    // scaledWave[i].y = origin.y - (oscData[c][cur] * tc[c].yScale + tc[c].yOffset - 1.f) * size.y/2.f;
+    nint cur = oscDataSize - xyp.sampleLen + i;
+    scaledPlot[i].x = origin.x + (oscData[xyp.axisChan[0]-1][cur] * xyp.xScale + xyp.xOffset) * sizeMin + sizeHalf.x;
+    scaledPlot[i].y = origin.y - (oscData[xyp.axisChan[1]-1][cur] * xyp.yScale + xyp.yOffset) * sizeMin + sizeHalf.y;
+  }
+  dl->AddPolyline(scaledPlot, xyp.sampleLen, ImGui::ColorConvertFloat4ToU32(xyp.color), 0, 1.0f);
+  delete[] scaledPlot;
   ImGui::End();
 }

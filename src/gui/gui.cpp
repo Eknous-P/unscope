@@ -36,8 +36,9 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   tc = new traceParams[channels];
 
   for (unsigned char i = 0; i < channels; i++) {
-    tc[i].enable = true;
-    tc[i].yScale = up->scale;
+    tc[i].enable  = true;
+    tc[i].yScale  = up->scale;
+    tc[i].xOffset = 0.0f;
     tc[i].yOffset = 0.0f;
     tc[i].timebase = up->timebase;
     tc[i].traceSize = sampleRate*tc[i].timebase/1000.0f;
@@ -414,6 +415,10 @@ void USCGUI::updateAudioDevices() {
       outputDeviceS = i;
     }
   }
+}
+
+float USCGUI::mapToRange(ImVec2 src, ImVec2 dest, float v) {
+  return dest.x + v*(dest.y-dest.x)/(src.y-src.x);
 }
 
 USCGUI::~USCGUI() {

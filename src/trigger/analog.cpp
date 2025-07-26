@@ -25,7 +25,6 @@ void TriggerAnalog::setupTrigger(unscopeParams* up, float* cb) {
 
   params = {
     TriggerParam(TP_KNOBNORM,false,"level",false,true),
-    TriggerParam(TP_KNOBNORM,false,"x offset",true,false),
     TriggerParam(TP_TOGGLE,false,"extend trigger range","allows trigger to scan for the full audio buffer,\ninstead of the visible range",false,false),
     TriggerParam(TP_TOGGLE,false,"trigger edge","off - rising\non - falling",false,false),
   };
@@ -44,9 +43,8 @@ bool TriggerAnalog::trigger(nint windowSize) {
   if (!chanBuf) return false;
   triggered = false;
   // locate trigger
-  bool triggerHigh = false, triggerLow = false, foundTrigger = false, edge = !params[3].getValue<bool>();
+  bool triggerHigh = false, triggerLow = false, foundTrigger = false, edge = !params[2].getValue<bool>();
   float trigY = params[0].getValue<float>(); // temp
-  long int offset = (windowSize / 2) * params[1].getValue<float>();
   triggerIndex = uParams->audioBufferSize - windowSize;
 
   while (triggerIndex > 0) {
@@ -61,20 +59,11 @@ bool TriggerAnalog::trigger(nint windowSize) {
       CHECK_TRIGGERED;
       if (foundTrigger && !edge) break;
     }
-    if (!params[2].getValue<bool>()) {
+    if (!params[1].getValue<bool>()) {
       if (triggerIndex < uParams->audioBufferSize - 2 * windowSize) return false; // out of window
     }
   }
 
-  // handle offset
-  if (
-    (triggerIndex - offset > uParams->audioBufferSize) ||
-    ((int)triggerIndex - offset < 0)
-  ) {
-    offset = 0;
-  }
-
-  triggerIndex -= offset;
 
   if (triggerIndex > uParams->audioBufferSize - windowSize) {
     alignRegionSize = uParams->audioBufferSize - triggerIndex;

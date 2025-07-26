@@ -134,6 +134,14 @@ void USCGUI::drawChanControls() {
         if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) tc[i].yScale = 1.0f;
 
       ImGui::TableNextColumn();
+        // x offset knob
+        if (ImGuiKnobs::Knob("x offset", &tc[i].xOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
+          if (tc[i].xOffset < -1.0f) tc[i].xOffset = -1.0f;
+          if (tc[i].xOffset >  1.0f) tc[i].xOffset =  1.0f;
+        }
+        if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) tc[i].xOffset = 0.0f;
+
+      ImGui::TableNextColumn();
         // y offset knob
         if (ImGuiKnobs::Knob("y offset", &tc[i].yOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
           if (tc[i].yOffset < -1.0f) tc[i].yOffset = -1.0f;
