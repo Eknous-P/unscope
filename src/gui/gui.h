@@ -20,7 +20,6 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 
 #include <SDL.h>
 #include <imgui.h>
-#include <implot.h>
 #include "imgui_stdlib.h"
 
 #include "shared.h"
@@ -58,10 +57,9 @@ class USCRender {
 
 class USCGUI {
   private:
-    struct scopeParams {
-      int plotFlags;
-      int scopeFlags;
-    };
+    struct settings {
+      bool msDiv;
+    } settings;
 
     struct traceParams {
       bool   enable;
@@ -111,7 +109,7 @@ class USCGUI {
     unsigned char channels;
     USCRenderers renderer;
   
-    float **oscData, **oscAlign;
+    float **oscData;
     nint oscDataSize, sampleRate;
     USCRender *rd;
     USCAudio *ai;
@@ -121,7 +119,6 @@ class USCGUI {
 
     unscopeParams *up;
     AudioConfig   *audConf;
-    scopeParams    sc;
     traceParams   *tc;
     xyParams       xyp;
     windowsOpen    wo;
@@ -138,7 +135,8 @@ class USCGUI {
     plotCursor HCursors[2], VCursors[2];
     bool showHCursors, showVCursors;
 
-    bool plotDragX(float* v, const char* label, ImDrawList* dl, ImVec4 rect, float v_min=-1.f, float v_max=1.f);
+    bool plotDragX(float* v, const char* label, ImDrawList* dl, ImVec4 rect, ImU32 col, float v_min=-1.f, float v_max=1.f);
+    bool plotDragY(float* v, const char* label, ImDrawList* dl, ImVec4 rect, ImU32 col, float v_min=-1.f, float v_max=1.f);
     float mapToRange(ImVec2 src, ImVec2 dest, float v);
 
 #ifdef TRIGGER_DEBUG

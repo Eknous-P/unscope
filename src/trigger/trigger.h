@@ -60,6 +60,10 @@ class TriggerParam {
   public:
     bool bindToDragX, bindToDragY;
 
+    const char* getLabel() {
+      return label;
+    }
+
     void *getValuePtr() {
       return valuePtr;
     }

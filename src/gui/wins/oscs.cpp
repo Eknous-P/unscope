@@ -17,12 +17,11 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 
 #include "gui.h"
 #include <imgui.h>
-#include <shared.h>
-#include "plotOsc.cpp"
+#include <imgui_internal.h>
 
 void USCGUI::drawMainScope() {
   if (!wo.mainScopeOpen) return;
-  if (!(oscAlign && oscData)) return;
+  if (!oscData) return;
   /*ImGui::Begin("Scope",&wo.mainScopeOpen);
   if (ImPlot::BeginPlot("##scope", ImGui::GetContentRegionAvail(),sc.plotFlags)) {
     for (unsigned char i = 0; i < channels; i++) {
@@ -148,7 +147,7 @@ void USCGUI::drawMainScope() {
       }
     }
     origin.x += textSize.x * channels;
-    size.x -= textSize.x * channels;
+    size.x   -= textSize.x * channels;
   }
   // grid
   {
@@ -173,20 +172,24 @@ void USCGUI::drawMainScope() {
   // ImVec2 *scaledWave=NULL;
   ImVec2* scaledWave;
   bool* triggered = new bool[channels];
+  FOR_RANGE(channels) {
+    unsigned char trigChan = (shareTrigger>0)?(shareTrigger-1):(shareParams?0:z);
+    if (shareTrigger>0) {
+      if (trigChan == z) {
+        memset(triggered, trigger[trigChan]->trigger(tc[trigChan].traceSize), channels);
+      }
+    }
+    else triggered[z] = trigger[z]->trigger(tc[trigChan].traceSize);
+  }
   for (int c = channels-1; c >= 0; c--) {
     if (!tc[c].enable) continue;
+    if (tc[c].color.w==0.0f) continue;
     // draw channels in reverse order so channel 1 is always on top
     nint len = tc[c].traceSize;
     long int offset = (tc[c].traceSize / 2.f) * tc[c].xOffset;
     scaledWave = new ImVec2[len];
     nint i=0;
     unsigned char trigChan = (shareTrigger>0)?(shareTrigger-1):(shareParams?0:c);
-    if (shareTrigger>0) {
-      if (trigChan == c) {
-        memset(triggered, trigger[trigChan]->trigger(tc[trigChan].traceSize), channels);
-      }
-    }
-    else triggered[c] = trigger[c]->trigger(tc[trigChan].traceSize);
     for (; i < len; i++) {
       scaledWave[i].x = origin.x + size.x*((float)i/(float)len);
 
@@ -205,19 +208,25 @@ void USCGUI::drawMainScope() {
     dl->AddPolyline(scaledWave, i, ImGui::ColorConvertFloat4ToU32(tc[c].color), 0, .4f);
     delete[] scaledWave;
   }
+  delete[] triggered;
   // drags
   {
+    char buf[256];
     FOR_RANGE(channels) {
       ImVec4 trigColor = trigger[z]->getTriggered()?ImVec4(0,1,0,.5f):ImVec4(1,0,0,.5f);
-      plotDragX((float*)&tc[z].xOffset, "test", dl, ImVec4(origin.x, origin.y, size.x, size.y));
+      snprintf(buf, 256, "x offset (ch %d)", z+1);
+      plotDragX(&tc[z].xOffset, buf, dl, ImVec4(origin.x, origin.y, size.x, size.y), 0xff00ff33);
+      // snprintf(buf, 256, "y offset##CH%d", z);
+      // plotDragY(&tc[z].yOffset, buf, dl, ImVec4(origin.x, origin.y, size.x, size.y), 0xff00ff33);
       for (TriggerParam p : trigger[z]->getParams()) {
         if (shareTrigger > 0 && z != shareTrigger - 1) continue;
         if (p.bindToDragX) {
-          plotDragX((float*)p.getValuePtr(), "test", dl, ImVec4(origin.x, origin.y, size.x, size.y));
+          snprintf(buf, 256, "%s (ch %d)", p.getLabel(), z+1);
+          plotDragX((float*)p.getValuePtr(), buf, dl, ImVec4(origin.x, origin.y, size.x, size.y), 0xff0077ff);
         }
         if (p.bindToDragY) {
-          // if (ImPlot::DragLineY(2*i+1, &valD, trigColor)) p.setValue<float>(valD);
-          // ImPlot::TagY(valD, trigColor, "CH %d", i + 1);
+          snprintf(buf, 256, "%s (ch %d)", p.getLabel(), z+1);
+          plotDragY((float*)p.getValuePtr(), buf, dl, ImVec4(origin.x, origin.y-tc[z].yOffset*size.y/2.0f, size.x, size.y), 0xff0077ff);
         }
       }
     }
@@ -226,26 +235,52 @@ void USCGUI::drawMainScope() {
   ImGui::End();
 }
 
-bool USCGUI::plotDragX(float* v, const char* label, ImDrawList* dl, ImVec4 rect, float v_min, float v_max) {
+bool USCGUI::plotDragX(float* v, const char* label, ImDrawList* dl, ImVec4 rect, ImU32 col, float v_min, float v_max) {
   ImVec2 p1, p2;
   p1.x = rect.x + (*v + 1.f) * rect.z/2.f;
   p2.x = p1.x;
   p1.y = rect.y;
   p2.y = p1.y + rect.w;
-  dl->AddLine(p1, p2, 0xff0000ff);
-  ImGui::SetCursorPosX(p1.x-2.5f - rect.x);
-  ImGui::Dummy(ImVec2(5.f, rect.w));
-  if (ImGui::IsItemHovered()) {
-    ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
-  if (ImGui::IsItemClicked()) {
-    float mouseX = ImGui::GetMousePos().x;
-    *v = mapToRange(ImVec2(rect.z,rect.w), ImVec2(v_min,v_max), mouseX-rect.x);
-    if (*v < v_min) *v = v_min;
-    if (*v > v_max) *v = v_max;
-    return true;
+  dl->AddLine(p1, p2, col);
+  ImGui::SetCursorPosX(p1.x-2.5f);
+  ImGui::SetCursorPosY(0.0f);
+  ImGui::PushID(label);
+  ImGui::InvisibleButton(label, ImVec2(5.f,rect.w));
+  float min=v_min, max=v_max;
+  bool ret = ImGui::DragBehavior(ImGui::GetID(label), ImGuiDataType_Float, v, 2.f/rect.z, &min, &max, "", ImGuiSliderFlags_None);
+  if (ImGui::IsItemHovered() || ret) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+  if (ImGui::IsItemHovered(ImGuiHoveredFlags_Stationary|ImGuiHoveredFlags_DelayNormal)) {
+    if (ImGui::BeginTooltip()) {
+      ImGui::Text("%s", label);
+      ImGui::EndTooltip();
+    }
   }
+  ImGui::PopID();
+  return ret;
+}
+
+bool USCGUI::plotDragY(float* v, const char* label, ImDrawList* dl, ImVec4 rect, ImU32 col, float v_min, float v_max) {
+  ImGuiWindow* window = ImGui::GetCurrentWindow();
+  ImVec2 p1, p2;
+  p1.x = rect.x;
+  p2.x = p1.x + rect.z;
+  p1.y = rect.y + (-*v + 1.f) * rect.w/2.f;
+  p2.y = p1.y;
+  dl->AddLine(p1, p2, col);
+  window->DC.CursorPos=ImVec2(p1.x,p1.y-2.5f)-window->Scroll;
+  ImGui::PushID(label);
+  ImGui::InvisibleButton(label, ImVec2(rect.z, 5.f));
+  float min=v_min, max=v_max;
+  bool ret = ImGui::DragBehavior(ImGui::GetID(label), ImGuiDataType_Float, v, 2.f/rect.w, &min, &max, "", ImGuiSliderFlags_Vertical);
+  if (ImGui::IsItemHovered() || ret) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_Stationary|ImGuiHoveredFlags_DelayNormal)) {
+    if (ImGui::BeginTooltip()) {
+      ImGui::Text("%s", label);
+      ImGui::EndTooltip();
+    }
   }
-  return false;
+  ImGui::PopID();
+  return ret;
 }
 
 void USCGUI::drawXYScope() {

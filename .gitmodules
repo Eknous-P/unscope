@@ -5,9 +5,6 @@
 [submodule "submodules/portaudio"]
 	path = submodules/portaudio
 	url = https://github.com/PortAudio/portaudio.git
-[submodule "submodules/implot"]
-	path = submodules/implot
-	url = https://github.com/epezent/implot.git
 [submodule "submodules/imgui-knobs"]
 	path = submodules/imgui-knobs
 	url = https://github.com/altschuler/imgui-knobs.git

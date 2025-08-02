@@ -64,9 +64,10 @@ void USCGUI::drawGlobalControls() {
   ImGui::End();
 }
 
-#define UPDATE_TIMEBASE if (tc[i].timebase < 0.0f) tc[i].timebase = 0.0f; \
-          if (tc[i].timebase > (float)oscDataSize/(float)sampleRate*1000.0f) tc[i].timebase = (float)oscDataSize/(float)sampleRate*1000.0f; \
-          tc[i].traceSize = sampleRate * tc[i].timebase / 1000;
+#define UPDATE_TIMEBASE {float oscWidthS = (float)oscDataSize/(float)sampleRate*1000.0f; \
+  if (tc[i].timebase < 0.0f) tc[i].timebase = 0.0f; \
+  if (tc[i].timebase > oscWidthS) tc[i].timebase = oscWidthS; \
+  tc[i].traceSize = sampleRate * tc[i].timebase / (settings.msDiv?100.f:1000.0f);}
 
 void USCGUI::drawChanControls() {
   for (unsigned char i = 0; i < channels; i++) {
@@ -115,7 +116,7 @@ void USCGUI::drawChanControls() {
         // timebase knob
         ImGui::BeginDisabled(disable);
         tc[i].timebase = tc[i].traceSize * 1000.0f / sampleRate;
-        if (ImGuiKnobs::Knob("timebase", &tc[i].timebase, 0, (float)oscDataSize/(float)sampleRate*1000.0f, 0.0f, "%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
+        if (ImGuiKnobs::Knob("timebase", &tc[i].timebase, 0, (float)oscDataSize/(float)sampleRate*1000.0f, 0.0f, settings.msDiv?"%g ms/div":"%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
           UPDATE_TIMEBASE;
         }
         if (disable) if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
@@ -180,8 +181,9 @@ void USCGUI::drawChanControls() {
     ImGui::End();
 
     if (shareParams && i != mainCh) {
+      tc[i].traceSize = tc[mainCh].traceSize;
       tc[i].timebase = tc[mainCh].timebase;
-      UPDATE_TIMEBASE;
+      // UPDATE_TIMEBASE;
       for (unsigned char j = 0; j < trigger[i]->getParams().size(); j++) {
         TriggerParam p = trigger[i]->getParams()[j];
         memcpy(p.getValuePtr(),trigger[mainCh]->getParams()[j].getValuePtr(),TriggerParamTypeSize[p.getType()]);

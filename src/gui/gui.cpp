@@ -28,9 +28,6 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   isGood = false;
   channels = aConf->inputChannels;
 
-  sc.plotFlags = ImPlotFlags_NoLegend|ImPlotFlags_NoMenus|ImPlotFlags_NoMouseText;
-  sc.scopeFlags = ImPlotAxisFlags_AutoFit|ImPlotAxisFlags_Lock|ImPlotAxisFlags_NoMenus|ImPlotAxisFlags_Foreground;
-
   sampleRate = aConf->sampleRate;
 
   tc = new traceParams[channels];
@@ -73,8 +70,7 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   oscDataSize = up->audioBufferSize;
 
   oscData = new float*[channels];
-  oscAlign = new float*[channels];
-  if (!oscData || !oscAlign) {
+  if (!oscData) {
     return;
   }
   FOR_RANGE(channels) {
@@ -115,6 +111,8 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
 
   showHCursors = false;
   showVCursors = false;
+
+  settings.msDiv=false;
 
 #ifdef TRIGGER_DEBUG
   triggerDebugBegin = 60000;
@@ -299,12 +297,10 @@ void USCGUI::drawGUI() {
   }
 
 
-  ImPlot::CreateContext();
     drawMainScope();
     drawXYScope();
-  ImPlot::DestroyContext();
 #ifdef TRIGGER_DEBUG
-  drawTriggerDebug();
+  // drawTriggerDebug();
 #endif
   // ImGui::ShowMetricsWindow();
 }
@@ -312,7 +308,7 @@ void USCGUI::drawGUI() {
 #ifdef TRIGGER_DEBUG
 void USCGUI::drawTriggerDebug() {
   // very slow indeed
-  if (!(oscAlign && oscData)) return;
+  if (!oscData) return;
 #define DIV 4
   ImGui::Begin("Trigger Debug");
   ImGui::InputScalar("begin", ImGuiDataType_U64,  &triggerDebugBegin);
@@ -426,6 +422,5 @@ USCGUI::~USCGUI() {
   DELETE_PTR(rd)
   DELETE_DOUBLE_PTR(trigger, channels)
   DELETE_DOUBLE_PTR_ARR(oscData, channels)
-  DELETE_PTR_ARR(oscAlign)
   DELETE_PTR_ARR(tc)
 }

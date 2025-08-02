@@ -121,10 +121,6 @@ ${imgui_path}/imgui_tables.cpp
 ${imgui_path}/imgui_widgets.cpp
 ${imgui_path}/misc/cpp/imgui_stdlib.cpp
 
-${implot_path}/implot.cpp
-${implot_path}/implot_demo.cpp
-${implot_path}/implot_items.cpp
-
 ${imgui_knobs_path}/imgui-knobs.cpp
 
 ${imgui_toggle_path}/imgui_toggle_palette.cpp
