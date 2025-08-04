@@ -103,7 +103,7 @@ int Audio_PA::init() {
         conf->outputDevice,
         conf->inputChannels,
         conf->outputChannels,
-        Pa_GetDeviceInfo(conf->inputDevice)->defaultSampleRate,
+        (int)Pa_GetDeviceInfo(conf->inputDevice)->defaultSampleRate,
         conf->frameSize);
       break;
     case paNoError:
@@ -170,7 +170,7 @@ int Audio_PA::getAvailDevices() {
 
     devs->push_back(AudioDevice(dir, i, d->hostApi, devName));
   }
-  return devs->size();
+  return (int)devs->size();
 }
 
 int Audio_PA::getDefaultInputDevice() {

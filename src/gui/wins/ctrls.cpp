@@ -67,12 +67,12 @@ void USCGUI::drawGlobalControls() {
 #define UPDATE_TIMEBASE {float oscWidthS = (float)oscDataSize/(float)sampleRate*1000.0f; \
   if (tc[i].timebase < 0.0f) tc[i].timebase = 0.0f; \
   if (tc[i].timebase > oscWidthS) tc[i].timebase = oscWidthS; \
-  tc[i].traceSize = sampleRate * tc[i].timebase / (settings.msDiv?100.f:1000.0f);}
+  tc[i].traceSize = (nint)(sampleRate * tc[i].timebase / (settings.msDiv?100.f:1000.0f));}
 
 void USCGUI::drawChanControls() {
   for (unsigned char i = 0; i < channels; i++) {
-    char strbuf[32];
-    sprintf(strbuf,"Channel %d Controls",i+1);
+    char strbuf[64];
+    snprintf(strbuf,64,"Channel %d Controls",i+1);
     if (!wo.chanControlsOpen[i]) continue;
     ImGui::Begin(strbuf,&wo.chanControlsOpen[i]);
     ImGui::Toggle("enable", &tc[i].enable);
@@ -87,7 +87,7 @@ void USCGUI::drawChanControls() {
 
     ImGui::BeginDisabled(!trigShare);
     ImGui::SameLine();
-    sprintf(strbuf, "##chan%dtrig", i+1);
+    snprintf(strbuf,64, "##chan%dtrig", i+1);
     if (trigShare) if (ImGui::RadioButton(strbuf,shareTrigger==i+1)) shareTrigger=i+1;
     if (ImGui::IsItemHovered()) {
       ImGui::SetTooltip("trigger to this channel");
@@ -96,16 +96,16 @@ void USCGUI::drawChanControls() {
 
     ImGui::SameLine();
     // color picker
-    sprintf(strbuf, "channel %d color", i+1);
+    snprintf(strbuf,64, "channel %d color", i+1);
     ImGui::ColorButton(strbuf, tc[i].color);
-    sprintf(strbuf, "##chan%dcol", i+1);
+    snprintf(strbuf,64, "##chan%dcol", i+1);
     if (ImGui::BeginPopupContextItem(strbuf,ImGuiPopupFlags_MouseButtonLeft)) {
-      sprintf(strbuf, "##chan%dcoledit", i+1);
+      snprintf(strbuf,64, "##chan%dcoledit", i+1);
       ImGui::ColorPicker4(strbuf,(float*)&tc[i].color);
       ImGui::EndPopup();
     }
 
-    sprintf(strbuf, "##chan%dctrls", i+1);
+    snprintf(strbuf,64, "##chan%dctrls", i+1);
     if (ImGui::BeginTable(strbuf, 4)) {
       ImGui::TableSetupColumn("c1",ImGuiTableColumnFlags_WidthFixed);
       ImGui::TableSetupColumn("c2",ImGuiTableColumnFlags_WidthFixed);
@@ -201,13 +201,13 @@ void USCGUI::drawXYScopeControls() {
 
     float maxTime = ((float)up->audioBufferSize / sampleRate) * 1000.0f;
     if (maxTime > 1000.0f) maxTime = 1000.0f;
-    int maxBuf = sampleRate * maxTime / 1000.0f;
+    nint maxBuf = (nint)(sampleRate * maxTime / 1000.0f);
     xyp.persistence = ((float)xyp.sampleLen / sampleRate) * 1000.0f;
     if (ImGuiKnobs::Knob("persistence", &xyp.persistence, 0.0f, maxTime, 0.0f,NULL, ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
       xyp.sampleLen = sampleRate * xyp.persistence / 1000.0f;
       if (xyp.sampleLen > maxBuf) xyp.sampleLen = maxBuf;
     }
-    RIGHTCLICK_EXACT_INPUT(&xyp.persistence, ImGuiDataType_Float, {if (xyp.persistence<0.0f) {xyp.persistence=0.0f;} if (xyp.persistence>maxTime) {xyp.persistence=maxTime;} xyp.sampleLen = sampleRate * xyp.persistence / 1000.0f;})
+    RIGHTCLICK_EXACT_INPUT(&xyp.persistence, ImGuiDataType_Float, {if (xyp.persistence<0.0f) {xyp.persistence=0.0f;} if (xyp.persistence>maxTime) {xyp.persistence=maxTime;} xyp.sampleLen = (nint)(sampleRate * xyp.persistence / 1000.0f);})
     ImGui::TableNextColumn();
 
     ImGuiKnobs::Knob("x scale", &xyp.xScale, 0.5f, 4.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);

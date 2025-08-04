@@ -66,14 +66,14 @@ class USCGUI {
       float  xOffset, yOffset;
       float  timebase, yScale;
       ImVec4 color;
-      int    traceSize;
+      nint   traceSize;
     };
 
     struct xyParams {
       float xScale,  yScale;
       float xOffset, yOffset;
       ImVec4 color;
-      int   sampleLen;
+      nint  sampleLen;
       float persistence;
       unsigned char axisChan[2];
     };
@@ -110,7 +110,8 @@ class USCGUI {
     USCRenderers renderer;
   
     float **oscData;
-    nint oscDataSize, sampleRate;
+    int sampleRate;
+    nint oscDataSize;
     USCRender *rd;
     USCAudio *ai;
 

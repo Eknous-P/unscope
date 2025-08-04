@@ -38,12 +38,12 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
     tc[i].xOffset = 0.0f;
     tc[i].yOffset = 0.0f;
     tc[i].timebase = up->timebase;
-    tc[i].traceSize = sampleRate*tc[i].timebase/1000.0f;
+    tc[i].traceSize = (nint)(sampleRate*tc[i].timebase/1000.0f);
   }
 
   tc[0].color = ImVec4(0.13f,0.97f,0.21f,0.95f);
   if (channels > 1) {
-  tc[1].color = ImVec4(0.93f,0.17f,0.23f,0.95f);
+    tc[1].color = ImVec4(0.93f,0.17f,0.23f,0.95f);
   }
 
   xyp.color = ImVec4(0.13f,0.97f,0.21f,0.35f);
@@ -52,7 +52,7 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   xyp.xScale = 1.0f;
   xyp.yScale = 1.0f;
   xyp.persistence = up->xyPersist;
-  xyp.sampleLen = sampleRate*xyp.persistence/1000;
+  xyp.sampleLen = (nint)(sampleRate*xyp.persistence/1000.0f);
   xyp.axisChan[0] = 1;
   xyp.axisChan[1] = 2;
 
@@ -257,9 +257,9 @@ void USCGUI::drawGUI() {
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Controls")) {
-      char buf[32];
+      char buf[64];
       for (unsigned char i = 0; i < channels; i++) {
-        sprintf(buf,"Channel %d Controls",i+1);
+        snprintf(buf,64,"Channel %d Controls",i+1);
         ImGui::MenuItem(buf,NULL,&wo.chanControlsOpen[i]);
       }
       ImGui::MenuItem("XY Scope Controls",NULL,&wo.xyScopeControlsOpen);
@@ -314,23 +314,21 @@ void USCGUI::drawTriggerDebug() {
   ImGui::InputScalar("begin", ImGuiDataType_U64,  &triggerDebugBegin);
   ImGui::InputScalar("end", ImGuiDataType_U64,  &triggerDebugEnd);
   ImDrawList* dl = ImGui::GetWindowDrawList();
-  nint count = (triggerDebugEnd-triggerDebugBegin)/DIV;
+  int count = (triggerDebugEnd-triggerDebugBegin)/DIV;
   unsigned char chan = shareTrigger<0?0:shareTrigger-1;
   if (!(count < 0 || triggerDebugEnd > oscDataSize || count > oscDataSize/DIV)) {
-    ImVec2 *al = new ImVec2[count],
-           *ol = new ImVec2[count],
+    ImVec2 *ol = new ImVec2[count],
            *sl = new ImVec2[count];
     ImVec2 winSize = ImGui::GetWindowSize(), winPos = ImGui::GetWindowPos();
     float hovering = ImGui::GetIO().MousePos.x - winPos.x;
     float winTitleBar = ImGui::GetStyle().FramePadding.x*2 + ImGui::CalcTextSize("Trigger Debug").y;
     winSize.y-=winTitleBar;
     winPos.y+=winTitleBar;
-    ImGui::Text("TRIGGER: %s DIV: %d, range: %llu", triggerNames[trigNum-1], DIV, count);
+    ImGui::Text("TRIGGER: %s DIV: %d, range: %d", triggerNames[trigNum-1], DIV, count);
     if (ImGui::IsWindowHovered()) ImGui::Text("index: %llu",(nint)((hovering/winSize.x)*count*DIV) + triggerDebugBegin);
-    if (al && ol && sl) {
+    if (ol && sl) {
       float x=0.0f;
       for (nint i = 0; i < count; i++) {
-        // al[i] = ImVec2(x,winSize.y*clamp((1.0f-oscAlign[chan][triggerDebugBegin+i*DIV])/2.f))+winPos;
         ol[i] = ImVec2(x,winSize.y*(1.0f-oscData[chan][triggerDebugBegin+i*DIV])/2.0f)+winPos;
         if (trigNum == TRIG_SMOOTH && sl) {
           sl[i] = ImVec2(x,winSize.y*clamp((1.0f-(((TriggerSmooth**)trigger)[chan]->getSmoothBuffer())[triggerDebugBegin+i*DIV])/2.f))+winPos;
@@ -338,7 +336,6 @@ void USCGUI::drawTriggerDebug() {
         x+=winSize.x/count;
       }
       dl->AddPolyline(ol, count, 0x7f7777ff, ImDrawFlags_None, 1.0f);
-      // dl->AddPolyline(al, count, 0xff77ffff, ImDrawFlags_None, 1.0f);
       switch (trigNum) {
         case TRIG_ANALOG: {
           float trigIdx = (float)(((TriggerAnalog**)trigger)[chan]->getTriggerIndex() - triggerDebugBegin)/(count*DIV);
@@ -366,10 +363,9 @@ void USCGUI::drawTriggerDebug() {
                   ImVec2(winSize.x,winSize.y)+winPos,
                   0x1155ff22);
     } else {
-      ImGui::Text("malloc fail!:\nal: %p\nol: %p\nsl: %p",al,ol,sl);
+      ImGui::Text("malloc fail!:\nnol: %p\nsl: %p",ol,sl);
     }
 
-    if (al) delete[] al;
     if (ol) delete[] ol;
     if (sl) delete[] sl;
     
