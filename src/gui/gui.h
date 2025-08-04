@@ -91,7 +91,7 @@ class USCGUI {
 
     struct plotCursor {
       const char* label;
-      double pos;
+      float pos;
       plotCursor():
         label(NULL),
         pos(0.0f) {}

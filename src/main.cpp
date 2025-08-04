@@ -262,7 +262,6 @@ const char* thirdPartyMsg =
 "SDL (https://github.com/libsdl-org/SDL)\n"
 #endif
 "Dear ImGui (https://github.com/ocornut/imgui)\n"
-"ImPlot (https://github.com/epezent/implot)\n"
 "ImGui Knobs (https://github.com/altschuler/imgui-knobs)\n"
 "imgui_toggle (https://github.com/cmdwtf/imgui_toggle)\n";
 

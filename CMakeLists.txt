@@ -18,7 +18,6 @@ set(sources_path    ${CMAKE_SOURCE_DIR}/src/)
 set(submodules_path ${CMAKE_SOURCE_DIR}/submodules)
 
 set(imgui_path        ${submodules_path}/imgui)
-set(implot_path       ${submodules_path}/implot)
 set(imgui_toggle_path ${submodules_path}/imgui_toggle)
 set(imgui_knobs_path  ${submodules_path}/imgui-knobs)
 set(sdl_path          ${submodules_path}/SDL)
@@ -175,7 +174,6 @@ ${SDL_INCLUDE_DIRS}
 ${imgui_path}
 ${imgui_path}/misc/cpp
 ${imgui_path}/backends
-${implot_path}
 ${imgui_toggle_path}
 ${imgui_knobs_path}
 ${sources_path}
