@@ -72,6 +72,7 @@ void USCGUI::drawMainScope() {
   if (!oscData) return;
 
   ImGui::Begin("Scope", NULL);
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f,0.0f));
   ImDrawList* dl = ImGui::GetWindowDrawList();
   ImVec2 origin = ImGui::GetWindowPos(), size = ImGui::GetWindowSize();
   float titleBar = ImGui::GetCurrentWindow()->TitleBarHeight();
@@ -265,6 +266,7 @@ void USCGUI::drawMainScope() {
       }
     }
   }
+  ImGui::PopStyleVar();
   ImGui::End();
 }
 
@@ -273,6 +275,7 @@ void USCGUI::drawXYScope() {
   if (!wo.xyScopeOpen) return;
   if (channels < 2) return;
   ImGui::Begin("Scope (XY)",&wo.xyScopeOpen);
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f,0.0f));
   ImDrawList* dl = ImGui::GetWindowDrawList();
   ImVec2 origin = ImGui::GetWindowPos(), size = ImGui::GetWindowSize();
   float titleBar = ImGui::GetCurrentWindow()->TitleBarHeight();
@@ -313,5 +316,6 @@ void USCGUI::drawXYScope() {
   }
   dl->AddPolyline(scaledPlot, xyp.sampleLen, ImGui::ColorConvertFloat4ToU32(xyp.color), 0, 1.0f);
   delete[] scaledPlot;
+  ImGui::PopStyleVar();
   ImGui::End();
 }
