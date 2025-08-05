@@ -19,24 +19,6 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #define TRIGGER_H
 
 #include "shared.h"
-#include "imgui.h"
-#include "imgui-knobs.h"
-#include "imgui_toggle.h"
-
-#define INIT_PARAM_VALUE \
-      switch (type) { \
-        case TP_TOGGLE: \
-          valuePtr = new bool; \
-          break; \
-        case TP_KNOBNORM: \
-        case TP_KNOBUNIT: \
-          valuePtr = new float; \
-          break; \
-        default: \
-          valuePtr = new int; \
-          break; \
-      } \
-      memset(valuePtr, 0, TriggerParamTypeSize[type]);
 
 enum TriggerParamTypes : unsigned char {
   TP_NONE = 0,
@@ -54,108 +36,30 @@ const unsigned char TriggerParamTypeSize[]={
 
 class TriggerParam {
   TriggerParamTypes type;
-  bool exactInput;
   void *valuePtr;
   const char *label, *desc;
+  bool exactInput, hovered, active;
   public:
     bool bindToDragX, bindToDragY;
 
-    const char* getLabel() {
-      return label;
-    }
-
-    void *getValuePtr() {
-      return valuePtr;
-    }
+    const char* getLabel();
+    void *getValuePtr();
 
     template<typename T>
-    T getValue() {
-      return *(T*)valuePtr;
-    }
+    T getValue() {return *(T*)valuePtr;}
 
     template<typename T>
-    void setValue(T v) {
-      *(T*)valuePtr = v;
-    }
+    void setValue(T v) {*(T*)valuePtr = v;}
 
-    void draw() {
-      switch (type) {
-        case TP_TOGGLE: {
-          ImGui::Toggle(label, (bool*)valuePtr);
-          break;
-        }
-        case TP_KNOBNORM: {
-          ImGuiKnobs::Knob(label, (float*)valuePtr, -1.0f, 1.0f, 0.0f, "%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
-          if (exactInput) RIGHTCLICK_EXACT_INPUT((float*)valuePtr, ImGuiDataType_Float, {
-            if (getValue<float>() > 1.0f) setValue<float>(1.0f);
-            if (getValue<float>() < -1.0f) setValue<float>(-1.0f);
-          });
-          if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) setValue<float>(0.0f);
-          break;
-        }
-        case TP_KNOBUNIT: {
-          ImGuiKnobs::Knob(label, (float*)valuePtr, 0.0f, 1.0f, 0.0f, "%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
-          if (exactInput) RIGHTCLICK_EXACT_INPUT((float*)valuePtr, ImGuiDataType_Float, {
-            if (getValue<float>() > 1.0f) setValue<float>(1.0f);
-            if (getValue<float>() < 0.0f) setValue<float>(0.0f);
-          });
-          if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) setValue<float>(0.0f);
-          break;
-        }
-        default: break;
-      }
-      if (desc) {
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
-          ImGui::SetTooltip("%s", desc);
-        }
-      }
-    }
+    bool draw();
+    TriggerParamTypes getType();
+    bool isHovered();
+    bool isActive();
 
-    TriggerParamTypes getType() {
-      return type;
-    }
-
-    TriggerParam():
-      type(TP_NONE),
-      exactInput(false),
-      valuePtr(NULL),
-      label(NULL),
-      desc(NULL) {}
-
-    TriggerParam(TriggerParamTypes t, bool i, const char* l, bool dragX=false, bool dragY=false):
-      desc(NULL) {
-      type       = t;
-      exactInput = i;
-      label      = l;
-      bindToDragX = dragX;
-      bindToDragY = dragY;
-      INIT_PARAM_VALUE
-    }
-
-    TriggerParam(TriggerParamTypes t, bool i, const char* l, const char* d, bool dragX=false, bool dragY=false) {
-      type       = t;
-      exactInput = i;
-      label      = l;
-      desc       = d;
-      bindToDragX = dragX;
-      bindToDragY = dragY;
-      INIT_PARAM_VALUE
-    }
-
-    void destroy() {
-      switch (type) {
-        case TP_TOGGLE:
-          if (valuePtr) delete (bool*)valuePtr;
-          break;
-        case TP_KNOBNORM:
-        case TP_KNOBUNIT:
-          if (valuePtr) delete (float*)valuePtr;
-          break;
-        default:
-          if (valuePtr) delete (int*)valuePtr;
-          break;
-      }
-    }
+    TriggerParam();
+    TriggerParam(TriggerParamTypes t, bool i, const char* l, bool dragX=false, bool dragY=false);
+    TriggerParam(TriggerParamTypes t, bool i, const char* l, const char* d, bool dragX=false, bool dragY=false);
+    void destroy();
 };
 
 class Trigger {

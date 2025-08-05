@@ -30,7 +30,7 @@ typedef float AudioSample;
 typedef unsigned long long int nint;
 
 // program stuff
-#define TRIGGER_DEBUG
+#define PROGRAM_DEBUG
 
 #define PROGRAM_NAME "unscope"
 #define PROGRAM_VER "1.0rc1"

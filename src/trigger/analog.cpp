@@ -79,7 +79,7 @@ nint TriggerAnalog::getAlignRegionSize() {
   return alignRegionSize;
 }
 
-#ifdef TRIGGER_DEBUG
+#ifdef PROGRAM_DEBUG
 nint TriggerAnalog::getTriggerIndex() {
   return triggerIndex;
 }

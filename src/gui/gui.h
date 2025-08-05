@@ -87,6 +87,11 @@ class USCGUI {
       bool aboutOpen;
       bool cursorsOpen;
       bool audioConfigOpen;
+#ifdef PROGRAM_DEBUG
+      bool metricsOpen;
+      bool paramDebugOpen;
+      bool triggerDebugOpen;
+#endif
     };
 
     struct plotCursor {
@@ -140,7 +145,7 @@ class USCGUI {
     bool plotDragY(float* v, const char* label, ImDrawList* dl, ImVec4 rect, ImU32 col, float v_min=-1.f, float v_max=1.f);
     float mapToRange(ImVec2 src, ImVec2 dest, float v);
 
-#ifdef TRIGGER_DEBUG
+#ifdef PROGRAM_DEBUG
     nint triggerDebugBegin, triggerDebugEnd;
 #endif
     char errorText[2048];
@@ -163,8 +168,9 @@ class USCGUI {
     void drawMainScope();
     void drawXYScope();
 
-#ifdef TRIGGER_DEBUG
-    void drawTriggerDebug();
+#ifdef PROGRAM_DEBUG
+    void drawTriggerDebug(bool* open);
+    void drawParamDebug(bool* open);
 #endif
 
     void drawGlobalControls();

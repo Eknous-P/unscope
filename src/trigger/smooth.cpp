@@ -129,7 +129,6 @@ nint TriggerSmooth::getAlignRegionSize() {
   return alignRegionSize;
 }
 
-#ifdef TRIGGER_DEBUG
 float* TriggerSmooth::getSmoothBuffer() {
   return smoothBuf;
 }
@@ -137,7 +136,6 @@ float* TriggerSmooth::getSmoothBuffer() {
 float TriggerSmooth::getTriggerLevel() {
   return triggerLevel;
 }
-#endif
 
 nint TriggerSmooth::getTriggerIndex() {
   return triggerIndex;

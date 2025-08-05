@@ -41,10 +41,9 @@ class TriggerSmooth : public Trigger {
     float* getAlignBuffer();
     nint getAlignRegionSize();
     nint getTriggerIndex();
-#ifdef TRIGGER_DEBUG
+
     float* getSmoothBuffer();
     float getTriggerLevel();
-#endif
     ~TriggerSmooth();
 };
 

@@ -172,6 +172,51 @@ void USCGUI::drawMainScope() {
       dl->AddText(origin+ImVec2(5.0f, size.y-15.0f-10.0f*z),0xffffffff, buf);
     }
   }
+  // trig hints
+  {
+    if (trigNum==TRIG_SMOOTH) {
+      FOR_RANGE(channels) {
+        if (!tc[z].enable) continue;
+        if (shareTrigger>0) {
+          if (z!=shareTrigger-1) continue;
+        }
+        if (trigger[z]->getParams()[0].isHovered()) {
+          nint len = tc[z].traceSize;
+          long int offset = (tc[z].traceSize / 2.f) * tc[z].xOffset;
+          scaledWave = new ImVec2[len];
+          nint i=0;
+          unsigned char trigChan = (shareTrigger>0)?(shareTrigger-1):(shareParams?0:z);
+          float* smoothBuf=((TriggerSmooth*)(trigger[z]))->getSmoothBuffer();
+          for (; i < len; i++) {
+            scaledWave[i].x = origin.x + size.x*((float)i/(float)len);
+
+            nint cur = i;
+            if (triggered[z]) {
+              cur += trigger[trigChan]->getTriggerIndex();
+            }
+            else if (doFallback) cur += oscDataSize - tc[z].traceSize;
+            else continue;
+
+            cur-=offset;
+
+            if (cur > oscDataSize) break;
+            scaledWave[i].y = origin.y - (smoothBuf[cur] * tc[z].yScale * (1.0f+trigger[z]->getParams()[0].getValue<float>()) + tc[z].yOffset - 1.f) * size.y/2.f;
+          }
+          dl->AddPolyline(scaledWave, i, 0xffff66ff, 0, .4f);
+          delete[] scaledWave;
+        }
+        if (trigger[z]->getParams()[1].isHovered()) {
+          float level=((TriggerSmooth*)(trigger[z]))->getTriggerLevel();
+          level=origin.y+(level+1.0f)*size.y/2.0f;
+          dl->AddLine(
+            ImVec2(origin.x,level), 
+            ImVec2(origin.x+size.x, level),
+            0xff0077ff
+          );
+        }
+      }
+    }
+  }
   ImGui::End();
 }
 

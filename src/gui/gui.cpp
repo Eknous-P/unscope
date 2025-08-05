@@ -66,6 +66,11 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   wo.aboutOpen           = false;
   wo.cursorsOpen         = true;
   wo.audioConfigOpen     = false;
+#ifdef PROGRAM_DEBUG
+  wo.metricsOpen         = false;
+  wo.paramDebugOpen      = false;
+  wo.triggerDebugOpen    = false;
+#endif
 
   oscDataSize = up->audioBufferSize;
 
@@ -114,7 +119,7 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
 
   settings.msDiv=false;
 
-#ifdef TRIGGER_DEBUG
+#ifdef PROGRAM_DEBUG
   triggerDebugBegin = 60000;
   triggerDebugEnd = oscDataSize;
 #endif
@@ -223,7 +228,6 @@ int USCGUI::init() {
 }
 
 void USCGUI::doFrame() {
-
   running &= rd->renderPreLoop()>=0;
   if (!running) return;
   ImGui::NewFrame();
@@ -267,6 +271,14 @@ void USCGUI::drawGUI() {
       ImGui::MenuItem("Cursors",NULL,&wo.cursorsOpen);
       ImGui::EndMenu();
     }
+#ifdef PROGRAM_DEBUG
+    if (ImGui::BeginMenu("Debug")) {
+      ImGui::MenuItem("Metrics",NULL,&wo.metricsOpen);
+      ImGui::MenuItem("Parameters...",NULL,&wo.paramDebugOpen);
+      ImGui::MenuItem("Trigger...",NULL,&wo.triggerDebugOpen);
+      ImGui::EndMenu();
+    }
+#endif
     if (ImGui::BeginMenu("About")) {
       ImGui::MenuItem("About...",NULL,&wo.aboutOpen);
       ImGui::EndMenu();
@@ -296,21 +308,22 @@ void USCGUI::drawGUI() {
     }
   }
 
-
-    drawMainScope();
-    drawXYScope();
-#ifdef TRIGGER_DEBUG
-  // drawTriggerDebug();
+  drawMainScope();
+  drawXYScope();
+#ifdef PROGRAM_DEBUG
+  if (wo.metricsOpen) ImGui::ShowMetricsWindow(&wo.metricsOpen);
+  drawTriggerDebug(&wo.triggerDebugOpen);
+  drawParamDebug(&wo.paramDebugOpen);
 #endif
-  // ImGui::ShowMetricsWindow();
 }
 
-#ifdef TRIGGER_DEBUG
-void USCGUI::drawTriggerDebug() {
+#ifdef PROGRAM_DEBUG
+void USCGUI::drawTriggerDebug(bool* open) {
   // very slow indeed
+  if (!*open) return;
   if (!oscData) return;
 #define DIV 4
-  ImGui::Begin("Trigger Debug");
+  ImGui::Begin("Trigger Debug", open);
   ImGui::InputScalar("begin", ImGuiDataType_U64,  &triggerDebugBegin);
   ImGui::InputScalar("end", ImGuiDataType_U64,  &triggerDebugEnd);
   ImDrawList* dl = ImGui::GetWindowDrawList();
@@ -374,6 +387,56 @@ void USCGUI::drawTriggerDebug() {
   }
   ImGui::End();
 #undef DIV
+}
+
+void USCGUI::drawParamDebug(bool* open) {
+  if (!*open) return;
+  ImGui::Begin("params",open);
+  if (ImGui::BeginTable("##paramTable", 6)) {
+    ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+    ImGui::TableNextColumn();
+    ImGui::Text("ch");
+    ImGui::TableNextColumn();
+    ImGui::Text("label");
+    ImGui::TableNextColumn();
+    ImGui::Text("type");
+    ImGui::TableNextColumn();
+    ImGui::Text("value");
+    ImGui::TableNextColumn();
+    ImGui::Text("hovered");
+    ImGui::TableNextColumn();
+    ImGui::Text("active");
+    FOR_RANGE(channels) {
+      for (TriggerParam p:trigger[z]->getParams()) {
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        ImGui::Text("%d",z);
+        ImGui::TableNextColumn();
+        ImGui::Text("%s",p.getLabel());
+        ImGui::TableNextColumn();
+        ImGui::Text("%d",p.getType());
+        ImGui::TableNextColumn();
+        switch (p.getType()) {
+          case TP_KNOBNORM:
+          case TP_KNOBUNIT:
+            ImGui::Text("%f",p.getValue<float>());
+            break;
+          case TP_TOGGLE:
+            ImGui::Text(p.getValue<bool>()?"true":"false");
+            break;
+          default:
+            ImGui::Text("%p",p.getValuePtr());
+            break;
+        }
+        ImGui::TableNextColumn();
+        ImGui::Text(p.isHovered()?"true":"false");
+        ImGui::TableNextColumn();
+        ImGui::Text(p.isActive()?"true":"false");
+      }
+    }
+    ImGui::EndTable();
+  }
+  ImGui::End();
 }
 #endif
 

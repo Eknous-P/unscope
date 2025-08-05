@@ -152,8 +152,8 @@ void USCGUI::drawChanControls() {
 
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
-      // trigger options here
-      unsigned char counter=0;
+      // trigger options
+      unsigned char counter=0, buttonCounter=0;
       ImGui::BeginDisabled(disable);
       for (TriggerParam p : trigger[i]->getParams()) {
         p.draw();
@@ -169,8 +169,14 @@ void USCGUI::drawChanControls() {
         if (p.getType()!=TP_TOGGLE) {
           if (counter==3) ImGui::TableNextRow();
           ImGui::TableNextColumn();
-          counter++;
-          counter&=3;
+          ++counter&=3;
+        } else {
+          if (buttonCounter==3) {
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ++counter&=3;
+          }
+          ++buttonCounter&=3;
         }
       }
       ImGui::EndDisabled();

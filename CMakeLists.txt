@@ -106,6 +106,7 @@ ${sources_path}/audio/io/audio_pa.cpp
 )
 
 list(APPEND trigger_sources
+${sources_path}/trigger/params.cpp
 ${sources_path}/trigger/abstract.cpp
 ${sources_path}/trigger/fallback.cpp
 ${sources_path}/trigger/analog.cpp
