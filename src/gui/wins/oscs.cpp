@@ -19,6 +19,54 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #include <imgui.h>
 #include <imgui_internal.h>
 
+bool USCGUI::plotDragX(float* v, const char* label, ImDrawList* dl, ImVec4 rect, ImU32 col, float v_min, float v_max) {
+  ImVec2 p1, p2;
+  p1.x = rect.x + (*v + 1.f) * rect.z/2.f;
+  p2.x = p1.x;
+  p1.y = rect.y;
+  p2.y = p1.y + rect.w;
+  dl->AddLine(p1, p2, col);
+  ImGui::SetCursorPosX(p1.x-2.5f);
+  ImGui::SetCursorPosY(0.0f);
+  ImGui::PushID(label);
+  ImGui::InvisibleButton(label, ImVec2(5.f,rect.w));
+  float min=v_min, max=v_max;
+  bool ret = ImGui::DragBehavior(ImGui::GetID(label), ImGuiDataType_Float, v, 2.f/rect.z, &min, &max, "", ImGuiSliderFlags_None);
+  if (ImGui::IsItemHovered() || ret) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+  if (ImGui::IsItemHovered(ImGuiHoveredFlags_Stationary|ImGuiHoveredFlags_DelayNormal)) {
+    if (ImGui::BeginTooltip()) {
+      ImGui::Text("%s", label);
+      ImGui::EndTooltip();
+    }
+  }
+  ImGui::PopID();
+  return ret;
+}
+
+bool USCGUI::plotDragY(float* v, const char* label, ImDrawList* dl, ImVec4 rect, ImU32 col, float v_min, float v_max) {
+  ImGuiWindow* window = ImGui::GetCurrentWindow();
+  ImVec2 p1, p2;
+  p1.x = rect.x;
+  p2.x = p1.x + rect.z;
+  p1.y = rect.y + (-*v + 1.f) * rect.w/2.f;
+  p2.y = p1.y;
+  dl->AddLine(p1, p2, col);
+  window->DC.CursorPos=ImVec2(p1.x,p1.y-2.5f)-window->Scroll;
+  ImGui::PushID(label);
+  ImGui::InvisibleButton(label, ImVec2(rect.z, 5.f));
+  float min=v_min, max=v_max;
+  bool ret = ImGui::DragBehavior(ImGui::GetID(label), ImGuiDataType_Float, v, 2.f/rect.w, &min, &max, "", ImGuiSliderFlags_Vertical);
+  if (ImGui::IsItemHovered() || ret) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_Stationary|ImGuiHoveredFlags_DelayNormal)) {
+    if (ImGui::BeginTooltip()) {
+      ImGui::Text("%s", label);
+      ImGui::EndTooltip();
+    }
+  }
+  ImGui::PopID();
+  return ret;
+}
+
 void USCGUI::drawMainScope() {
   if (!wo.mainScopeOpen) return;
   if (!oscData) return;
@@ -26,7 +74,7 @@ void USCGUI::drawMainScope() {
   ImGui::Begin("Scope", NULL);
   ImDrawList* dl = ImGui::GetWindowDrawList();
   ImVec2 origin = ImGui::GetWindowPos(), size = ImGui::GetWindowSize();
-  float titleBar = ImGui::GetStyle().FramePadding.x*2.f + ImGui::CalcTextSize("Scope").y;
+  float titleBar = ImGui::GetCurrentWindow()->TitleBarHeight();
   origin.y += titleBar;
   size.y -= titleBar;
   // v scale labels
@@ -38,7 +86,7 @@ void USCGUI::drawMainScope() {
       snprintf(buf, 16, " CH.%.2d", z+1);
       p1.y = origin.y + 5.f;
       p1.x = origin.x + textSize.x * z;
-      dl->AddText(p1, 0xffffffff, buf);
+      dl->AddText(p1, ImGui::GetColorU32(ImGuiCol_Text), buf);
     }
     FOR_RANGE(9) {
       for (unsigned char c=0; c<channels; c++) {
@@ -46,7 +94,7 @@ void USCGUI::drawMainScope() {
         p1.x = origin.x + textSize.x * c;
         float v = -((signed char)z-4)/4.f / tc[c].yScale - tc[c].yOffset;
         snprintf(buf, 16, v>=0?" %1.3f":"%1.3f", v);
-        dl->AddText(p1, 0xffffffff, buf);
+        dl->AddText(p1, ImGui::GetColorU32(ImGuiCol_Text), buf);
       }
     }
     origin.x += textSize.x * channels;
@@ -152,7 +200,7 @@ void USCGUI::drawMainScope() {
         tDiff,
         1000.0f / tDiff
       );
-      dl->AddText(origin+ImVec2(5.0f, 5.0f+10.0f*z),0xffffffff, buf);
+      dl->AddText(origin+ImVec2(5.0f, 5.0f+10.0f*z),ImGui::GetColorU32(ImGuiCol_Text), buf);
     }
   }
   if (showVCursors) {
@@ -169,7 +217,7 @@ void USCGUI::drawMainScope() {
         VCursors[1].pos,
         vDiff
       );
-      dl->AddText(origin+ImVec2(5.0f, size.y-15.0f-10.0f*z),0xffffffff, buf);
+      dl->AddText(origin+ImVec2(5.0f, size.y-15.0f-10.0f*z),ImGui::GetColorU32(ImGuiCol_Text), buf);
     }
   }
   // trig hints
@@ -220,54 +268,6 @@ void USCGUI::drawMainScope() {
   ImGui::End();
 }
 
-bool USCGUI::plotDragX(float* v, const char* label, ImDrawList* dl, ImVec4 rect, ImU32 col, float v_min, float v_max) {
-  ImVec2 p1, p2;
-  p1.x = rect.x + (*v + 1.f) * rect.z/2.f;
-  p2.x = p1.x;
-  p1.y = rect.y;
-  p2.y = p1.y + rect.w;
-  dl->AddLine(p1, p2, col);
-  ImGui::SetCursorPosX(p1.x-2.5f);
-  ImGui::SetCursorPosY(0.0f);
-  ImGui::PushID(label);
-  ImGui::InvisibleButton(label, ImVec2(5.f,rect.w));
-  float min=v_min, max=v_max;
-  bool ret = ImGui::DragBehavior(ImGui::GetID(label), ImGuiDataType_Float, v, 2.f/rect.z, &min, &max, "", ImGuiSliderFlags_None);
-  if (ImGui::IsItemHovered() || ret) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
-  if (ImGui::IsItemHovered(ImGuiHoveredFlags_Stationary|ImGuiHoveredFlags_DelayNormal)) {
-    if (ImGui::BeginTooltip()) {
-      ImGui::Text("%s", label);
-      ImGui::EndTooltip();
-    }
-  }
-  ImGui::PopID();
-  return ret;
-}
-
-bool USCGUI::plotDragY(float* v, const char* label, ImDrawList* dl, ImVec4 rect, ImU32 col, float v_min, float v_max) {
-  ImGuiWindow* window = ImGui::GetCurrentWindow();
-  ImVec2 p1, p2;
-  p1.x = rect.x;
-  p2.x = p1.x + rect.z;
-  p1.y = rect.y + (-*v + 1.f) * rect.w/2.f;
-  p2.y = p1.y;
-  dl->AddLine(p1, p2, col);
-  window->DC.CursorPos=ImVec2(p1.x,p1.y-2.5f)-window->Scroll;
-  ImGui::PushID(label);
-  ImGui::InvisibleButton(label, ImVec2(rect.z, 5.f));
-  float min=v_min, max=v_max;
-  bool ret = ImGui::DragBehavior(ImGui::GetID(label), ImGuiDataType_Float, v, 2.f/rect.w, &min, &max, "", ImGuiSliderFlags_Vertical);
-  if (ImGui::IsItemHovered() || ret) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
-    if (ImGui::IsItemHovered(ImGuiHoveredFlags_Stationary|ImGuiHoveredFlags_DelayNormal)) {
-    if (ImGui::BeginTooltip()) {
-      ImGui::Text("%s", label);
-      ImGui::EndTooltip();
-    }
-  }
-  ImGui::PopID();
-  return ret;
-}
-
 void USCGUI::drawXYScope() {
   if (!oscData) return;
   if (!wo.xyScopeOpen) return;
@@ -275,7 +275,7 @@ void USCGUI::drawXYScope() {
   ImGui::Begin("Scope (XY)",&wo.xyScopeOpen);
   ImDrawList* dl = ImGui::GetWindowDrawList();
   ImVec2 origin = ImGui::GetWindowPos(), size = ImGui::GetWindowSize();
-  float titleBar = ImGui::GetStyle().FramePadding.x*2.f + ImGui::CalcTextSize("Scope (XY)").y;
+  float titleBar = ImGui::GetCurrentWindow()->TitleBarHeight();
   origin.y += titleBar;
   size.y -= titleBar;
   ImVec2 sizeHalf = size/2;
