@@ -148,6 +148,9 @@ void USCGUI::setupRenderer(USCRenderers r) {
         rd = new USCRenderDirectX11;
         break;
 #endif
+    case USC_RENDER_SDLRENDERER2:
+      rd = new USCRenderSDLRenderer;
+      break;
     case USC_RENDER_NONE:
     default: break;
   }
@@ -189,25 +192,20 @@ void USCGUI::setupTrigger(Triggers t) {
 
 int USCGUI::init() {
   if (running) return 0;
-  if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER)!=0) return UGUIERROR_INITFAIL;
+  if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_EVENTS)!=0) return UGUIERROR_INITFAIL;
   setupRenderer(renderer);
   setupTrigger(trigNum);
   if (!isGood) return -1;
   if (rd->initRender()!=0) return UGUIERROR_INITFAIL;
-  // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-  // io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
   ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
   ImGui::GetIO().IniFilename = NULL;
   // ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
   //io.ConfigViewportsNoAutoMerge = true;
   //io.ConfigViewportsNoTaskBarIcon = true;
-  // Setup Dear ImGui style
   ImGui::StyleColorsDark();
-  //ImGui::StyleColorsLight();
-  // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
   style = ImGui::GetStyle();
   if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
     style.WindowRounding = 0.0f;
@@ -215,7 +213,6 @@ int USCGUI::init() {
   }
   ImGui::LoadIniSettingsFromMemory(windowLayout);
   // ImGui::LoadIniSettingsFromDisk(INIFILE);
-  // Setup Platform/Renderer backends
   if (rd->setupRender(
     (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE|SDL_WINDOW_ALLOW_HIGHDPI),
     PROGRAM_NAME_AND_VER,
@@ -232,7 +229,7 @@ void USCGUI::doFrame() {
   if (!running) return;
   ImGui::NewFrame();
   
-  ImGui::DockSpaceOverViewport(ImGui::GetWindowViewport(),0);
+  ImGui::DockSpaceOverViewport(ImGui::GetID("dock"),ImGui::GetWindowViewport());
 
   drawGUI();
 
@@ -407,6 +404,7 @@ void USCGUI::drawParamDebug(bool* open) {
     ImGui::TableNextColumn();
     ImGui::Text("active");
     FOR_RANGE(channels) {
+      ImGui::PushID(z);
       for (TriggerParam p:trigger[z]->getParams()) {
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
@@ -416,23 +414,34 @@ void USCGUI::drawParamDebug(bool* open) {
         ImGui::TableNextColumn();
         ImGui::Text("%d",p.getType());
         ImGui::TableNextColumn();
+        ImGui::PushID(p.getLabel());
         switch (p.getType()) {
           case TP_KNOBNORM:
+            if (ImGui::InputFloat("##floatinput", (float*)p.getValuePtr())) {
+              if (p.getValue<float>()<-1.0f) p.setValue<float>(-1.0f);
+              if (p.getValue<float>()>1.0f) p.setValue<float>(1.0f);
+            }
+            break;
           case TP_KNOBUNIT:
-            ImGui::Text("%f",p.getValue<float>());
+            if (ImGui::InputFloat("##floatinput", (float*)p.getValuePtr())) {
+              if (p.getValue<float>()<0.0f) p.setValue<float>(0.0f);
+              if (p.getValue<float>()>1.0f) p.setValue<float>(1.0f);
+            }
             break;
           case TP_TOGGLE:
-            ImGui::Text(p.getValue<bool>()?"true":"false");
+            ImGui::Checkbox("##boolinput", (bool*)p.getValuePtr());
             break;
           default:
             ImGui::Text("%p",p.getValuePtr());
             break;
         }
+        ImGui::PopID();
         ImGui::TableNextColumn();
         ImGui::Text(p.isHovered()?"true":"false");
         ImGui::TableNextColumn();
         ImGui::Text(p.isActive()?"true":"false");
       }
+      ImGui::PopID();
     }
     ImGui::EndTable();
   }

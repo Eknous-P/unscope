@@ -114,6 +114,8 @@ ${sources_path}/trigger/smooth.cpp
 )
 
 list(APPEND gui_sources
+${imgui_path}/backends/imgui_impl_sdlrenderer2.cpp
+${imgui_path}/backends/imgui_impl_sdl2.cpp
 ${imgui_path}/imgui.cpp
 ${imgui_path}/imgui_demo.cpp
 ${imgui_path}/imgui_draw.cpp
@@ -136,12 +138,12 @@ ${sources_path}/gui/wins/oscs.cpp
 ${sources_path}/gui/wins/cursors.cpp
 ${sources_path}/gui/wins/audioConfig.cpp
 
-${sources_path}/gui/render/abstract.cpp)
+${sources_path}/gui/render/abstract.cpp
+${sources_path}/gui/render/render_sdl2renderer.cpp)
 
 if(RENDER_OPENGL)
   add_compile_definitions(USE_OPENGL)
   list(APPEND gui_sources
-  ${imgui_path}/backends/imgui_impl_sdl2.cpp
   ${imgui_path}/backends/imgui_impl_opengl2.cpp
   ${sources_path}/gui/render/render_opengl2.cpp)
 endif()
@@ -149,7 +151,6 @@ if(RENDER_DIRECTX)
   add_compile_definitions(USE_DIRECTX)
   list(APPEND gui_sources
   ${imgui_path}/backends/imgui_impl_dx11.cpp
-  ${imgui_path}/backends/imgui_impl_sdl2.cpp
   ${sources_path}/gui/render/render_directx11.cpp)
   list(APPEND linked_libraries "d3dcompiler")
 endif()

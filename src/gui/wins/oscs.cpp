@@ -75,7 +75,7 @@ void USCGUI::drawMainScope() {
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f,0.0f));
   ImDrawList* dl = ImGui::GetWindowDrawList();
   ImVec2 origin = ImGui::GetWindowPos(), size = ImGui::GetWindowSize();
-  float titleBar = ImGui::GetCurrentWindow()->TitleBarHeight();
+  float titleBar = ImGui::GetCurrentWindow()->TitleBarHeight;
   origin.y += titleBar;
   size.y -= titleBar;
   // v scale labels
@@ -278,7 +278,7 @@ void USCGUI::drawXYScope() {
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f,0.0f));
   ImDrawList* dl = ImGui::GetWindowDrawList();
   ImVec2 origin = ImGui::GetWindowPos(), size = ImGui::GetWindowSize();
-  float titleBar = ImGui::GetCurrentWindow()->TitleBarHeight();
+  float titleBar = ImGui::GetCurrentWindow()->TitleBarHeight;
   origin.y += titleBar;
   size.y -= titleBar;
   ImVec2 sizeHalf = size/2;

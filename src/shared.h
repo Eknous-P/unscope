@@ -113,6 +113,7 @@ enum unscopeArgs : char {
 
 enum USCRenderers {
   USC_RENDER_NONE=0,
+  USC_RENDER_SDLRENDERER2,
   USC_RENDER_OPENGL2,
   USC_RENDER_DIRECTX11,
 };

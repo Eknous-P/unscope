@@ -43,6 +43,7 @@ class USCRender {
 };
 
 // renderers
+#include "render/render_sdl2renderer.h"
 #ifdef USE_OPENGL
 #include "render/render_opengl2.h"
 #endif

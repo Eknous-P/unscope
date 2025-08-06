@@ -46,10 +46,14 @@ int main(int argc, char** argv) {
   params.xyPersist         = 40;    // ms
   params.scale             = 1.0f;  // (no unit)
   params.trigger           = 0.0f;  // (no unit)
-#ifdef _WIN32
+#ifdef USE_DIRECTX
   params.renderer = USC_RENDER_DIRECTX11;
 #else
-  params.renderer = USC_RENDER_OPENGL2;
+#ifdef USE_OPENGL
+  params.renderer = USC_RENDER_SDLRENDERER2;
+#else
+  params.renderer = USC_RENDER_SDLRENDERER2;
+#endif
 #endif
 
   // parse arguments
@@ -293,6 +297,7 @@ const char* errMsgs[] = {
 };
 
 const char* renderers[] = {
+  "SDL2 Renderer",
 #ifdef USE_OPENGL
   "OpenGL",
 #endif
