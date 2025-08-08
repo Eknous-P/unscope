@@ -18,11 +18,11 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #include "gui.h"
 #include <imgui.h>
 
-void USCGUI::drawAbout() {
-  if (!wo.aboutOpen) return;
+void USCGUI::drawAbout(bool* open) {
+  if (!*open) return;
   ImGui::OpenPopup("About");
   ImGui::SetNextWindowSize(ImVec2(600.f, 270.f));
-  if (ImGui::BeginPopupModal("About",&wo.aboutOpen,ImGuiWindowFlags_NoMove|ImGuiWindowFlags_AlwaysAutoResize)) {
+  if (ImGui::BeginPopupModal("About",open,ImGuiWindowFlags_NoMove|ImGuiWindowFlags_AlwaysAutoResize)) {
     ImGui::SetCursorPosX((ImGui::GetWindowWidth()-ImGui::CalcTextSize(PROGRAM_NAME " " PROGRAM_VER).x)/2.0f);
     ImGui::Text(PROGRAM_NAME_AND_VER);
 

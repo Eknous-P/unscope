@@ -114,8 +114,15 @@ enum unscopeArgs : char {
 enum USCRenderers {
   USC_RENDER_NONE=0,
   USC_RENDER_SDLRENDERER2,
+#ifdef USE_OPENGL
   USC_RENDER_OPENGL2,
+#endif
+#ifdef USE_DIRECTX9
+  USC_RENDER_DIRECTX9,
+#endif
+#ifdef USE_DIRECTX11
   USC_RENDER_DIRECTX11,
+#endif
 };
 
 struct unscopeParams {

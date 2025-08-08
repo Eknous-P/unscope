@@ -19,9 +19,9 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #include "imgui-knobs.h"
 #include "imgui_toggle.h"
 
-void USCGUI::drawGlobalControls() {
-  if (!wo.globalControlsOpen) return;
-  ImGui::Begin("Global Controls",&wo.globalControlsOpen);
+void USCGUI::drawGlobalControls(bool* open) {
+  if (!*open) return;
+  ImGui::Begin("Global Controls",open);
   ImGui::Toggle("share parameters",&shareParams);
 
   bool trigShare = shareTrigger>0;
@@ -69,12 +69,12 @@ void USCGUI::drawGlobalControls() {
   if (tc[i].timebase > oscWidthS) tc[i].timebase = oscWidthS; \
   tc[i].traceSize = (nint)(sampleRate * tc[i].timebase / (settings.msDiv?100.f:1000.0f));}
 
-void USCGUI::drawChanControls() {
+void USCGUI::drawChanControls(bool** open) {
   for (unsigned char i = 0; i < channels; i++) {
     char strbuf[64];
     snprintf(strbuf,64,"Channel %d Controls",i+1);
-    if (!wo.chanControlsOpen[i]) continue;
-    ImGui::Begin(strbuf,&wo.chanControlsOpen[i]);
+    if (!(*open)[i]) continue;
+    ImGui::Begin(strbuf,&(*open)[i]);
     ImGui::Toggle("enable", &tc[i].enable);
 
     ImGui::SameLine();
@@ -198,9 +198,9 @@ void USCGUI::drawChanControls() {
   }
 }
 
-void USCGUI::drawXYScopeControls() {
-  if (!wo.xyScopeControlsOpen || channels < 2) return;
-  ImGui::Begin("XY Scope Controls",&wo.xyScopeControlsOpen);
+void USCGUI::drawXYScopeControls(bool* open) {
+  if (!*open || channels < 2) return;
+  ImGui::Begin("XY Scope Controls",open);
   if (ImGui::BeginTable("##xycontrols",3)) {
     ImGui::TableNextRow();
     ImGui::TableNextColumn();

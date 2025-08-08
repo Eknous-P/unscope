@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.2)
 set(CMAKE_CXX_STANDARD 11)
 
 project(unscope)
-set(CMAKE_PROJECT_VERSION_MAJOR 0)
-set(CMAKE_PROJECT_VERSION_MINOR 3)
+set(CMAKE_PROJECT_VERSION_MAJOR 1)
+set(CMAKE_PROJECT_VERSION_MINOR 0)
 
 set(linked_libraries)
 set(compiler_options)
@@ -42,16 +42,25 @@ endif()
 # flags
 if (IS_WIN)
   set(SYSTEM_SDL_DEF FALSE)
-  set(DIRECTX_DEF TRUE)
+  if (IS_32BIT)
+    set(DIRECTX9_DEF TRUE)
+    set(DIRECTX11_DEF FALSE)
+  else()
+    set(DIRECTX9_DEF FALSE)
+    set(DIRECTX11_DEF TRUE)
+  endif()
+
   set(OPENGL_DEF FALSE)
 else()
   set(SYSTEM_SDL_DEF TRUE)
-  set(DIRECTX_DEF FALSE)
+  set(DIRECTX9_DEF FALSE)
+  set(DIRECTX11_DEF FALSE)
   set(OPENGL_DEF TRUE)
 endif()
 
 option(SYSTEM_SDL "use system sdl" ${SYSTEM_SDL_DEF})
-option(RENDER_DIRECTX "use directx" ${DIRECTX_DEF})
+option(RENDER_DIRECTX9 "use directx9" ${DIRECTX9_DEF})
+option(RENDER_DIRECTX11 "use directx11" ${DIRECTX11_DEF})
 option(RENDER_OPENGL "use opengl" ${OPENGL_DEF})
 
 # render
@@ -62,8 +71,13 @@ if (RENDER_OPENGL)
   list(APPEND linked_libraries ${OPENGL_LIBRARIES})
 endif()
 
-if(RENDER_DIRECTX)
-  message(STATUS "using directx")
+if(RENDER_DIRECTX9)
+  message(STATUS "using directx9")
+  list(APPEND linked_libraries "d3d9.lib")
+endif()
+
+if(RENDER_DIRECTX11)
+  message(STATUS "using directx11")
   list(APPEND linked_libraries "d3d11.lib")
 endif()
 
@@ -91,7 +105,7 @@ set(SDL_FILESYSTEM OFF)
 set(SDL_SENSOR OFF)
 set(SDL_LOCALE OFF)
 set(SDL_OPENGL ${RENDER_OPENGL})
-set(SDL_DIRECTX ${RENDER_DIRECTX})
+set(SDL_DIRECTX ${RENDER_DIRECTX11} OR ${RENDER_DIRECTX9})
 
 # portaudio
 set(PA_BUILD_SHARED_LIBS OFF CACHE BOOL "Build dynamic library" FORCE)
@@ -147,12 +161,22 @@ if(RENDER_OPENGL)
   ${imgui_path}/backends/imgui_impl_opengl2.cpp
   ${sources_path}/gui/render/render_opengl2.cpp)
 endif()
-if(RENDER_DIRECTX)
-  add_compile_definitions(USE_DIRECTX)
+if(RENDER_DIRECTX9)
+  add_compile_definitions(USE_DIRECTX9)
+  list(APPEND gui_sources
+  ${imgui_path}/backends/imgui_impl_dx9.cpp
+  ${sources_path}/gui/render/render_directx9.cpp)
+  list(APPEND linked_libraries "d3dcompiler")
+endif()
+if(RENDER_DIRECTX11)
+  add_compile_definitions(USE_DIRECTX11)
   list(APPEND gui_sources
   ${imgui_path}/backends/imgui_impl_dx11.cpp
   ${sources_path}/gui/render/render_directx11.cpp)
   list(APPEND linked_libraries "d3dcompiler")
+endif()
+if(IS_32BIT)
+  add_compile_definitions(BUILD_32BIT)
 endif()
 
 list(APPEND unscope_srcs ${gui_sources} ${audio_sources} ${trigger_sources} ${sources_path}/main.cpp)

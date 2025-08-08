@@ -47,7 +47,7 @@ bool TriggerParam::draw() {
   hovered=false;
   active=false;
   bool ret=false;
-  ImGui::PushID(this);
+  ImGui::PushID(label);
   switch (type) {
     case TP_TOGGLE: {
       ret=ImGui::Toggle(label, (bool*)valuePtr);

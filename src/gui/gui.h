@@ -47,7 +47,10 @@ class USCRender {
 #ifdef USE_OPENGL
 #include "render/render_opengl2.h"
 #endif
-#ifdef USE_DIRECTX
+#ifdef USE_DIRECTX9
+#include "render/render_directx9.h"
+#endif
+#ifdef USE_DIRECTX11
 #include "render/render_directx11.h"
 #endif
 
@@ -80,8 +83,8 @@ class USCGUI {
     };
 
     struct windowsOpen {
+      bool* chanControlsOpen;
       bool mainScopeOpen;
-      bool chanControlsOpen[3];
       bool xyScopeOpen;
       bool xyScopeControlsOpen;
       bool globalControlsOpen;
@@ -144,7 +147,6 @@ class USCGUI {
 
     bool plotDragX(float* v, const char* label, ImDrawList* dl, ImVec4 rect, ImU32 col, float v_min=-1.f, float v_max=1.f);
     bool plotDragY(float* v, const char* label, ImDrawList* dl, ImVec4 rect, ImU32 col, float v_min=-1.f, float v_max=1.f);
-    float mapToRange(ImVec2 src, ImVec2 dest, float v);
 
 #ifdef PROGRAM_DEBUG
     nint triggerDebugBegin, triggerDebugEnd;
@@ -166,22 +168,22 @@ class USCGUI {
     void doFrame();
     void drawGUI();
   
-    void drawMainScope();
-    void drawXYScope();
+    void drawMainScope(bool* open);
+    void drawXYScope(bool* open);
 
 #ifdef PROGRAM_DEBUG
     void drawTriggerDebug(bool* open);
     void drawParamDebug(bool* open);
 #endif
 
-    void drawGlobalControls();
-    void drawChanControls();
-    void drawXYScopeControls();
+    void drawGlobalControls(bool* open);
+    void drawChanControls(bool** open);
+    void drawXYScopeControls(bool* open);
 
-    void drawAbout();
-    void drawSettings();
-    void drawCursors();
-    void drawAudioConfig();
+    void drawAbout(bool* open);
+    void drawSettings(bool* open);
+    void drawCursors(bool* open);
+    void drawAudioConfig(bool* open);
 
     void errorPopup(const char* errorTxt, ...);
 

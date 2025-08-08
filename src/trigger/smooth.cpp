@@ -18,7 +18,7 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #include "smooth.h"
 
 #define CHECK_TRIGGERED foundTrigger=triggerLow&&triggerHigh
-#define LOG_F_LEVEL 100.0f
+#define LOG_F_LEVEL 1000.0f
 #define LOG_FUNC(x) log(x*LOG_F_LEVEL+1.f)/log(LOG_F_LEVEL+1.f)
 
 void TriggerSmooth::setupTrigger(unscopeParams* up, float* cb) {

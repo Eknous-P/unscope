@@ -17,10 +17,10 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 
 #include "gui.h"
 
-void USCGUI::drawAudioConfig() {
-  if (!wo.audioConfigOpen) return;
+void USCGUI::drawAudioConfig(bool* open) {
+  if (!*open) return;
   ImGui::OpenPopup("Audio Configuration");
-  if (ImGui::BeginPopupModal("Audio Configuration", &wo.audioConfigOpen, ImGuiWindowFlags_NoMove|ImGuiWindowFlags_AlwaysAutoResize)) {
+  if (ImGui::BeginPopupModal("Audio Configuration", open, ImGuiWindowFlags_NoMove|ImGuiWindowFlags_AlwaysAutoResize)) {
     char buf[256];
     snprintf(buf, sizeof(buf), "%d", audConf->sampleRate);
     if (ImGui::BeginCombo("sample rate", buf)) {

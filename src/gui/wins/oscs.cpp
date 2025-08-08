@@ -16,7 +16,6 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "gui.h"
-#include <imgui.h>
 #include <imgui_internal.h>
 
 bool USCGUI::plotDragX(float* v, const char* label, ImDrawList* dl, ImVec4 rect, ImU32 col, float v_min, float v_max) {
@@ -67,11 +66,11 @@ bool USCGUI::plotDragY(float* v, const char* label, ImDrawList* dl, ImVec4 rect,
   return ret;
 }
 
-void USCGUI::drawMainScope() {
-  if (!wo.mainScopeOpen) return;
+void USCGUI::drawMainScope(bool* open) {
+  if (!*open) return;
   if (!oscData) return;
 
-  ImGui::Begin("Scope", NULL);
+  ImGui::Begin("Scope", open);
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f,0.0f));
   ImDrawList* dl = ImGui::GetWindowDrawList();
   ImVec2 origin = ImGui::GetWindowPos(), size = ImGui::GetWindowSize();
@@ -225,11 +224,12 @@ void USCGUI::drawMainScope() {
   {
     if (trigNum==TRIG_SMOOTH) {
       FOR_RANGE(channels) {
+        unsigned char trigChan = (shareTrigger>0)?(shareTrigger-1):(shareParams?0:z);
         if (!tc[z].enable) continue;
         if (shareTrigger>0) {
           if (z!=shareTrigger-1) continue;
         }
-        if (trigger[z]->getParams()[0].isHovered()) {
+        if (trigger[trigChan]->getParams()[0].isHovered()) {
           nint len = tc[z].traceSize;
           long int offset = (tc[z].traceSize / 2.f) * tc[z].xOffset;
           scaledWave = new ImVec2[len];
@@ -270,11 +270,11 @@ void USCGUI::drawMainScope() {
   ImGui::End();
 }
 
-void USCGUI::drawXYScope() {
+void USCGUI::drawXYScope(bool* open) {
   if (!oscData) return;
-  if (!wo.xyScopeOpen) return;
+  if (!*open) return;
   if (channels < 2) return;
-  ImGui::Begin("Scope (XY)",&wo.xyScopeOpen);
+  ImGui::Begin("Scope (XY)",open);
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f,0.0f));
   ImDrawList* dl = ImGui::GetWindowDrawList();
   ImVec2 origin = ImGui::GetWindowPos(), size = ImGui::GetWindowSize();

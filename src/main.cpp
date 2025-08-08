@@ -46,13 +46,17 @@ int main(int argc, char** argv) {
   params.xyPersist         = 40;    // ms
   params.scale             = 1.0f;  // (no unit)
   params.trigger           = 0.0f;  // (no unit)
-#ifdef USE_DIRECTX
+#ifdef USE_DIRECTX11
   params.renderer = USC_RENDER_DIRECTX11;
 #else
 #ifdef USE_OPENGL
-  params.renderer = USC_RENDER_SDLRENDERER2;
+  params.renderer = USC_RENDER_OPENGL2;
 #else
+// #ifdef USE_DIRECTX9 // i give up....
+//   params.renderer = USC_RENDER_DIRECTX9;
+// #else
   params.renderer = USC_RENDER_SDLRENDERER2;
+// #endif
 #endif
 #endif
 
@@ -193,8 +197,8 @@ int main(int argc, char** argv) {
 
   e = g.init();
   if (e != 0) {
-    printf(ERROR_MSG "error in initializing GUI! %s" MSG_END, getErrorMsg(e));
-    return -1;
+    printf(ERROR_MSG "error in initializing GUI! %d:%s" MSG_END, e, getErrorMsg(e));
+    return 1;
   }
 
   USCAudio i(&audConf, params.audioBufferSize);
@@ -301,7 +305,10 @@ const char* renderers[] = {
 #ifdef USE_OPENGL
   "OpenGL",
 #endif
-#ifdef USE_DIRECTX
+#ifdef USE_DIRECTX19
+  "DirectX 9",
+#endif
+#ifdef USE_DIRECTX11
   "DirectX 11",
 #endif
 };

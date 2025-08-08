@@ -18,9 +18,9 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #include "gui.h"
 #include "imgui_toggle.h"
 
-void USCGUI::drawCursors() {
-  if (!wo.cursorsOpen) return;
-  ImGui::Begin("Cursors",&wo.cursorsOpen);
+void USCGUI::drawCursors(bool* open) {
+  if (!*open) return;
+  ImGui::Begin("Cursors",open);
   ImGui::Toggle("show horizontal cursors", &showHCursors);
   ImGui::Toggle("show vertical cursors", &showVCursors);
 

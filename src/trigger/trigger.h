@@ -38,7 +38,8 @@ class TriggerParam {
   TriggerParamTypes type;
   void *valuePtr;
   const char *label, *desc;
-  bool exactInput, hovered, active;
+  bool exactInput;
+  bool hovered, active;
   public:
     bool bindToDragX, bindToDragY;
 

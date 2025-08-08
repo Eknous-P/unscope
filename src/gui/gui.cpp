@@ -56,10 +56,10 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   xyp.axisChan[0] = 1;
   xyp.axisChan[1] = 2;
 
+  wo.chanControlsOpen=new bool[channels];
+  if (!wo.chanControlsOpen) return;
+  FOR_RANGE(channels) wo.chanControlsOpen[z]=true;
   wo.mainScopeOpen       = true;
-  wo.chanControlsOpen[0] = true;
-  wo.chanControlsOpen[1] = true;
-  wo.chanControlsOpen[2] = true;
   wo.xyScopeOpen         = true;
   wo.xyScopeControlsOpen = true;
   wo.globalControlsOpen  = true;
@@ -129,6 +129,7 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   ai = NULL;
   devs = NULL;
   isGood = true;
+  rd = NULL;
 }
 
 void USCGUI::attachAudioInput(USCAudio *i) {
@@ -143,7 +144,12 @@ void USCGUI::setupRenderer(USCRenderers r) {
       rd = new USCRenderOpenGL2;
       break;
 #endif
-#ifdef USE_DIRECTX
+#ifdef USE_DIRECTX9
+    case USC_RENDER_DIRECTX9:
+        rd = new USCRenderDirectX9;
+        break;
+#endif
+#ifdef USE_DIRECTX11
     case USC_RENDER_DIRECTX11:
         rd = new USCRenderDirectX11;
         break;
@@ -225,11 +231,21 @@ int USCGUI::init() {
 }
 
 void USCGUI::doFrame() {
-  running &= rd->renderPreLoop()>=0;
+  int s;
+  s=rd->renderPreLoop();
+  switch (s) {
+    case 1:
+      SDL_Delay(100);
+      break;
+    case 0: break;
+    default:
+      running=false;
+      break;
+  }
   if (!running) return;
   ImGui::NewFrame();
   
-  ImGui::DockSpaceOverViewport(ImGui::GetID("dock"),ImGui::GetWindowViewport());
+  ImGui::DockSpaceOverViewport(ImGui::GetID("dock"),ImGui::GetMainViewport());
 
   drawGUI();
 
@@ -271,6 +287,7 @@ void USCGUI::drawGUI() {
 #ifdef PROGRAM_DEBUG
     if (ImGui::BeginMenu("Debug")) {
       ImGui::MenuItem("Metrics",NULL,&wo.metricsOpen);
+      ImGui::Separator();
       ImGui::MenuItem("Parameters...",NULL,&wo.paramDebugOpen);
       ImGui::MenuItem("Trigger...",NULL,&wo.triggerDebugOpen);
       ImGui::EndMenu();
@@ -282,13 +299,13 @@ void USCGUI::drawGUI() {
     }
     ImGui::EndMainMenuBar();
   }
-  drawGlobalControls();
-  drawChanControls();
-  drawXYScopeControls();
+  drawGlobalControls(&wo.globalControlsOpen);
+  drawChanControls(&wo.chanControlsOpen);
+  drawXYScopeControls(&wo.xyScopeControlsOpen);
 
-  drawAbout();
-  drawCursors();
-  drawAudioConfig();
+  drawAbout(&wo.aboutOpen);
+  drawCursors(&wo.cursorsOpen);
+  drawAudioConfig(&wo.audioConfigOpen);
 
   if (updateAudio) setOscData(ai->getAudioBuffer());
 
@@ -305,8 +322,8 @@ void USCGUI::drawGUI() {
     }
   }
 
-  drawMainScope();
-  drawXYScope();
+  drawMainScope(&wo.mainScopeOpen);
+  drawXYScope(&wo.xyScopeOpen);
 #ifdef PROGRAM_DEBUG
   if (wo.metricsOpen) ImGui::ShowMetricsWindow(&wo.metricsOpen);
   drawTriggerDebug(&wo.triggerDebugOpen);
@@ -481,12 +498,11 @@ void USCGUI::updateAudioDevices() {
   }
 }
 
-float USCGUI::mapToRange(ImVec2 src, ImVec2 dest, float v) {
-  return dest.x + v*(dest.y-dest.x)/(src.y-src.x);
-}
-
 USCGUI::~USCGUI() {
-  if (isGood) rd->destroyRender();
+  if (isGood) {
+    if (rd) rd->destroyRender();
+  }
+  delete[] wo.chanControlsOpen;
   DELETE_PTR(rd)
   DELETE_DOUBLE_PTR(trigger, channels)
   DELETE_DOUBLE_PTR_ARR(oscData, channels)

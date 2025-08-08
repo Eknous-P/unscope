@@ -57,7 +57,6 @@ int USCRenderOpenGL2::renderPreLoop() {
       return -1;
   }
   if (SDL_GetWindowFlags(win) & SDL_WINDOW_MINIMIZED) {
-    SDL_Delay(10);
     return 1; // continue
   }
 
