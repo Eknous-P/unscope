@@ -207,7 +207,9 @@ int main(int argc, char** argv) {
     printf(ERROR_MSG "failed to init audio io!" MSG_END);
     return 1;
   }
-  i.getAvailDevices();
+  if (i.getAvailDevices() < 1) {
+    printf(ERROR_MSG "no devices found!" MSG_END);
+  }
 
   g.attachAudioInput(&i);
 

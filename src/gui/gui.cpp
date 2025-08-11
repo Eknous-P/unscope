@@ -496,6 +496,8 @@ void USCGUI::updateAudioDevices() {
       outputDeviceS = i;
     }
   }
+  if (inputDeviceS == -1) inputDeviceS=0;
+  if (outputDeviceS == -1) outputDeviceS=0;
 }
 
 USCGUI::~USCGUI() {

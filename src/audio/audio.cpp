@@ -19,6 +19,7 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #include "audio_pa.h"
 
 USCAudio::USCAudio(AudioConfig* conf, nint bufSize) {
+  devices.clear();
   config = conf;
 
   buffer.size = bufSize;
@@ -83,6 +84,7 @@ int USCAudio::initIO(AudioDrivers d) {
     case AUDIO_PORTAUDIO:
       audioIO = new Audio_PA;
       break;
+    case AUDIO_DUMMY:
     default:
       audioIO = new AudioIO;
       break;

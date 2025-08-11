@@ -155,6 +155,7 @@ bool Audio_PA::isOutputting() {
 }
 
 int Audio_PA::getAvailDevices() {
+  if (Pa_GetDeviceCount() < 1) return 0;
   devs->push_back(AudioDevice(DIR_IN,  Pa_GetDefaultInputDevice(),  Pa_GetDefaultHostApi(), "Default input"));
   devs->push_back(AudioDevice(DIR_OUT, Pa_GetDefaultOutputDevice(), Pa_GetDefaultHostApi(), "Default output"));
   for (int i = 0; i < Pa_GetDeviceCount(); i++) {

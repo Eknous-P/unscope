@@ -31,6 +31,7 @@ struct AudioBuffer {
 };
 
 enum AudioDrivers {
+  AUDIO_DUMMY=0,
   AUDIO_PORTAUDIO,
 };
 
