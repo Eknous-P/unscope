@@ -18,6 +18,7 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #include "gui.h"
 #include "imgui-knobs.h"
 #include "imgui_toggle.h"
+#include <imgui.h>
 
 void USCGUI::drawGlobalControls(bool* open) {
   if (!*open) return;
@@ -108,7 +109,7 @@ void USCGUI::drawChanControls(bool** open) {
     snprintf(strbuf,64, "##chan%dctrls", i+1);
     if (ImGui::BeginTable(strbuf, 4)) {
       ImGui::TableSetupColumn("c1",ImGuiTableColumnFlags_WidthFixed);
-      ImGui::TableSetupColumn("c2",ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("c2",ImGuiTableColumnFlags_WidthStretch);
       ImGui::TableSetupColumn("c3",ImGuiTableColumnFlags_WidthFixed);
       ImGui::TableSetupColumn("c4",ImGuiTableColumnFlags_WidthFixed);
       ImGui::TableNextRow();
@@ -149,10 +150,17 @@ void USCGUI::drawChanControls(bool** open) {
           if (tc[i].yOffset >  1.0f) tc[i].yOffset =  1.0f;
         }
         if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) tc[i].yOffset = 0.0f;
-
+      ImGui::EndTable();
+    }
+    // trigger options
+    snprintf(strbuf,64, "##chan%dtrigctrls", i+1);
+    if (ImGui::BeginTable(strbuf, 4)) {
+      ImGui::TableSetupColumn("c1",ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("c2",ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("c3",ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("c4",ImGuiTableColumnFlags_WidthFixed);
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
-      // trigger options
       unsigned char counter=0, buttonCounter=0;
       ImGui::BeginDisabled(disable);
       for (TriggerParam p : trigger[i]->getParams()) {
