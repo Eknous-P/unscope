@@ -88,15 +88,18 @@ int Audio_PA::init() {
         conf->sampleRate,
         conf->frameSize);
       break;
-    case paInvalidChannelCount:
-      printf(INFO_MSG "trying preferred channel count..." MSG_END);
-      openStream(conf->inputDevice,
-        conf->outputDevice,
-        Pa_GetDeviceInfo(conf->inputDevice)->maxInputChannels,
-        Pa_GetDeviceInfo(conf->outputDevice)->maxOutputChannels,
-        conf->sampleRate,
-        conf->frameSize);
+    case paInvalidChannelCount: {
+      // TODO: handle chan count switching
+      // int outChans=conf->outputDevice>0?Pa_GetDeviceInfo(conf->outputDevice)->maxOutputChannels:0;
+      // printf(INFO_MSG "trying preferred channel count..." MSG_END);
+      // openStream(conf->inputDevice,
+      //   conf->outputDevice,
+      //   Pa_GetDeviceInfo(conf->inputDevice)->maxInputChannels,
+      //   outChans,
+      //   conf->sampleRate,
+      //   conf->frameSize);
       break;
+    }
     case paInvalidSampleRate:
       printf(INFO_MSG "trying default sample rate..." MSG_END);
       openStream(conf->inputDevice,
