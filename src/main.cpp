@@ -218,10 +218,13 @@ int main(int argc, char** argv) {
 
   if (i.initAudio()) {
     printf(ERROR_MSG "failed to init audio!" MSG_END);
+    i.deinitIO();
     return 2;
   }
   if (i.startAudio()) {
     printf(ERROR_MSG "failed to start audio!" MSG_END);
+    i.deinitAudio();
+    i.deinitIO();
     return 3;
   }
 
