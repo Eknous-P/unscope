@@ -124,13 +124,11 @@ void USCGUI::drawMainScope(bool* open) {
   ImVec2* scaledWave;
   bool* triggered = new bool[channels];
   FOR_RANGE(channels) {
-    unsigned char trigChan = (shareTrigger>0)?(shareTrigger-1):(shareParams?0:z);
-    if (shareTrigger>0) {
-      if (trigChan == z) {
-        memset(triggered, trigger[trigChan]->trigger(tc[trigChan].traceSize), channels);
-      }
+    unsigned char trigChan = (shareTrigger>0)?(shareTrigger-1):z;
+    if (shareTrigger>0 && trigChan == z) {
+      memset(triggered, trigger[trigChan]->trigger(tc[trigChan].traceSize), channels);
     }
-    else triggered[z] = trigger[z]->trigger(tc[trigChan].traceSize);
+    else triggered[z] = trigger[z]->trigger(tc[z].traceSize);
   }
   for (int c = channels-1; c >= 0; c--) {
     if (!tc[c].enable) continue;
@@ -140,7 +138,7 @@ void USCGUI::drawMainScope(bool* open) {
     long int offset = (tc[c].traceSize / 2.f) * tc[c].xOffset;
     scaledWave = new ImVec2[len];
     nint i=0;
-    unsigned char trigChan = (shareTrigger>0)?(shareTrigger-1):(shareParams?0:c);
+    unsigned char trigChan = (shareTrigger>0)?(shareTrigger-1):c;
     for (; i < len; i++) {
       scaledWave[i].x = origin.x + size.x*((float)i/(float)len);
 
