@@ -61,11 +61,12 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   FOR_RANGE(channels) {
     sd[z].in=NULL;
     sd[z].out=NULL;
-    sd[z].samples=2048;
-    sd[z].scale=1;
     sd[z].updatePlan=true;
     sd[z].color=tc[z].color;
   }
+
+  sc.samples=2048;
+  sc.scale=1;
 
   wo.chanControlsOpen=new bool[channels];
   if (!wo.chanControlsOpen) return;
@@ -77,12 +78,14 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   wo.aboutOpen           = false;
   wo.cursorsOpen         = true;
   wo.audioConfigOpen     = false;
+  wo.spectrumOpen        = true;
+  wo.spectrumControlsOpen= true;
 #ifdef PROGRAM_DEBUG
   wo.metricsOpen         = false;
   wo.paramDebugOpen      = false;
   wo.triggerDebugOpen    = false;
+  wo.fftDebugOpen        = false;
 #endif
-  wo.spectrumOpen        = true;
 
   oscDataSize = up->audioBufferSize;
 
@@ -283,6 +286,8 @@ void USCGUI::drawGUI() {
     if (ImGui::BeginMenu("Scopes")) {
       ImGui::MenuItem("Main Scope",NULL,&wo.mainScopeOpen);
       ImGui::MenuItem("Scope (XY)",NULL,&wo.xyScopeOpen);
+      ImGui::Separator();
+      ImGui::MenuItem("Frequency Spectrum",NULL,&wo.spectrumOpen);
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Controls")) {
@@ -292,6 +297,9 @@ void USCGUI::drawGUI() {
         ImGui::MenuItem(buf,NULL,&wo.chanControlsOpen[i]);
       }
       ImGui::MenuItem("XY Scope Controls",NULL,&wo.xyScopeControlsOpen);
+      ImGui::Separator();
+      ImGui::MenuItem("Spectrum Controls",NULL,&wo.spectrumControlsOpen);
+      ImGui::Separator();
       ImGui::MenuItem("Global Controls",NULL,&wo.globalControlsOpen);
       ImGui::MenuItem("Cursors",NULL,&wo.cursorsOpen);
       ImGui::EndMenu();
@@ -302,6 +310,7 @@ void USCGUI::drawGUI() {
       ImGui::Separator();
       ImGui::MenuItem("Parameters...",NULL,&wo.paramDebugOpen);
       ImGui::MenuItem("Trigger...",NULL,&wo.triggerDebugOpen);
+      ImGui::MenuItem("FFT...",NULL,&wo.fftDebugOpen);
       ImGui::EndMenu();
     }
 #endif
@@ -314,6 +323,7 @@ void USCGUI::drawGUI() {
   drawGlobalControls(&wo.globalControlsOpen);
   drawChanControls(&wo.chanControlsOpen);
   drawXYScopeControls(&wo.xyScopeControlsOpen);
+  drawSpectrumControls(&wo.spectrumControlsOpen);
 
   drawAbout(&wo.aboutOpen);
   drawCursors(&wo.cursorsOpen);
@@ -341,6 +351,7 @@ void USCGUI::drawGUI() {
   if (wo.metricsOpen) ImGui::ShowMetricsWindow(&wo.metricsOpen);
   drawTriggerDebug(&wo.triggerDebugOpen);
   drawParamDebug(&wo.paramDebugOpen);
+  drawFFTDebug(&wo.fftDebugOpen);
 #endif
 }
 

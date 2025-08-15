@@ -92,13 +92,14 @@ class USCGUI {
       bool aboutOpen;
       bool cursorsOpen;
       bool audioConfigOpen;
+      bool spectrumOpen;
+      bool spectrumControlsOpen;
 #ifdef PROGRAM_DEBUG
       bool metricsOpen;
       bool paramDebugOpen;
       bool triggerDebugOpen;
+      bool fftDebugOpen;
 #endif
-      bool spectrumOpen;
-      bool spectrumControlsOpen;
     };
 
     struct plotCursor {
@@ -117,9 +118,11 @@ class USCGUI {
       double* in;
       fftw_complex* out;
       fftw_plan p;
-
+      bool updatePlan;
       ImVec4 color;
+    }* sd;
 
+    struct spectrumControls {
       unsigned int samples;
 
       // 2 nibbles per axis
@@ -127,9 +130,7 @@ class USCGUI {
       // 1 - log
       // 2 - notes
       unsigned char scale;
-
-      bool updatePlan;
-    }* sd;
+    } sc;
 
     bool fullscreen;
     ImGuiIO io;
@@ -171,6 +172,7 @@ class USCGUI {
 
 #ifdef PROGRAM_DEBUG
     nint triggerDebugBegin, triggerDebugEnd;
+    double fftPeak;
 #endif
     char errorText[2048];
 
@@ -196,6 +198,7 @@ class USCGUI {
 #ifdef PROGRAM_DEBUG
     void drawTriggerDebug(bool* open);
     void drawParamDebug(bool* open);
+    void drawFFTDebug(bool* open);
 #endif
 
     void drawGlobalControls(bool* open);
