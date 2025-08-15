@@ -71,6 +71,7 @@ bool TriggerParam::draw() {
       if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) setValue<float>(0.0f);
       break;
     }
+    case TP_NONE:
     default:
       ImGui::Text("what?");
       break;

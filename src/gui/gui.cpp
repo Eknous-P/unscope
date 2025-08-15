@@ -56,6 +56,17 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   xyp.axisChan[0] = 1;
   xyp.axisChan[1] = 2;
 
+  sd = new spectrumData[channels];
+  if (!sd) return;
+  FOR_RANGE(channels) {
+    sd[z].in=NULL;
+    sd[z].out=NULL;
+    sd[z].samples=2048;
+    sd[z].scale=1;
+    sd[z].updatePlan=true;
+    sd[z].color=tc[z].color;
+  }
+
   wo.chanControlsOpen=new bool[channels];
   if (!wo.chanControlsOpen) return;
   FOR_RANGE(channels) wo.chanControlsOpen[z]=true;
@@ -71,6 +82,7 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   wo.paramDebugOpen      = false;
   wo.triggerDebugOpen    = false;
 #endif
+  wo.spectrumOpen        = true;
 
   oscDataSize = up->audioBufferSize;
 
@@ -324,6 +336,7 @@ void USCGUI::drawGUI() {
 
   drawMainScope(&wo.mainScopeOpen);
   drawXYScope(&wo.xyScopeOpen);
+  drawSpectrum(&wo.spectrumOpen);
 #ifdef PROGRAM_DEBUG
   if (wo.metricsOpen) ImGui::ShowMetricsWindow(&wo.metricsOpen);
   drawTriggerDebug(&wo.triggerDebugOpen);
@@ -503,6 +516,14 @@ void USCGUI::updateAudioDevices() {
 USCGUI::~USCGUI() {
   if (isGood) {
     if (rd) rd->destroyRender();
+  }
+  if (sd) {
+    FOR_RANGE(channels) {
+      if (sd[z].in)  delete[] sd[z].in;
+      if (sd[z].out) fftw_free(sd[z].out);
+      if (sd[z].p)   fftw_destroy_plan(sd[z].p);
+    }
+    delete[] sd;
   }
   delete[] wo.chanControlsOpen;
   DELETE_PTR(rd)
