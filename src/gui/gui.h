@@ -19,7 +19,6 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #define USC_GUI_H
 
 #include <SDL.h>
-#include <fftw3.h>
 #include <imgui.h>
 #include "imgui_stdlib.h"
 
@@ -97,8 +96,6 @@ class USCGUI {
       bool paramDebugOpen;
       bool triggerDebugOpen;
 #endif
-      bool spectrumOpen;
-      bool spectrumControlsOpen;
     };
 
     struct plotCursor {
@@ -112,24 +109,6 @@ class USCGUI {
         pos = p;
       }
     };
-
-    struct spectrumData {
-      double* in;
-      fftw_complex* out;
-      fftw_plan p;
-
-      ImVec4 color;
-
-      unsigned int samples;
-
-      // 2 nibbles per axis
-      // 0 - none (linear)
-      // 1 - log
-      // 2 - notes
-      unsigned char scale;
-
-      bool updatePlan;
-    }* sd;
 
     bool fullscreen;
     ImGuiIO io;
@@ -191,7 +170,6 @@ class USCGUI {
   
     void drawMainScope(bool* open);
     void drawXYScope(bool* open);
-    void drawSpectrum(bool* open);
 
 #ifdef PROGRAM_DEBUG
     void drawTriggerDebug(bool* open);
@@ -201,7 +179,6 @@ class USCGUI {
     void drawGlobalControls(bool* open);
     void drawChanControls(bool** open);
     void drawXYScopeControls(bool* open);
-    void drawSpectrumControls(bool* open);
 
     void drawAbout(bool* open);
     void drawSettings(bool* open);

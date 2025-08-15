@@ -113,16 +113,6 @@ set(PA_BUILD_SHARED_LIBS OFF CACHE BOOL "Build dynamic library" FORCE)
 add_subdirectory(${submodules_path}/portaudio EXCLUDE_FROM_ALL)
 list(APPEND linked_libraries PortAudio)
 
-# fftw
-if (TRUE)
-  pkg_check_modules(fftw fftw3 REQUIRED)
-  list(APPEND compiler_options ${fftw_CFLAGS} ${fftw_CFLAGS_OTHER})
-  list(APPEND linked_libraries ${fftw_LINK_LIBRARIES})
-  message(STATUS "found fftw")
-else()
-# todo: static link
-endif()
-
 # sources
 list(APPEND audio_sources
 ${sources_path}/audio/audio.cpp
@@ -162,7 +152,6 @@ ${sources_path}/gui/wins/ctrls.cpp
 ${sources_path}/gui/wins/oscs.cpp
 ${sources_path}/gui/wins/cursors.cpp
 ${sources_path}/gui/wins/audioConfig.cpp
-${sources_path}/gui/wins/spectrum.cpp
 
 ${sources_path}/gui/render/abstract.cpp
 ${sources_path}/gui/render/render_sdl2renderer.cpp)
