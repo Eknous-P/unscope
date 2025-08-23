@@ -19,8 +19,8 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #define USC_GUI_H
 
 #include <SDL.h>
-#include <fftw3.h>
-#include <imgui.h>
+#include "pffft.h"
+#include "imgui.h"
 #include "imgui_stdlib.h"
 
 #include "shared.h"
@@ -115,11 +115,10 @@ class USCGUI {
     };
 
     struct spectrumData {
-      double* in;
-      fftw_complex* out;
-      fftw_plan p;
-      bool updatePlan;
+      float *in, *out, *work;
+      PFFFT_Setup* setup;
       ImVec4 color;
+      bool updateSetup, running;
     }* sd;
 
     struct spectrumControls {

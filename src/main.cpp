@@ -267,7 +267,7 @@ const char* helpMsg =
 const char* aboutMsg = 
 "An audio oscilloscope\n";
 
-const char* thirdPartyMsg =
+const char* thirdPartyMsg = // TODO: change this to be able to use TextLinkOpenURL
 "unscope is made using these libraries:\n"
 "\n"
 "PortAudio (https://github.com/PortAudio/portaudio)\n"
@@ -276,7 +276,8 @@ const char* thirdPartyMsg =
 #endif
 "Dear ImGui (https://github.com/ocornut/imgui)\n"
 "ImGui Knobs (https://github.com/altschuler/imgui-knobs)\n"
-"imgui_toggle (https://github.com/cmdwtf/imgui_toggle)\n";
+"imgui_toggle (https://github.com/cmdwtf/imgui_toggle)\n"
+"PFFFT (https://github.com/marton78/pffft)";
 
 const char* licenseMsg =
 "Copyright (C) 2025 Eknous\n"

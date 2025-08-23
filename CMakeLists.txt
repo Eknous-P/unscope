@@ -108,20 +108,15 @@ else()
   add_compile_definitions(NON_SYS_SDL)
 endif()
 
+# pffft
+set(PFFFT_USE_TYPE_DOUBLE OFF)
+add_subdirectory(${submodules_path}/pffft EXCLUDE_FROM_ALL)
+list(APPEND linked_libraries PFFFT)
+
 # portaudio
 set(PA_BUILD_SHARED_LIBS OFF CACHE BOOL "Build dynamic library" FORCE)
 add_subdirectory(${submodules_path}/portaudio EXCLUDE_FROM_ALL)
 list(APPEND linked_libraries PortAudio)
-
-# fftw
-if (TRUE)
-  pkg_check_modules(fftw fftw3 REQUIRED)
-  list(APPEND compiler_options ${fftw_CFLAGS} ${fftw_CFLAGS_OTHER})
-  list(APPEND linked_libraries ${fftw_LINK_LIBRARIES})
-  message(STATUS "found fftw")
-else()
-# todo: static link
-endif()
 
 # sources
 list(APPEND audio_sources

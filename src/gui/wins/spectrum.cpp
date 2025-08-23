@@ -18,14 +18,74 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #include "gui.h"
 #include "imgui_internal.h"
 
+#define UPDATE_X_SCALE sc.scale=(sc.scale&0xf0)|(xs&0xf);
+#define UPDATE_Y_SCALE sc.scale=(sc.scale&0xf)|(ys<<4);
+typedef float (*xScaleFunc)(float,float);
+typedef float (*yScaleFunc)(float);
+
+float xScaleFuncLinear(float x, float freq) {
+  return x;
+}
+
+float xScaleFuncLog(float x, float freq) {
+  const float base=100;
+  return log((base-1)*x+1.0f)/log(base);
+}
+
+float yScaleFuncLinear(float y) {
+  return y;
+}
+
+float yScaleFuncDb(float y) {
+  return log10(y)*20.0f/70.0f+1;
+}
+
+xScaleFunc xScaleFunctions[]={
+  xScaleFuncLinear,
+  xScaleFuncLog
+};
+
+yScaleFunc yScaleFunctions[]={
+  yScaleFuncLinear,
+  yScaleFuncDb
+};
+
 void USCGUI::drawSpectrumControls(bool* open) {
   if (!oscData) return;
   if (!*open) return;
   if (ImGui::Begin("Spectrum Controls", open)) {
     if (ImGui::InputScalar("Bins", ImGuiDataType_U32, &sc.samples)) {
       if (sc.samples > oscDataSize) sc.samples = oscDataSize;
-      FOR_RANGE(channels) sd[z].updatePlan=true;
+      FOR_RANGE(channels) sd[z].updateSetup=true;
     }
+    ImGui::Text("X scale:");
+    ImGui::Indent();
+    unsigned char xs = sc.scale&0xf;
+    if (ImGui::RadioButton("Linear##XSC", xs==0)) {
+      xs=0;
+      UPDATE_X_SCALE
+    }
+    if (ImGui::RadioButton("Logarithmic##XSC", xs==1)) {
+      xs=1;
+      UPDATE_X_SCALE
+    }
+    // if (ImGui::RadioButton("12TET", xs==2)) {
+    //   xs=2;
+    //   UPDATE_X_SCALE
+    // }
+    ImGui::Unindent();
+    ImGui::Text("Y scale:");
+    ImGui::Indent();
+    unsigned char ys = sc.scale>>4;
+    if (ImGui::RadioButton("Linear##YSC", ys==0)) {
+      ys=0;
+      UPDATE_Y_SCALE
+    }
+    if (ImGui::RadioButton("dB##YSC", ys==1)) {
+      ys=1;
+      UPDATE_Y_SCALE
+    }
+    ImGui::Unindent();
     ImGui::Text("Spectrum Colors:");
     ImGui::Indent();
     char buf[256];
@@ -37,6 +97,8 @@ void USCGUI::drawSpectrumControls(bool* open) {
         ImGui::ColorPicker4("##specColEdit",(float*)&sd[z].color);
         ImGui::EndPopup();
       }
+      ImGui::SameLine();
+      ImGui::Text("%s",buf);
       ImGui::PopID();
     }
     ImGui::Unindent();
@@ -54,75 +116,133 @@ void USCGUI::drawSpectrum(bool* open) {
   float titleBar = ImGui::GetCurrentWindow()->TitleBarHeight;
   origin.y += titleBar;
   size.y -= titleBar;
-  ImVec2 sizeHalf = size/2;
-  float sizeMin = size.x<size.y?size.x:size.y;
-  // grid
-  // {
-  //   ImVec2 p1, p2;
-  //   p1.x = origin.x + sizeHalf.x - sizeMin/2.f;
-  //   p1.y = origin.y + sizeHalf.y - sizeMin/2.f;
-  //   p2.x = origin.x + sizeHalf.x + sizeMin/2.f;
-  //   p2.y = origin.y + sizeHalf.y + sizeMin/2.f;
-  //   dl->AddRect(p1, p2, 0x44ffffff);
-  //   FOR_RANGE(9) {
-  //     // veritcal lines
-  //     p1.x = origin.x + sizeHalf.x - sizeMin * ((z-4)/10.f);
-  //     p2.x = p1.x;
-  //     p1.y = origin.y + sizeHalf.y - sizeMin/2.f;
-  //     p2.y = origin.y + sizeHalf.y + sizeMin/2.f;
-  //     dl->AddLine(p1, p2, 0x44ffffff);
-  //     // horizontal lines
-  //     p1.y = origin.y + sizeHalf.y - sizeMin * ((z-4)/10.f);
-  //     p2.y = p1.y;
-  //     p1.x = origin.x + sizeHalf.x - sizeMin/2.f;
-  //     p2.x = origin.x + sizeHalf.x + sizeMin/2.f;
-  //     dl->AddLine(p1, p2, 0x44ffffff);
-  //   }
-  // }
-  sizeMin/=2.f;
-  FOR_RANGE(channels) {
-    unsigned int samples = sc.samples;
-    if (sd[z].updatePlan) {
-      sd[z].updatePlan=false;
-      if (sd[z].in)  delete[] sd[z].in;
-      if (sd[z].out) fftw_free(sd[z].out);
-      if (sd[z].p)   fftw_destroy_plan(sd[z].p);
-      sd[z].in = new double[samples*2];
-      sd[z].out = (fftw_complex*)fftw_malloc(sizeof(fftw_complex)*samples*2);
-      sd[z].p = fftw_plan_dft_r2c_1d(samples*2, sd[z].in, sd[z].out, FFTW_ESTIMATE);
-    }
-    nint cur=oscDataSize-samples*2;
-    for (unsigned int i = 0; i < samples*2; i++) {
-      float f = oscData[z][cur+i];
-      sd[z].in[i] = f * 0.5 * (1 - cos(2*M_PI*i/samples));
-    }
-    fftw_execute(sd[z].p);
-    ImVec2* scaledPlot = new ImVec2[samples];
-#ifdef PROGRAM_DEBUG
-    fftPeak=0.0;
-#endif
-    for (unsigned int i=0; i<samples; i++) {
-      switch (sc.scale&0xf) {
-        case 1:
-          scaledPlot[i].x = origin.x + size.x*log2((float)i/samples+1.f);
-          break;
-        case 0:
-        default:
-          scaledPlot[i].x = origin.x + (size.x/samples)*i;
-          break;
+  // v scale labels
+  {
+    float padding = ImGui::GetStyle().FramePadding.x;
+    ImVec2 p1, textSize;
+    char buf[16];
+    switch (sc.scale>>4) {
+      case 0: { // linear
+        textSize = ImGui::CalcTextSize("1.00");
+        textSize.x += 5.f;
+        FOR_RANGE(9) {
+          p1.y = origin.y + size.y * ((z+1)/10.f) - textSize.y/2;
+          p1.x = origin.x + padding;
+          snprintf(buf, 16, "%1.2f", (z+1)/10.0f);
+          dl->AddText(p1, ImGui::GetColorU32(ImGuiCol_Text), buf);
+        }
+        break;
       }
-      double mag=sqrt(sd[z].out[i][0] * sd[z].out[i][0] + sd[z].out[i][1] * sd[z].out[i][1])/((double)samples/4.0);
-#ifdef PROGRAM_DEBUG
-      if (mag>fftPeak) fftPeak=mag;
-#endif
-      scaledPlot[i].y = origin.y + size.y - size.y*mag;
+      case 1: { // db
+        textSize = ImGui::CalcTextSize("70dB");
+        textSize.x += 5.f;
+        FOR_RANGE(7) {
+          p1.y = origin.y + size.y * ((z+1)/8.f) - textSize.y/2;
+          p1.x = origin.x + padding;
+          snprintf(buf, 16, "%2ddB", (z+1)*10);
+          dl->AddText(p1, ImGui::GetColorU32(ImGuiCol_Text), buf);
+        }
+        break;
+      }
     }
-    dl->PushClipRectFullScreen();
-    dl->AddPolyline(scaledPlot, samples, ImGui::ColorConvertFloat4ToU32(sd[z].color), 0, 1.0f);
-    dl->PopClipRect();
-    delete[] scaledPlot;
+    origin.x += textSize.x+padding;
+    size.x   -= textSize.x+padding;
+  }
+  // y grid
+  switch (sc.scale>>4) {
+    case 0: { // linear
+      for (unsigned char z=1; z<((size.y>450)?20:10); z++) {
+        dl->AddLine(
+          origin+ImVec2(0,size.y*z/10),
+          origin+ImVec2(size.x,size.y*z/10),
+          0x44ffffff);
+      }
+      break;
+    }
+    case 1: { // db
+      for (unsigned char z=1; z<((size.y>450)?16:8); z++) {
+        dl->AddLine(
+          origin+ImVec2(0,size.y*z/8),
+          origin+ImVec2(size.x,size.y*z/8),
+          0x44ffffff);
+      }
+      break;
+    }
+  }
+  unsigned int samples = sc.samples;
+  for (int z = channels-1; z>=0; z--) {
+    if (sd[z].updateSetup) {
+      sd[z].updateSetup=false;
+      sd[z].running=false;
+      if (sd[z].in) {
+        pffft_aligned_free(sd[z].in);
+        sd[z].in=NULL;
+      }
+      if (sd[z].out) {
+        pffft_aligned_free(sd[z].out);
+        sd[z].out=NULL;
+      }
+      if (sd[z].work) {
+        pffft_aligned_free(sd[z].work);
+        sd[z].work=NULL;
+      }
+      if (sd[z].setup) {
+        pffft_destroy_setup(sd[z].setup);
+        sd[z].setup=NULL;
+      }
+      sd[z].setup =  pffft_new_setup(samples*2, PFFFT_REAL);
+      if (!sd[z].setup) {
+        break;
+      }
+      sd[z].in = (float*)pffft_aligned_malloc(sizeof(float)*samples*2);
+      sd[z].out = (float*)pffft_aligned_malloc(sizeof(float)*samples*2);
+      sd[z].work = (float*)pffft_aligned_malloc(sizeof(float)*samples*2);
+      if (
+        sd[z].in &&
+        sd[z].out &&
+        sd[z].work
+      ) {
+        sd[z].running=true;
+      }
+    }
+    
+    if (sd[z].running) {
+      nint cur=oscDataSize-samples*2;
+      for (unsigned int i = 0; i < samples*2; i++) {
+        float f = oscData[z][cur+i];
+        sd[z].in[i] = f * 0.5 * (1 - cos(M_PI*i/samples));
+      }
+      pffft_transform_ordered(sd[z].setup, sd[z].in, sd[z].out, sd[z].work,PFFFT_FORWARD);
+      ImVec2* scaledPlot = new ImVec2[samples];
+#ifdef PROGRAM_DEBUG
+      fftPeak=0.0;
+#endif
+      for (unsigned int i=0; i<samples; i++) {
+        scaledPlot[i].x = origin.x + size.x*(xScaleFunctions[sc.scale&0xf])((float)i/samples, sampleRate/2.0f);
+        float mag=2.0*sqrt(sd[z].out[i<<1] * sd[z].out[i<<1] + sd[z].out[(i<<1)+1] * sd[z].out[(i<<1)+1])/(float)samples;
+#ifdef PROGRAM_DEBUG
+        if (mag>fftPeak) fftPeak=mag;
+#endif
+        scaledPlot[i].y = origin.y + size.y - size.y*yScaleFunctions[sc.scale>>4](mag);
+      }
+      // dl->PushClipRectFullScreen();
+      dl->AddPolyline(scaledPlot, samples, ImGui::ColorConvertFloat4ToU32(sd[z].color), 0, 1.0f);
+      // dl->PopClipRect();
+      delete[] scaledPlot;
+    }
   }
   ImGui::PopStyleVar();
+  // hover thing
+  // {
+  //   if (ImGui::IsWindowHovered()) {
+  //     float mx = (ImGui::GetMousePos().x - origin.x)/size.x;
+  //     int sample = samples*mx;
+  //     float freq = sampleRate*scaleFunctions[sc.scale&0xf](mx);
+  //     char buf[512];
+  //     snprintf(buf,512,"sample: %d, freq: %f",sample, freq);
+  //     dl->AddText(origin+ImVec2(10.f,10.f), ImGui::ColorConvertFloat4ToU32(ImGui::GetStyleColorVec4(ImGuiCol_Text)), buf);
+  //   }
+  // }
   ImGui::End();
 }
 
@@ -130,30 +250,55 @@ void USCGUI::drawSpectrum(bool* open) {
 void USCGUI::drawFFTDebug(bool* open) {
   if (!oscData) return;
   if (!*open) return;
-  ImGui::Begin("FFT Debug", open);
-  ImGui::Text("fft peak: %f", fftPeak);
-  if (ImGui::BeginTable("data", 4)) {
-      ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
-      ImGui::TableNextColumn();
-      ImGui::Text("i");
-      ImGui::TableNextColumn();
-      ImGui::Text("input");
-      ImGui::TableNextColumn();
-      ImGui::Text("real");
-      ImGui::TableNextColumn();
-      ImGui::Text("complex");
-    for (int i=0; i<sc.samples; i++) {
-      ImGui::TableNextRow();
-      ImGui::TableNextColumn();
-      ImGui::Text("%d",i);
-      ImGui::TableNextColumn();
-      ImGui::Text("%f",sd[0].in[i]);
-      ImGui::TableNextColumn();
-      ImGui::Text("%f",sd[0].out[i][0]);
-      ImGui::TableNextColumn();
-      ImGui::Text("%f",sd[0].out[i][1]);
+  if (ImGui::Begin("FFT Debug", open)) {
+    if (ImGui::BeginTabBar("##fftDebugTab")) {
+      if (ImGui::BeginTabItem("raw data")) {
+        ImGui::Text("fft peak: %f", fftPeak);
+        if (ImGui::BeginTable("data", 4)) {
+            ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+            ImGui::TableNextColumn();
+            ImGui::Text("i");
+            ImGui::TableNextColumn();
+            ImGui::Text("input");
+            ImGui::TableNextColumn();
+            ImGui::Text("real");
+            ImGui::TableNextColumn();
+            ImGui::Text("complex");
+          for (int i=0; i<sc.samples; i++) {
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ImGui::Text("%d",i);
+            ImGui::TableNextColumn();
+            ImGui::Text("%f",sd[0].in[i]);
+            ImGui::TableNextColumn();
+            ImGui::Text("%f",sd[0].out[i<<1]);
+            ImGui::TableNextColumn();
+            ImGui::Text("%f",sd[0].out[(i<<1)+1]);
+          }
+          ImGui::EndTable();
+        }
+        ImGui::EndTabItem();
+      }
+      if (ImGui::BeginTabItem("fft input")) {
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f,0.0f));
+        ImDrawList* dl = ImGui::GetWindowDrawList();
+        ImVec2 origin = ImGui::GetCurrentWindow()->DC.CursorPos, size = ImGui::GetContentRegionAvail();
+        float titleBar = ImGui::GetCurrentWindow()->TitleBarHeight;
+        origin.y += titleBar;
+        size.y -= titleBar;
+        int samples=sc.samples*2;
+        ImVec2* scaledPlot = new ImVec2[samples];
+        for (nint i=0; i<samples; i++) {
+          scaledPlot[i].x = origin.x + size.x*(i/(float)samples);
+          scaledPlot[i].y = origin.y + size.y/2.0f - sd[0].in[i]*size.y/2.0f;
+        }
+        dl->AddPolyline(scaledPlot, samples, ImGui::ColorConvertFloat4ToU32(sd[0].color), 0, 1.0f);
+        delete[] scaledPlot;
+        ImGui::PopStyleVar();
+        ImGui::EndTabItem();
+      }
+      ImGui::EndTabBar();
     }
-    ImGui::EndTable();
   }
   ImGui::End();
 }

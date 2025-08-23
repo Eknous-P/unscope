@@ -61,8 +61,11 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   FOR_RANGE(channels) {
     sd[z].in=NULL;
     sd[z].out=NULL;
-    sd[z].updatePlan=true;
+    sd[z].work=NULL;
+    sd[z].setup=NULL;
     sd[z].color=tc[z].color;
+    sd[z].updateSetup=true;
+    sd[z].running=false;
   }
 
   sc.samples=2048;
@@ -530,9 +533,10 @@ USCGUI::~USCGUI() {
   }
   if (sd) {
     FOR_RANGE(channels) {
-      if (sd[z].in)  delete[] sd[z].in;
-      if (sd[z].out) fftw_free(sd[z].out);
-      if (sd[z].p)   fftw_destroy_plan(sd[z].p);
+      if (sd[z].in) pffft_aligned_free(sd[z].in);
+      if (sd[z].out) pffft_aligned_free(sd[z].out);
+      if (sd[z].work) pffft_aligned_free(sd[z].work);
+      if (sd[z].setup) pffft_destroy_setup(sd[z].setup);
     }
     delete[] sd;
   }
