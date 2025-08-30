@@ -58,22 +58,31 @@ void USCGUI::drawSpectrumControls(bool* open) {
       if (sc.samples > oscDataSize) sc.samples = oscDataSize;
       FOR_RANGE(channels) sd[z].updateSetup=true;
     }
-    ImGui::Text("X scale:");
-    ImGui::Indent();
-    unsigned char xs = sc.scale&0xf;
-    if (ImGui::RadioButton("Linear##XSC", xs==0)) {
-      xs=0;
-      UPDATE_X_SCALE
+    if (ImGui::Combo("Spectrum Mode", &sc.mode, spectrumModes, 2)) {
+      FOR_RANGE(channels) sd[z].updateSetup=true;
     }
-    if (ImGui::RadioButton("Logarithmic##XSC", xs==1)) {
-      xs=1;
-      UPDATE_X_SCALE
+    switch (sc.mode) {
+      case 0: {
+        ImGui::Text("X scale:");
+        ImGui::Indent();
+        unsigned char xs = sc.scale&0xf;
+        if (ImGui::RadioButton("Linear##XSC", xs==0)) {
+          xs=0;
+          UPDATE_X_SCALE
+        }
+        if (ImGui::RadioButton("Logarithmic##XSC", xs==1)) {
+          xs=1;
+          UPDATE_X_SCALE
+        }
+        ImGui::Unindent();
+        break;
+      }
+      case 1: {
+        break;
+      }
+      default:
+        break;
     }
-    // if (ImGui::RadioButton("12TET", xs==2)) {
-    //   xs=2;
-    //   UPDATE_X_SCALE
-    // }
-    ImGui::Unindent();
     ImGui::Text("Y scale:");
     ImGui::Indent();
     unsigned char ys = sc.scale>>4;
@@ -173,7 +182,7 @@ void USCGUI::drawSpectrum(bool* open) {
   for (int z = channels-1; z>=0; z--) {
     if (sd[z].updateSetup) {
       sd[z].updateSetup=false;
-      sd[z].running=false;
+      sd[z].running=true;
       if (sd[z].in) {
         pffft_aligned_free(sd[z].in);
         sd[z].in=NULL;
@@ -190,43 +199,76 @@ void USCGUI::drawSpectrum(bool* open) {
         pffft_destroy_setup(sd[z].setup);
         sd[z].setup=NULL;
       }
-      sd[z].setup =  pffft_new_setup(samples*2, PFFFT_REAL);
-      if (!sd[z].setup) {
-        break;
-      }
       sd[z].in = (float*)pffft_aligned_malloc(sizeof(float)*samples*2);
-      sd[z].out = (float*)pffft_aligned_malloc(sizeof(float)*samples*2);
-      sd[z].work = (float*)pffft_aligned_malloc(sizeof(float)*samples*2);
-      if (
-        sd[z].in &&
-        sd[z].out &&
-        sd[z].work
-      ) {
-        sd[z].running=true;
+      if (!sd[z].in) sd[z].running=false;
+      switch (sc.mode) {
+        case 0: {
+          sd[z].setup = pffft_new_setup(samples*2, PFFFT_REAL);
+          if (!sd[z].setup) {
+            sd[z].running=false;
+          }
+          sd[z].out  = (float*)pffft_aligned_malloc(sizeof(float)*samples*2);
+          sd[z].work = (float*)pffft_aligned_malloc(sizeof(float)*samples*2);
+          if (!(sd[z].out && sd[z].work)) sd[z].running=false;
+          break;
+        }
+        case 1: {
+          sd[z].running=false;
+          break;
+        }
+        default:
+          sd[z].running=false;
+          break;
       }
     }
     
     if (sd[z].running) {
       nint cur=oscDataSize-samples*2;
-      for (unsigned int i = 0; i < samples*2; i++) {
-        float f = oscData[z][cur+i];
-        sd[z].in[i] = f * 0.5 * (1 - cos(M_PI*i/samples));
+      switch (sc.mode) {
+        case 0:
+          for (unsigned int i = 0; i < samples*2; i++) {
+            float f = oscData[z][cur+i];
+            sd[z].in[i] = f * 0.5 * (1 - cos(M_PI*i/samples));
+          }
+          pffft_transform_ordered(sd[z].setup, sd[z].in, sd[z].out, sd[z].work,PFFFT_FORWARD);
+          break;
+        case 1: {
+          break;
+        }
+        default:
+          break;
       }
-      pffft_transform_ordered(sd[z].setup, sd[z].in, sd[z].out, sd[z].work,PFFFT_FORWARD);
-      ImVec2* scaledPlot = new ImVec2[samples];
+      ImVec2* scaledPlot = NULL;
+      unsigned int count=0;
 #ifdef PROGRAM_DEBUG
       fftPeak=0.0;
 #endif
-      for (unsigned int i=0; i<samples; i++) {
-        scaledPlot[i].x = origin.x + size.x*(xScaleFunctions[sc.scale&0xf])((float)i/samples, sampleRate/2.0f);
-        float mag=2.0*sqrt(sd[z].out[i<<1] * sd[z].out[i<<1] + sd[z].out[(i<<1)+1] * sd[z].out[(i<<1)+1])/(float)samples;
+      switch (sc.mode) {
+        case 0: scaledPlot=new ImVec2[samples]; break;
+        default:  break;
+      }
+        float mag=0.0f;
+        switch (sc.mode) {
+          case 0: {
+            count=samples;
+            for (unsigned int i=0; i<count; i++) {
+              scaledPlot[i].x = origin.x + size.x*(xScaleFunctions[sc.scale&0xf])((float)i/samples, sampleRate/2.0f);
+              mag = 2.0*sqrt(sd[z].out[i<<1] * sd[z].out[i<<1] + sd[z].out[(i<<1)+1] * sd[z].out[(i<<1)+1])/(float)samples;
+              scaledPlot[i].y = origin.y + size.y - size.y*yScaleFunctions[sc.scale>>4](mag);
+            }
+            break;
+          }
+          case 1: {
+            break;
+          }
+          default:
+            break;
+        }
 #ifdef PROGRAM_DEBUG
         if (mag>fftPeak) fftPeak=mag;
 #endif
-        scaledPlot[i].y = origin.y + size.y - size.y*yScaleFunctions[sc.scale>>4](mag);
-      }
       // dl->PushClipRectFullScreen();
-      dl->AddPolyline(scaledPlot, samples, ImGui::ColorConvertFloat4ToU32(sd[z].color), 0, 1.0f);
+      dl->AddPolyline(scaledPlot, count, ImGui::ColorConvertFloat4ToU32(sd[z].color), 0, 1.0f);
       // dl->PopClipRect();
       delete[] scaledPlot;
     }

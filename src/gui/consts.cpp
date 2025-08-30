@@ -130,6 +130,11 @@ const char* triggerNames[]={
   "smoothed"
 };
 
+const char* const spectrumModes[]={
+  "FFT",
+  "Constant Q"
+};
+
 const unsigned char step_one = 1;
 
 const int sampleRates[9]={

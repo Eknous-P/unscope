@@ -69,6 +69,7 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   }
 
   sc.samples=2048;
+  sc.mode=0;
   sc.scale=1;
 
   wo.chanControlsOpen=new bool[channels];

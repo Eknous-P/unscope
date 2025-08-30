@@ -117,13 +117,16 @@ class USCGUI {
     struct spectrumData {
       float *in, *out, *work;
       PFFFT_Setup* setup;
+
       ImVec4 color;
       bool updateSetup, running;
     }* sd;
 
     struct spectrumControls {
       unsigned int samples;
-
+      // 0 - linear fft, 1 - constant-q
+      int mode;
+      int octaves, perOctaveBins;
       // 2 nibbles per axis
       // 0 - none (linear)
       // 1 - log
@@ -225,6 +228,7 @@ class USCGUI {
 extern const unsigned char step_one;
 extern const char *windowLayout;
 extern const char *triggerNames[];
+extern const char *const spectrumModes[];
 extern const int sampleRates[];
 extern const int frameSizes[];
 
