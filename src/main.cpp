@@ -277,7 +277,8 @@ const char* thirdPartyMsg = // TODO: change this to be able to use TextLinkOpenU
 "Dear ImGui (https://github.com/ocornut/imgui)\n"
 "ImGui Knobs (https://github.com/altschuler/imgui-knobs)\n"
 "imgui_toggle (https://github.com/cmdwtf/imgui_toggle)\n"
-"PFFFT (https://github.com/marton78/pffft)";
+"PFFFT (https://github.com/marton78/pffft)\n"
+"ShowCQT (modified) (https://github.com/mfcc64/showcqt-js)\n";
 
 const char* licenseMsg =
 "Copyright (C) 2025 Eknous\n"

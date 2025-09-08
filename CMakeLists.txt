@@ -150,6 +150,8 @@ ${imgui_toggle_path}/imgui_toggle_presets.cpp
 ${imgui_toggle_path}/imgui_toggle_renderer.cpp
 ${imgui_toggle_path}/imgui_toggle.cpp
 
+${submodules_path}/showcqt-min/showcqt.c
+
 ${sources_path}/gui/consts.cpp
 ${sources_path}/gui/gui.cpp
 ${sources_path}/gui/wins/about.cpp
@@ -209,6 +211,7 @@ ${imgui_path}/misc/cpp
 ${imgui_path}/backends
 ${imgui_toggle_path}
 ${imgui_knobs_path}
+${submodules_path}/showcqt-min
 ${sources_path}
 ${sources_path}/audio
 ${sources_path}/audio/io

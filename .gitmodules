@@ -18,3 +18,6 @@
 [submodule "submodules/pffft"]
 	path = submodules/pffft
 	url = https://github.com/marton78/pffft.git
+[submodule "submodules/showcqt-min"]
+	path = submodules/showcqt-min
+	url = https://github.com/Eknous-P/showcqt-min.git

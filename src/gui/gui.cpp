@@ -56,21 +56,24 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   xyp.axisChan[0] = 1;
   xyp.axisChan[1] = 2;
 
-  sd = new spectrumData[channels];
-  if (!sd) return;
   FOR_RANGE(channels) {
-    sd[z].in=NULL;
-    sd[z].out=NULL;
-    sd[z].work=NULL;
-    sd[z].setup=NULL;
-    sd[z].color=tc[z].color;
-    sd[z].updateSetup=true;
-    sd[z].running=false;
+    sd.in=NULL;
+    sd.out=NULL;
+    sd.work=NULL;
+    sd.setup=NULL;
+    sd.cqt=NULL;
+    sd.updateSetup=true;
+    sd.running=false;
   }
 
-  sc.samples=2048;
+  sc.fftBins=2048;
+  sc.cqtBins=1200;
   sc.mode=0;
+  sc.plotType=0;
   sc.scale=1;
+  sc.colorModulate=false;
+
+  generateFFTFrequencies();
 
   wo.chanControlsOpen=new bool[channels];
   if (!wo.chanControlsOpen) return;
@@ -144,6 +147,23 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
 #endif
 
   memset(errorText, 0, 2048 * sizeof(char));
+
+  topKeyColor=ImVec4(0,0,0,.1);
+  bottomKeyColor=ImVec4(1,1,1,.1);
+
+  pianoColors[0]=&bottomKeyColor;
+  pianoColors[1]=&topKeyColor;
+  pianoColors[2]=&bottomKeyColor;
+  pianoColors[3]=&topKeyColor;
+  pianoColors[4]=&bottomKeyColor;
+  pianoColors[5]=&bottomKeyColor;
+  pianoColors[6]=&topKeyColor;
+  pianoColors[7]=&bottomKeyColor;
+  pianoColors[8]=&topKeyColor;
+  pianoColors[9]=&bottomKeyColor;
+  pianoColors[10]=&topKeyColor;
+  pianoColors[11]=&bottomKeyColor;
+
 
   ai = NULL;
   devs = NULL;
@@ -528,19 +548,40 @@ void USCGUI::updateAudioDevices() {
   if (outputDeviceS == -1) outputDeviceS=0;
 }
 
+void USCGUI::generateFFTFrequencies() {
+  fftFrequencies.clear();
+  switch (sc.scale&0xf) {
+    case 0: {
+      for (int i=0; i<sampleRate/2; i+=1000) {
+        fftFrequencies.push_back(i);
+      }
+      break;
+    }
+    case 1: {
+      int freq=0;
+      for (int j=10; j<sampleRate/2; j*=10) {
+        for (int i=1; i<10; i++) {
+          freq = i*j;
+          if (freq>sampleRate/2) break;
+          fftFrequencies.push_back(freq);
+        }
+        if (freq>sampleRate/2) break;
+      }
+      break;
+    }
+    default: break;
+  }
+}
+
 USCGUI::~USCGUI() {
   if (isGood) {
     if (rd) rd->destroyRender();
   }
-  if (sd) {
-    FOR_RANGE(channels) {
-      if (sd[z].in) pffft_aligned_free(sd[z].in);
-      if (sd[z].out) pffft_aligned_free(sd[z].out);
-      if (sd[z].work) pffft_aligned_free(sd[z].work);
-      if (sd[z].setup) pffft_destroy_setup(sd[z].setup);
-    }
-    delete[] sd;
-  }
+  if (sd.in) pffft_aligned_free(sd.in);
+  if (sd.out) pffft_aligned_free(sd.out);
+  if (sd.work) pffft_aligned_free(sd.work);
+  if (sd.setup) pffft_destroy_setup(sd.setup);
+  if (sd.cqt) delete sd.cqt;
   delete[] wo.chanControlsOpen;
   DELETE_PTR(rd)
   DELETE_DOUBLE_PTR(trigger, channels)

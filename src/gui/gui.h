@@ -19,6 +19,7 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #define USC_GUI_H
 
 #include <SDL.h>
+#include "showcqt.h"
 #include "pffft.h"
 #include "imgui.h"
 #include "imgui_stdlib.h"
@@ -118,21 +119,25 @@ class USCGUI {
       float *in, *out, *work;
       PFFFT_Setup* setup;
 
-      ImVec4 color;
+      ShowCQT* cqt;
+      
       bool updateSetup, running;
-    }* sd;
+    } sd;
 
     struct spectrumControls {
-      unsigned int samples;
+      unsigned int fftBins, cqtBins;
       // 0 - linear fft, 1 - constant-q
       int mode;
-      int octaves, perOctaveBins;
+      // 0 - line, 1 - bar
+      int plotType;
       // 2 nibbles per axis
       // 0 - none (linear)
       // 1 - log
-      // 2 - notes
       unsigned char scale;
+      bool colorModulate;
     } sc;
+
+    vector<int> fftFrequencies;
 
     bool fullscreen;
     ImGuiIO io;
@@ -169,8 +174,13 @@ class USCGUI {
     plotCursor HCursors[2], VCursors[2];
     bool showHCursors, showVCursors;
 
+    ImVec4 topKeyColor, bottomKeyColor;
+    ImVec4* pianoColors[12];
+
     bool plotDragX(float* v, const char* label, ImDrawList* dl, ImVec4 rect, ImU32 col, float v_min=-1.f, float v_max=1.f);
     bool plotDragY(float* v, const char* label, ImDrawList* dl, ImVec4 rect, ImU32 col, float v_min=-1.f, float v_max=1.f);
+
+    void generateFFTFrequencies();
 
 #ifdef PROGRAM_DEBUG
     nint triggerDebugBegin, triggerDebugEnd;
