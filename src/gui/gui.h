@@ -130,6 +130,8 @@ class USCGUI {
       int mode;
       // 0 - line, 1 - bar
       int plotType;
+      float fftXZoom, fftYZoom, fftXOffset, fftYOffset;
+      int cqtOctaves, cqtBaseNote;
       // 2 nibbles per axis
       // 0 - none (linear)
       // 1 - log

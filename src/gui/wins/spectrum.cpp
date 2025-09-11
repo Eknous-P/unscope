@@ -83,12 +83,28 @@ void USCGUI::drawSpectrumControls(bool* open) {
           UPDATE_X_SCALE
         }
         ImGui::Unindent();
+        if (ImGui::SliderFloat("X Zoom", &sc.fftXZoom, 1.0f, 10.0f)) {
+          if (sc.fftXZoom<1.0f) sc.fftXZoom=1.0f;
+          if (sc.fftXZoom>10.0f) sc.fftXZoom=10.0f;
+        }
+        if (ImGui::SliderFloat("X Offset", &sc.fftXOffset, 0.0f, 1.0f)) {
+          if (sc.fftXOffset<0.0f) sc.fftXOffset=0.0f;
+          if (sc.fftXOffset>1.0f) sc.fftXOffset=1.0f;
+        }
         break;
       }
       case 1: {
         if (ImGui::InputScalar("Width", ImGuiDataType_U32, &sc.cqtBins)) {
           if (sc.cqtBins > CQT_MAX_WIDTH) sc.cqtBins = CQT_MAX_WIDTH;
           sd.updateSetup=true;
+        }
+        if (ImGui::SliderInt("Octaves", &sc.cqtOctaves, 1, 10)) {
+          if (sc.cqtOctaves<1) sc.cqtOctaves=1;
+          if (sc.cqtOctaves>10) sc.cqtOctaves=10;
+        }
+        if (ImGui::SliderInt("Offset", &sc.cqtBaseNote, 0, 120)) {
+          if (sc.cqtBaseNote<0) sc.cqtBaseNote=0;
+          if (sc.cqtBaseNote>120) sc.cqtBaseNote=120;
         }
         break;
       }
@@ -189,7 +205,8 @@ void USCGUI::drawSpectrum(bool* open) {
           for (size_t j=0; j<fftFrequencies.size(); j++) {
             int i=fftFrequencies[j];
             char buf[16];
-            pos=size.x*i/(sampleRate/2.0f);
+            pos=sc.fftXZoom*size.x*(i/(sampleRate/2.0f)-sc.fftXOffset);
+            if (pos>size.x) break;
             dl->AddLine(
               origin+ImVec2(pos, 0),
               origin+ImVec2(pos, size.y),
@@ -212,7 +229,8 @@ void USCGUI::drawSpectrum(bool* open) {
           for (size_t j=0; j<fftFrequencies.size(); j++) {
             i=fftFrequencies[j];
             ImU32 color=0x22ffffff;
-            pos=size.x*(xScaleFunctions[sc.scale&0xf])(i/(sampleRate/2.0f));
+            pos=sc.fftXZoom*size.x*((xScaleFunctions[sc.scale&0xf])(i/(sampleRate/2.0f))-sc.fftXOffset);
+            if (pos>size.x) break;
             if (j%9==0) {
               color=0x44ffffff;
               { // if xlabel
@@ -237,22 +255,23 @@ void USCGUI::drawSpectrum(bool* open) {
       break;
     }
     case 1: {
-      float x=(size.x/10.f)*(9/12.f)-size.x/10.f;
+      float x=0;
+      const float max=12*sc.cqtOctaves, step=size.x/max;
       char buf[16];
-      for (int z = 0; z < 125; z++, x+=size.x/120.f) {
-        if (x<0) continue;
-        ImU32 color=(z%12==11)?0x44ffffff:0x22ffffff;
+      #define NOTE_OFFSET 4
+      for (int z = sc.cqtBaseNote; z < sc.cqtOctaves*12+sc.cqtBaseNote; z++, x+=step) {
+        ImU32 color=((z+NOTE_OFFSET)%12==0)?0x44ffffff:0x22ffffff;
         dl->AddLine(
           origin+ImVec2(x, 0.f),
           origin+ImVec2(x, size.y),
           color);
         dl->AddRectFilled(
           origin+ImVec2(x, 0.f),
-          origin+ImVec2(x+size.x/120.f, size.y),
-          ImGui::ColorConvertFloat4ToU32(*(pianoColors[(z+1)%12]))
+          origin+ImVec2(x+step, size.y),
+          ImGui::ColorConvertFloat4ToU32(*(pianoColors[(z+NOTE_OFFSET)%12]))
         );
-        if ((z)%12==0) { // if xlabel
-          snprintf(buf, 16, "C%d", (z+1)/12);
+        if ((z+NOTE_OFFSET)%12==0) { // if xlabel
+          snprintf(buf, 16, "C%d", (z+NOTE_OFFSET)/12);
           float _x=ImGui::CalcTextSize(buf).x;
           dl->AddText(
             origin+ImVec2(x-_x/2, size.y),
@@ -262,6 +281,7 @@ void USCGUI::drawSpectrum(bool* open) {
         }
         if (x>origin.x+size.x) break;
       }
+      #undef NOTE_OFFSET
       break;
     }
     default: break;
@@ -346,18 +366,26 @@ void USCGUI::drawSpectrum(bool* open) {
       fftPeak=0.0;
 #endif
       float mag=0.0f, y=0.0f;
-      const bool plotLine=sc.plotType==0, plotBar=sc.plotType==1;
-      if (plotLine) switch (sc.mode) {
-        case 0: scaledPlot=new ImVec2[sc.fftBins]; break;
-        case 1: scaledPlot=new ImVec2[sd.cqt->fft_size]; break;
-        default:  break;
+      bool plotLine=sc.plotType==0, plotBar=sc.plotType==1;
+      switch (sc.mode) {
+        case 0:
+          count=sc.fftBins;
+          break;
+        case 1:
+          count=(sc.cqtBins/10.0f)*sc.cqtOctaves;
+          break;
+        default: break;
+      }
+      if (plotLine) {
+        scaledPlot=new ImVec2[count];
+        if (!scaledPlot) plotLine=false;
+        memset(scaledPlot, 0, count*sizeof(ImVec2));
       }
       switch (sc.mode) {
         case 0: {
-          count=sc.fftBins;
           for (unsigned int i=0; i<count; i++) {
-            float curr = size.x*(xScaleFunctions[sc.scale&0xf])((float)i/count),
-                  next = size.x*(xScaleFunctions[sc.scale&0xf])((float)(i+1)/count);
+            float curr = sc.fftXZoom*size.x*((xScaleFunctions[sc.scale&0xf])((float)i/count)-sc.fftXOffset),
+                  next = sc.fftXZoom*size.x*((xScaleFunctions[sc.scale&0xf])((float)(i+1)/count)-sc.fftXOffset);
             mag = 2.0*sqrt(sd.out[i<<1] * sd.out[i<<1] + sd.out[(i<<1)+1] * sd.out[(i<<1)+1])/(float)count;
             y = 1.0-yScaleFunctions[sc.scale>>4](mag);
             if (plotLine) {
@@ -379,10 +407,14 @@ void USCGUI::drawSpectrum(bool* open) {
           break;
         }
         case 1: {
-          count=sd.cqt->t_size;
           const float step=size.x/count;
+          const int offset=(sc.cqtBins/120.0f)*sc.cqtBaseNote;
           for (unsigned int i=0; i<count; i++) {
-            y=1.0f-yScaleFunctions[sc.scale>>4](2.0f*sd.cqt->magOutput[i]);
+            if (i+offset>sd.cqt->t_size) {
+              count=i;
+              break;
+            }
+            y=1.0f-yScaleFunctions[sc.scale>>4](2.0f*sd.cqt->magOutput[i+offset]);
             if (plotLine) {
               scaledPlot[i].x = origin.x + step*i;
               scaledPlot[i].y = origin.y + size.y*y;

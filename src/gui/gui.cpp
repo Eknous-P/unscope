@@ -71,6 +71,12 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   sc.mode=0;
   sc.plotType=0;
   sc.scale=1;
+  sc.fftXOffset=0;
+  sc.fftYOffset=0;
+  sc.fftXZoom=1;
+  sc.fftYZoom=1;
+  sc.cqtOctaves=10;
+  sc.cqtBaseNote=0;
   sc.colorModulate=false;
 
   generateFFTFrequencies();
