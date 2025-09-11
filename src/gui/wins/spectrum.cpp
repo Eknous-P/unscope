@@ -67,9 +67,18 @@ void USCGUI::drawSpectrumControls(bool* open) {
     ImGui::Separator();
     switch (sc.mode) {
       case 0: {
+        if (!sd.running) {
+          ImGui::Text("invalid fft bin count! try %d", pffft_nearest_transform_size(sc.fftBins, PFFFT_REAL, 1));
+          ImGui::PushStyleColor(ImGuiCol_Border, 0xff0000ff);
+          ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+        }
         if (ImGui::InputScalar("Bins", ImGuiDataType_U32, &sc.fftBins)) {
           if (sc.fftBins > oscDataSize) sc.fftBins = oscDataSize;
           sd.updateSetup=true;
+        }
+        if (!sd.running) {
+          ImGui::PopStyleVar();
+          ImGui::PopStyleColor();
         }
         ImGui::Text("X scale:");
         ImGui::Indent();
@@ -288,6 +297,7 @@ void USCGUI::drawSpectrum(bool* open) {
   }
   for (int z = channels-1; z>=0; z--) {
     if (sd.updateSetup) {
+      printf(INFO_MSG "updating spectrum..." MSG_END);
       sd.updateSetup=false;
       sd.running=true;
       if (sd.in) {
@@ -316,23 +326,32 @@ void USCGUI::drawSpectrum(bool* open) {
         case 0: {
           sd.setup = pffft_new_setup(sc.fftBins*2, PFFFT_REAL);
           if (!sd.setup) {
+            printf(ERROR_MSG "failed to create pffft setup!" MSG_END);
             sd.running=false;
           }
           sd.out  = (float*)pffft_aligned_malloc(sizeof(float)*sc.fftBins*2);
           sd.work = (float*)pffft_aligned_malloc(sizeof(float)*sc.fftBins*2);
-          if (!(sd.out && sd.work)) sd.running=false;
+          if (!(sd.out && sd.work)) {
+            printf(ERROR_MSG "failed to allocate fft buffers!" MSG_END);
+            sd.running=false;
+          }
           break;
         }
         case 1: {         
           sd.cqt = new ShowCQT;
-          if (!sd.cqt) sd.running=false;
+          if (!sd.cqt) {
+            printf(ERROR_MSG "failed to create cqt!" MSG_END);
+            sd.running=false;
+          }
           CQT_init(sd.cqt, sampleRate, sc.cqtBins, size.y, 0, 100, 0);
           break;
         }
         default:
+          printf(ERROR_MSG "invalid mode!" MSG_END);
           sd.running=false;
           break;
       }
+      if (sd.running) printf(SUCCESS_MSG "spectrum ready!" MSG_END);
     }
     
     if (sd.running) {
@@ -378,7 +397,10 @@ void USCGUI::drawSpectrum(bool* open) {
       }
       if (plotLine) {
         scaledPlot=new ImVec2[count];
-        if (!scaledPlot) plotLine=false;
+        if (!scaledPlot) {
+          printf(ERROR_MSG "failed to allocate line plot vectors (how?\?)!" MSG_END);
+          plotLine=false;
+        }
         memset(scaledPlot, 0, count*sizeof(ImVec2));
       }
       switch (sc.mode) {
