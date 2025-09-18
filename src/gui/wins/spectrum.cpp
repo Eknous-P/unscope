@@ -149,7 +149,7 @@ void USCGUI::drawSpectrum(bool* open) {
   size.y   -= titleBar;
   // x scale labels (precalc)
   {
-    bottomTextSize=ImGui::CalcTextSize("10").y;
+    bottomTextSize=ImGui::CalcTextSize("1234567890k").y;
     size.y -= bottomTextSize;
   }
   // v scale labels
@@ -233,7 +233,7 @@ void USCGUI::drawSpectrum(bool* open) {
           break;
         }
         case 1: {
-          float pos=0, i;
+          float pos=0, prevPos=0, i;
           char buf[16];
           for (size_t j=0; j<fftFrequencies.size(); j++) {
             i=fftFrequencies[j];
@@ -242,20 +242,25 @@ void USCGUI::drawSpectrum(bool* open) {
             if (pos>size.x) break;
             if (j%9==0) {
               color=0x44ffffff;
-              { // if xlabel
+            }
+            { // if xlabel
+              if (i>=1000) {
+                snprintf(buf, 16, "%dk", (int)i/1000);
+              } else {
                 snprintf(buf, 16, "%d", (int)i);
-                float x=ImGui::CalcTextSize(buf).x;
-                dl->AddText(
-                  origin+ImVec2(pos-x/2, size.y),
-                  ImGui::GetColorU32(ImGuiCol_Text),
-                  buf
-                );
               }
+              float x=ImGui::CalcTextSize(buf).x;
+              if (pos-prevPos > x || j%9==0) dl->AddText(
+                origin+ImVec2(pos-x/2, size.y),
+                ImGui::GetColorU32(ImGuiCol_Text),
+                buf
+              );
             }
             dl->AddLine(
               origin+ImVec2(pos, 0),
               origin+ImVec2(pos, size.y),
               color);
+            prevPos=pos;
           }
           break;
         }

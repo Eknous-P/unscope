@@ -16,6 +16,7 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "gui.h"
+#include <imgui.h>
 
 bool USCGUI::isRunning() {
   return running;
@@ -280,7 +281,7 @@ void USCGUI::doFrame() {
   s=rd->renderPreLoop();
   switch (s) {
     case 1:
-      SDL_Delay(100);
+      if (!(ImGui::GetIO().ConfigFlags&ImGuiConfigFlags_ViewportsEnable)) SDL_Delay(100); // replace with viewports setting later
       break;
     case 0: break;
     default:

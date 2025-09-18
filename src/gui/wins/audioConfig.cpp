@@ -75,6 +75,8 @@ void USCGUI::drawAudioConfig(bool* open) {
       } else {
         sampleRate = audConf->sampleRate;
         ai->startAudio();
+        sd.updateSetup=true;
+        generateFFTFrequencies();
       }
       if (e==0) {
         wo.audioConfigOpen = false;
