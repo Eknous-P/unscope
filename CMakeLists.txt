@@ -94,6 +94,12 @@ set(SDL_OPENGL ${RENDER_OPENGL})
 set(SDL_DIRECTX ${RENDER_DIRECTX11} OR ${RENDER_DIRECTX9})
 set(SDL_PIPEWIRE OFF)
 
+# pffft
+# it shouldnt be this high up but it lacks custom target checks so this is a workaround
+set(PFFFT_USE_TYPE_DOUBLE OFF)
+add_subdirectory(${submodules_path}/pffft EXCLUDE_FROM_ALL)
+list(APPEND linked_libraries PFFFT)
+
 # sdl
 if (SYSTEM_SDL)
   pkg_check_modules(SDL sdl2 REQUIRED)
@@ -107,11 +113,6 @@ else()
   # list(APPEND linked_libraries SDL2)
   add_compile_definitions(NON_SYS_SDL)
 endif()
-
-# pffft
-set(PFFFT_USE_TYPE_DOUBLE OFF)
-add_subdirectory(${submodules_path}/pffft EXCLUDE_FROM_ALL)
-list(APPEND linked_libraries PFFFT)
 
 # portaudio
 set(PA_BUILD_SHARED_LIBS OFF CACHE BOOL "Build dynamic library" FORCE)
