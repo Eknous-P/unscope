@@ -24,6 +24,9 @@ extern "C" {
 #include <stdio.h>
 #include <memory.h>
 #include <math.h>
+#ifdef _WIN32
+#include <string.h> 
+#endif
 }
 
 typedef float AudioSample;
