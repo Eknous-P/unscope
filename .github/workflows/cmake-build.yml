@@ -25,22 +25,22 @@ jobs:
         submodues: recursive
 
     - name: Prepare environment
-      run: >
+      run: |
         sudo apt-get update
         sudo apt-get install libasound2-dev libpulse-dev libopengl-dev libxext-dev
         mkdir build
         cd build
 
     - name: Configure CMake
-      run: >
+      run: |
         cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DSYSTEM_SDL=OFF
 
     - name: Build
-      run: >
+      run: |
         make
 
     - name: Package
-      run: >
+      run: |
         PACKAGE_NAME=unscope_${{ matrix.config.packname }}.zip
         mkdir unscope
         mv ./unscope ./unscope/unscope
