@@ -15,27 +15,43 @@ jobs:
       matrix:
         build_type: [Debug]
         config:
-        - {name: 'Linux (latest)', os: ubuntu-latest, toolchain: ''}
+        - {name: 'Linux (latest)', os: ubuntu-latest, toolchain: '', packname: linux}
 
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodues: recursive
 
-    - name: Set reusable strings
-      # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
-      id: strings
-      shell: bash
-      run: |
-        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+    - name: Prepare environment
+      run: >
+        sudo apt update
+        sudo apt install libasound2-dev libpulse-dev libopengl-dev libxext-dev
+        mkdir build
+        cd build
 
     - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: >
-        ls
-          
+        cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DSYSTEM_SDL=OFF
 
     - name: Build
-      # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      run: echo "end"
+      run: >
+        make
+
+    - name: Package
+      run: >
+        PACKAGE_NAME=unscope_${{ matrix.config.packname }}.zip
+        mkdir unscope
+        mv ./unscope ./unscope/unscope
+        cp ../LICENSE ./unscope/LICENSE
+        cp ../README.md ./unscope/README.md
+        cp ../submodules/SDL/LICENSE.txt ./unscope/SDL_LICENSE.txt
+        zip -r ${PACKAGE_NAME} ./unscope
+        
+        
+    - name: Upload
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        path: unscope_*.zip
+        
