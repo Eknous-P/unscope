@@ -43,12 +43,11 @@ jobs:
     - name: Package
       run: |
         PACKAGE_NAME=unscope_${{ matrix.config.packname }}.zip
-        cd build
         mkdir unscope
-        mv ./unscope ./unscope/unscope
-        cp ../LICENSE ./unscope/LICENSE
-        cp ../README.md ./unscope/README.md
-        cp ../submodules/SDL/LICENSE.txt ./unscope/SDL_LICENSE.txt
+        mv build/unscope ./unscope/unscope
+        cp ./LICENSE ./unscope/LICENSE
+        cp ./README.md ./unscope/README.md
+        cp submodules/SDL/LICENSE.txt ./unscope/SDL_LICENSE.txt
         zip -r ${PACKAGE_NAME} ./unscope
         
         
