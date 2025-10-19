@@ -26,8 +26,8 @@ jobs:
 
     - name: Prepare environment
       run: >
-        sudo apt update
-        sudo apt install libasound2-dev libpulse-dev libopengl-dev libxext-dev
+        sudo apt-get update
+        sudo apt-get install libasound2-dev libpulse-dev libopengl-dev libxext-dev
         mkdir build
         cd build
 
