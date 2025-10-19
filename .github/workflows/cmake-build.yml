@@ -15,7 +15,7 @@ jobs:
       matrix:
         build_type: [Debug]
         config:
-        - {name: 'Linux (latest)', os: linux-lastest, toolchain: ''}
+        - {name: 'Linux (latest)', os: linux-latest, toolchain: ''}
 
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
