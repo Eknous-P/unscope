@@ -37,11 +37,13 @@ jobs:
 
     - name: Build
       run: |
+        cd build
         make
 
     - name: Package
       run: |
         PACKAGE_NAME=unscope_${{ matrix.config.packname }}.zip
+        cd build
         mkdir unscope
         mv ./unscope ./unscope/unscope
         cp ../LICENSE ./unscope/LICENSE
