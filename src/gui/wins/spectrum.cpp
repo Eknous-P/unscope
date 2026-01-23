@@ -187,19 +187,21 @@ void USCGUI::drawSpectrum(bool* open) {
   // y grid
   switch (sc.scale>>4) {
     case 0: { // linear
-      for (unsigned char z=1; z<((size.y>450)?20:10); z++) {
+      unsigned char lines=((size.y>450)?20:10);
+      for (unsigned char z=1; z<lines; z++) {
         dl->AddLine(
-          origin+ImVec2(0,size.y*z/10),
-          origin+ImVec2(size.x,size.y*z/10),
+          origin+ImVec2(0,size.y*z/lines),
+          origin+ImVec2(size.x,size.y*z/lines),
           0x44ffffff);
       }
       break;
     }
     case 1: { // db
-      for (unsigned char z=1; z<((size.y>450)?16:8); z++) {
+      unsigned char lines=((size.y>450)?16:8);
+      for (unsigned char z=1; z<lines; z++) {
         dl->AddLine(
-          origin+ImVec2(0,size.y*z/8),
-          origin+ImVec2(size.x,size.y*z/8),
+          origin+ImVec2(0,size.y*z/lines),
+          origin+ImVec2(size.x,size.y*z/lines),
           0x44ffffff);
       }
       break;
