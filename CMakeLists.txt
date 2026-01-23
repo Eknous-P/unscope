@@ -215,3 +215,6 @@ ${sources_path}/gui/render)
 target_compile_options(unscope PRIVATE ${compiler_options})
 target_link_libraries(unscope PRIVATE ${linked_libraries})
 
+message(STATUS "compiler options: " ${compiler_options})
+message(STATUS "linked libraries: " ${linked_libraries})
+
