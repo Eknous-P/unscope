@@ -16,6 +16,7 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "gui.h"
+#include <imgui.h>
 
 bool USCGUI::isRunning() {
   return running;
@@ -56,6 +57,31 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   xyp.axisChan[0] = 1;
   xyp.axisChan[1] = 2;
 
+  FOR_RANGE(channels) {
+    sd.in=NULL;
+    sd.out=NULL;
+    sd.work=NULL;
+    sd.setup=NULL;
+    sd.cqt=NULL;
+    sd.updateSetup=true;
+    sd.running=false;
+  }
+
+  sc.fftBins=2048;
+  sc.cqtBins=1200;
+  sc.mode=0;
+  sc.plotType=0;
+  sc.scale=1;
+  sc.fftXOffset=0;
+  sc.fftYOffset=0;
+  sc.fftXZoom=1;
+  sc.fftYZoom=1;
+  sc.cqtOctaves=10;
+  sc.cqtBaseNote=0;
+  sc.colorModulate=false;
+
+  generateFFTFrequencies();
+
   wo.chanControlsOpen=new bool[channels];
   if (!wo.chanControlsOpen) return;
   FOR_RANGE(channels) wo.chanControlsOpen[z]=true;
@@ -66,10 +92,13 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   wo.aboutOpen           = false;
   wo.cursorsOpen         = true;
   wo.audioConfigOpen     = false;
+  wo.spectrumOpen        = true;
+  wo.spectrumControlsOpen= true;
 #ifdef PROGRAM_DEBUG
   wo.metricsOpen         = false;
   wo.paramDebugOpen      = false;
   wo.triggerDebugOpen    = false;
+  wo.fftDebugOpen        = false;
 #endif
 
   oscDataSize = up->audioBufferSize;
@@ -125,6 +154,23 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
 #endif
 
   memset(errorText, 0, 2048 * sizeof(char));
+
+  topKeyColor=ImVec4(0,0,0,.1);
+  bottomKeyColor=ImVec4(1,1,1,.1);
+
+  pianoColors[0]=&bottomKeyColor;
+  pianoColors[1]=&topKeyColor;
+  pianoColors[2]=&bottomKeyColor;
+  pianoColors[3]=&topKeyColor;
+  pianoColors[4]=&bottomKeyColor;
+  pianoColors[5]=&bottomKeyColor;
+  pianoColors[6]=&topKeyColor;
+  pianoColors[7]=&bottomKeyColor;
+  pianoColors[8]=&topKeyColor;
+  pianoColors[9]=&bottomKeyColor;
+  pianoColors[10]=&topKeyColor;
+  pianoColors[11]=&bottomKeyColor;
+
 
   ai = NULL;
   devs = NULL;
@@ -235,7 +281,7 @@ void USCGUI::doFrame() {
   s=rd->renderPreLoop();
   switch (s) {
     case 1:
-      SDL_Delay(100);
+      if (!(ImGui::GetIO().ConfigFlags&ImGuiConfigFlags_ViewportsEnable)) SDL_Delay(100); // replace with viewports setting later
       break;
     case 0: break;
     default:
@@ -271,6 +317,8 @@ void USCGUI::drawGUI() {
     if (ImGui::BeginMenu("Scopes")) {
       ImGui::MenuItem("Main Scope",NULL,&wo.mainScopeOpen);
       ImGui::MenuItem("Scope (XY)",NULL,&wo.xyScopeOpen);
+      ImGui::Separator();
+      ImGui::MenuItem("Frequency Spectrum",NULL,&wo.spectrumOpen);
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Controls")) {
@@ -280,6 +328,9 @@ void USCGUI::drawGUI() {
         ImGui::MenuItem(buf,NULL,&wo.chanControlsOpen[i]);
       }
       ImGui::MenuItem("XY Scope Controls",NULL,&wo.xyScopeControlsOpen);
+      ImGui::Separator();
+      ImGui::MenuItem("Spectrum Controls",NULL,&wo.spectrumControlsOpen);
+      ImGui::Separator();
       ImGui::MenuItem("Global Controls",NULL,&wo.globalControlsOpen);
       ImGui::MenuItem("Cursors",NULL,&wo.cursorsOpen);
       ImGui::EndMenu();
@@ -290,6 +341,7 @@ void USCGUI::drawGUI() {
       ImGui::Separator();
       ImGui::MenuItem("Parameters...",NULL,&wo.paramDebugOpen);
       ImGui::MenuItem("Trigger...",NULL,&wo.triggerDebugOpen);
+      ImGui::MenuItem("FFT...",NULL,&wo.fftDebugOpen);
       ImGui::EndMenu();
     }
 #endif
@@ -302,6 +354,7 @@ void USCGUI::drawGUI() {
   drawGlobalControls(&wo.globalControlsOpen);
   drawChanControls(&wo.chanControlsOpen);
   drawXYScopeControls(&wo.xyScopeControlsOpen);
+  drawSpectrumControls(&wo.spectrumControlsOpen);
 
   drawAbout(&wo.aboutOpen);
   drawCursors(&wo.cursorsOpen);
@@ -324,10 +377,12 @@ void USCGUI::drawGUI() {
 
   drawMainScope(&wo.mainScopeOpen);
   drawXYScope(&wo.xyScopeOpen);
+  drawSpectrum(&wo.spectrumOpen);
 #ifdef PROGRAM_DEBUG
   if (wo.metricsOpen) ImGui::ShowMetricsWindow(&wo.metricsOpen);
   drawTriggerDebug(&wo.triggerDebugOpen);
   drawParamDebug(&wo.paramDebugOpen);
+  drawFFTDebug(&wo.fftDebugOpen);
 #endif
 }
 
@@ -500,10 +555,40 @@ void USCGUI::updateAudioDevices() {
   if (outputDeviceS == -1) outputDeviceS=0;
 }
 
+void USCGUI::generateFFTFrequencies() {
+  fftFrequencies.clear();
+  switch (sc.scale&0xf) {
+    case 0: {
+      for (int i=0; i<sampleRate/2; i+=1000) {
+        fftFrequencies.push_back(i);
+      }
+      break;
+    }
+    case 1: {
+      int freq=0;
+      for (int j=10; j<sampleRate/2; j*=10) {
+        for (int i=1; i<10; i++) {
+          freq = i*j;
+          if (freq>sampleRate/2) break;
+          fftFrequencies.push_back(freq);
+        }
+        if (freq>sampleRate/2) break;
+      }
+      break;
+    }
+    default: break;
+  }
+}
+
 USCGUI::~USCGUI() {
   if (isGood) {
     if (rd) rd->destroyRender();
   }
+  if (sd.in) pffft_aligned_free(sd.in);
+  if (sd.out) pffft_aligned_free(sd.out);
+  if (sd.work) pffft_aligned_free(sd.work);
+  if (sd.setup) pffft_destroy_setup(sd.setup);
+  if (sd.cqt) delete sd.cqt;
   delete[] wo.chanControlsOpen;
   DELETE_PTR(rd)
   DELETE_DOUBLE_PTR(trigger, channels)

@@ -94,6 +94,12 @@ set(SDL_OPENGL ${RENDER_OPENGL})
 set(SDL_DIRECTX ${RENDER_DIRECTX11} OR ${RENDER_DIRECTX9})
 set(SDL_PIPEWIRE OFF CACHE BOOL "use sdl pipewire")
 
+# pffft
+# it shouldnt be this high up but it lacks custom target checks so this is a workaround
+set(PFFFT_USE_TYPE_DOUBLE OFF)
+add_subdirectory(${submodules_path}/pffft EXCLUDE_FROM_ALL)
+list(APPEND linked_libraries PFFFT)
+
 # sdl
 if (SYSTEM_SDL)
   pkg_check_modules(SDL sdl2 REQUIRED)
@@ -147,6 +153,8 @@ ${imgui_toggle_path}/imgui_toggle_presets.cpp
 ${imgui_toggle_path}/imgui_toggle_renderer.cpp
 ${imgui_toggle_path}/imgui_toggle.cpp
 
+${submodules_path}/showcqt-min/showcqt.c
+
 ${sources_path}/gui/consts.cpp
 ${sources_path}/gui/gui.cpp
 ${sources_path}/gui/wins/about.cpp
@@ -154,6 +162,7 @@ ${sources_path}/gui/wins/ctrls.cpp
 ${sources_path}/gui/wins/oscs.cpp
 ${sources_path}/gui/wins/cursors.cpp
 ${sources_path}/gui/wins/audioConfig.cpp
+${sources_path}/gui/wins/spectrum.cpp
 
 ${sources_path}/gui/render/abstract.cpp
 ${sources_path}/gui/render/render_sdl2renderer.cpp)
@@ -205,6 +214,7 @@ ${imgui_path}/misc/cpp
 ${imgui_path}/backends
 ${imgui_toggle_path}
 ${imgui_knobs_path}
+${submodules_path}/showcqt-min
 ${sources_path}
 ${sources_path}/audio
 ${sources_path}/audio/io

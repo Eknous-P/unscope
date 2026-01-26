@@ -24,6 +24,9 @@ extern "C" {
 #include <stdio.h>
 #include <memory.h>
 #include <math.h>
+#ifdef _WIN32
+#include <string.h> 
+#endif
 }
 
 typedef float AudioSample;
@@ -48,7 +51,7 @@ typedef unsigned long long int nint;
 #define MSG_END "\033[0m\n"
 
 // frequently used stuff
-#define FOR_RANGE(c) for (unsigned char z = 0; z < c; z++)
+#define FOR_RANGE(c) for (unsigned char z = 0; z < (c); z++)
 #define NEW_DOUBLE_PTR(x,type,size,count) \
   x = new type*[count]; \
   if (x) { \
@@ -159,11 +162,17 @@ struct AudioDevice {
     dev(0),
     host(0)
     {memset(devName, 0, 256);}
-  AudioDevice(unsigned char di, int dv, int h, const char* dn) {
+  AudioDevice(unsigned char di, int dv, int h, char* dn) {
     direction = di;
     dev = dv;
     host = h;
     memcpy(devName, dn, 256);
+  }
+  AudioDevice(unsigned char di, int dv, int h, const char* dn) {
+    direction = di;
+    dev = dv;
+    host = h;
+    strcpy(devName, dn);
   }
 };
 

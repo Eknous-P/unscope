@@ -92,8 +92,8 @@ void USCGUI::drawMainScope(bool* open) {
       for (unsigned char c=0; c<channels; c++) {
         p1.y = origin.y + size.y * ((z+1)/10.f) - textSize.y/2;
         p1.x = origin.x + textSize.x * c;
-        float v = -((signed char)z-4)/4.f / tc[c].yScale - tc[c].yOffset;
-        snprintf(buf, 16, v>=0?" %1.3f":"%1.3f", v);
+        float v = -(((signed char)z-4)/5.f + tc[c].yOffset) / tc[c].yScale;
+        snprintf(buf, 16, v>0?" %1.3f":"%1.3f", v);
         dl->AddText(p1, ImGui::GetColorU32(ImGuiCol_Text), buf);
       }
     }
@@ -120,15 +120,11 @@ void USCGUI::drawMainScope(bool* open) {
   }
 
   // waveforms
-  // ImVec2 *scaledWave=NULL;
-  ImVec2* scaledWave;
+  ImVec2 *scaledWave=NULL;
   bool* triggered = new bool[channels];
   FOR_RANGE(channels) {
     unsigned char trigChan = (shareTrigger>0)?(shareTrigger-1):z;
-    if (shareTrigger>0 && trigChan == z) {
-      memset(triggered, trigger[trigChan]->trigger(tc[trigChan].traceSize), channels);
-    }
-    else triggered[z] = trigger[z]->trigger(tc[z].traceSize);
+    triggered[z] = trigger[trigChan]->trigger(tc[trigChan].traceSize);
   }
   for (int c = channels-1; c >= 0; c--) {
     if (!tc[c].enable) continue;

@@ -19,7 +19,9 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #define USC_GUI_H
 
 #include <SDL.h>
-#include <imgui.h>
+#include "showcqt.h"
+#include "pffft.h"
+#include "imgui.h"
 #include "imgui_stdlib.h"
 
 #include "shared.h"
@@ -91,10 +93,13 @@ class USCGUI {
       bool aboutOpen;
       bool cursorsOpen;
       bool audioConfigOpen;
+      bool spectrumOpen;
+      bool spectrumControlsOpen;
 #ifdef PROGRAM_DEBUG
       bool metricsOpen;
       bool paramDebugOpen;
       bool triggerDebugOpen;
+      bool fftDebugOpen;
 #endif
     };
 
@@ -109,6 +114,32 @@ class USCGUI {
         pos = p;
       }
     };
+
+    struct spectrumData {
+      float *in, *out, *work;
+      PFFFT_Setup* setup;
+
+      ShowCQT* cqt;
+      
+      bool updateSetup, running;
+    } sd;
+
+    struct spectrumControls {
+      unsigned int fftBins, cqtBins;
+      // 0 - linear fft, 1 - constant-q
+      int mode;
+      // 0 - line, 1 - bar
+      int plotType;
+      float fftXZoom, fftYZoom, fftXOffset, fftYOffset;
+      int cqtOctaves, cqtBaseNote;
+      // 2 nibbles per axis
+      // 0 - none (linear)
+      // 1 - log
+      unsigned char scale;
+      bool colorModulate;
+    } sc;
+
+    vector<int> fftFrequencies;
 
     bool fullscreen;
     ImGuiIO io;
@@ -145,11 +176,17 @@ class USCGUI {
     plotCursor HCursors[2], VCursors[2];
     bool showHCursors, showVCursors;
 
+    ImVec4 topKeyColor, bottomKeyColor;
+    ImVec4* pianoColors[12];
+
     bool plotDragX(float* v, const char* label, ImDrawList* dl, ImVec4 rect, ImU32 col, float v_min=-1.f, float v_max=1.f);
     bool plotDragY(float* v, const char* label, ImDrawList* dl, ImVec4 rect, ImU32 col, float v_min=-1.f, float v_max=1.f);
 
+    void generateFFTFrequencies();
+
 #ifdef PROGRAM_DEBUG
     nint triggerDebugBegin, triggerDebugEnd;
+    double fftPeak;
 #endif
     char errorText[2048];
 
@@ -170,15 +207,18 @@ class USCGUI {
   
     void drawMainScope(bool* open);
     void drawXYScope(bool* open);
+    void drawSpectrum(bool* open);
 
 #ifdef PROGRAM_DEBUG
     void drawTriggerDebug(bool* open);
     void drawParamDebug(bool* open);
+    void drawFFTDebug(bool* open);
 #endif
 
     void drawGlobalControls(bool* open);
     void drawChanControls(bool** open);
     void drawXYScopeControls(bool* open);
+    void drawSpectrumControls(bool* open);
 
     void drawAbout(bool* open);
     void drawSettings(bool* open);
@@ -200,6 +240,7 @@ class USCGUI {
 extern const unsigned char step_one;
 extern const char *windowLayout;
 extern const char *triggerNames[];
+extern const char *const spectrumModes[];
 extern const int sampleRates[];
 extern const int frameSizes[];
 
