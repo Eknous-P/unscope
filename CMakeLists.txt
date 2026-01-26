@@ -106,7 +106,7 @@ else()
   add_subdirectory(${sdl_path} EXCLUDE_FROM_ALL)
   set(SDL_INCLUDE_DIRS ${sdl_path}/include)
   # list(APPEND linked_libraries SDL2::SDL2)
-  list(APPEND linked_libraries SDL2 SDL2-static)
+  list(APPEND linked_libraries SDL2-static)
   add_compile_definitions(NON_SYS_SDL)
 endif()
 
