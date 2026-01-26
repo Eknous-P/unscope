@@ -1,6 +1,6 @@
 /*
 unscope - an audio oscilloscope
-Copyright (C) 2025 Eknous
+Copyright (C) 2025-2026 Eknous
 
 unscope is free software: you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
@@ -281,7 +281,7 @@ const char* thirdPartyMsg = // TODO: change this to be able to use TextLinkOpenU
 "ShowCQT (modified) (https://github.com/mfcc64/showcqt-js)\n";
 
 const char* licenseMsg =
-"Copyright (C) 2025 Eknous\n"
+"Copyright (C) 2025-2026 Eknous\n"
 "\n"
 "unscope is free software: you can redistribute it and/or modify it under the\n"
 "terms of the GNU General Public License as published by the Free Software\n"

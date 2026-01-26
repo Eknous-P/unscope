@@ -1,6 +1,6 @@
 /*
 unscope - an audio oscilloscope
-Copyright (C) 2025 Eknous
+Copyright (C) 2025-2026 Eknous
 
 unscope is free software: you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
