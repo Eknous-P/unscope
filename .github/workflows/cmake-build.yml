@@ -39,6 +39,7 @@ jobs:
       run: |
         cd build
         make
+        tree || (sudo apt install tree && tree)
 
     - name: Package
       run: |
