@@ -27,7 +27,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install libasound2-dev libpulse-dev libgl-dev libopengl-dev libxext-dev libsndio-dev
+        sudo apt-get install libasound2-dev libpulse-dev libgl-dev libopengl-dev libxext-dev libsndio-dev tree
 
     - name: Configure CMake
       run: |
@@ -38,8 +38,7 @@ jobs:
     - name: Build
       run: |
         cd build
-        make
-        tree || (sudo apt install tree && tree)
+        make || tree
 
     - name: Package
       run: |
