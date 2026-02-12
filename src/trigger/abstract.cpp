@@ -17,16 +17,14 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 
 #include "trigger.h"
 
-void Trigger::setupTrigger(unscopeParams* up, float* cb) {
-  uParams  = up;
-  chanBuf  = cb;
+void Trigger::setupTrigger(DataBuffer* buf) {
+  buffer=buf;
 
   params = {
 
   };
 
   triggered = false;
-  alignRegionSize = 0;
 }
 
 vector<TriggerParam> Trigger::getParams() {
@@ -41,14 +39,10 @@ bool Trigger::getTriggered() {
   return triggered;
 }
 
-nint Trigger::getAlignRegionSize() {
-  return alignRegionSize;
-}
-
 nint Trigger::getTriggerIndex() {
   return triggerIndex;
 }
 
 Trigger::~Trigger(){
-  for (TriggerParam i:params) i.destroy();
+  for (TriggerParam& i:params) i.destroy();
 }

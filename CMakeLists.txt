@@ -12,6 +12,7 @@ set(compiler_options)
 set(gui_sources)
 set(audio_sources)
 set(trigger_sources)
+set(param_sources)
 
 # paths
 set(sources_path    ${CMAKE_SOURCE_DIR}/src/)
@@ -81,7 +82,7 @@ if(RENDER_DIRECTX11)
   list(APPEND linked_libraries "d3d11.lib")
 endif()
 
-set(SDL_AUDIO OFF CACHE BOOL "use sdl audio")
+set(SDL_AUDIO ON CACHE BOOL "use sdl audio")
 set(SDL_HAPTIC OFF CACHE BOOL "use sdl haptic")
 set(SDL_JOYSTICK OFF CACHE BOOL "use sdl joystick")
 set(SDL_HIDAPI OFF CACHE BOOL "use sdl hidapi")
@@ -122,18 +123,24 @@ add_subdirectory(${submodules_path}/portaudio EXCLUDE_FROM_ALL)
 list(APPEND linked_libraries PortAudio)
 
 # sources
-list(APPEND audio_sources
-${sources_path}/audio/audio.cpp
-${sources_path}/audio/io/abstract.cpp
-${sources_path}/audio/io/audio_pa.cpp
+list(APPEND data_sources
+${sources_path}/data/data.cpp
+${sources_path}/data/driver/abstract.cpp
+${sources_path}/data/driver/dummy.cpp
+${sources_path}/data/driver/audio_common.cpp
+${sources_path}/data/driver/data_portaudio.cpp
+${sources_path}/data/driver/data_sdl.cpp
 )
 
 list(APPEND trigger_sources
-${sources_path}/trigger/params.cpp
 ${sources_path}/trigger/abstract.cpp
 ${sources_path}/trigger/fallback.cpp
 ${sources_path}/trigger/analog.cpp
 ${sources_path}/trigger/smooth.cpp
+)
+
+list(APPEND param_sources
+${sources_path}/param/param.cpp
 )
 
 list(APPEND gui_sources
@@ -159,10 +166,9 @@ ${sources_path}/gui/consts.cpp
 ${sources_path}/gui/gui.cpp
 ${sources_path}/gui/wins/about.cpp
 ${sources_path}/gui/wins/ctrls.cpp
-${sources_path}/gui/wins/oscs.cpp
-${sources_path}/gui/wins/cursors.cpp
-${sources_path}/gui/wins/audioConfig.cpp
-${sources_path}/gui/wins/spectrum.cpp
+${sources_path}/gui/wins/scopes.cpp
+${sources_path}/gui/wins/dataConfig.cpp
+# ${sources_path}/gui/wins/spectrum.cpp
 
 ${sources_path}/gui/render/abstract.cpp
 ${sources_path}/gui/render/render_sdl2renderer.cpp)
@@ -191,7 +197,7 @@ if(IS_32BIT)
   add_compile_definitions(BUILD_32BIT)
 endif()
 
-list(APPEND unscope_srcs ${gui_sources} ${audio_sources} ${trigger_sources} ${sources_path}/main.cpp)
+list(APPEND unscope_srcs ${gui_sources} ${data_sources} ${trigger_sources} ${param_sources} ${sources_path}/main.cpp)
 
 # project
 
@@ -216,8 +222,9 @@ ${imgui_toggle_path}
 ${imgui_knobs_path}
 ${submodules_path}/showcqt-min
 ${sources_path}
-${sources_path}/audio
-${sources_path}/audio/io
+${sources_path}/param
+${sources_path}/data
+${sources_path}/data/io
 ${sources_path}/trigger
 ${sources_path}/gui
 ${sources_path}/gui/render)

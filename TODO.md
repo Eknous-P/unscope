@@ -1,3 +1,4 @@
-- configs IN A FILE
-  - layout and settings
-- aux scope and audio processing
+# TODO for `data`:
+- fix xy scope
+- change all params to use class members
+- CONFIG

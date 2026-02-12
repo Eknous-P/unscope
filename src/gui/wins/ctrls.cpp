@@ -15,254 +15,356 @@ You should have received a copy of the GNU General Public License along with
 unscope. If not, see <https://www.gnu.org/licenses/>. 
 */
 
+#include "shared.h"
 #include "gui.h"
 #include "imgui-knobs.h"
 #include "imgui_toggle.h"
-#include <imgui.h>
+#include <algorithm> // std::find
+#include <iterator> // std::advance
 
-void USCGUI::drawGlobalControls(bool* open) {
+void USCGUI::drawChannelManager(bool* open) {
   if (!*open) return;
-  ImGui::Begin("Global Controls",open);
-  ImGui::Toggle("share parameters",&shareParams);
+  if (ImGui::Begin("Global Controls",open)) {
+    if (ImGui::BeginTable("Scopes", 7)) {
+      ImGui::TableSetupColumn("c1", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("c2", ImGuiTableColumnFlags_WidthStretch);
+      ImGui::TableSetupColumn("c3", ImGuiTableColumnFlags_WidthStretch);
+      ImGui::TableSetupColumn("c4", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("c5", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("c6", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableSetupColumn("c7", ImGuiTableColumnFlags_WidthFixed);
+      ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+      ImGui::TableNextColumn();
+      ImGui::TableNextColumn();
+      ImGui::Text("buffer");
+      ImGui::TableNextColumn();
+      ImGui::Text("trigger");
+      ImGui::TableNextColumn();
+      for (int i=0; i<scopes.size(); i++) {
+        ImGui::PushID(i);
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        // remove button
+        if (ImGui::Button("×##scopeRemove")) {
+          // first erase the channel pointer from the window its bound to
+          vector<ScopeChannel*>& winChans = scopeWindows[scopes[i]->whichWindow].channels;
+          auto whichWinChan = std::find(winChans.begin(), winChans.end(), scopes[i]);
+          winChans.erase(whichWinChan);
+          // then erase the pointer from the channels vector
+          auto whichChan = scopes.begin();
+          std::advance(whichChan,i);
+          scopes.erase(whichChan);
+          // (maybe i shouldnt need to keep all the pinters in a single vector first...)
+          ImGui::PopID();
+          continue;
+        }
+        ImGui::TableNextColumn();
+        // buffer list
+        if (ImGui::BeginCombo("##scopeBufferSelect", scopes[i]->getBuffer()->getName().c_str())) {
+          ImGui::BeginDisabled();
+          ImGui::Selectable("select a buffer...");
+          ImGui::EndDisabled();
+          ImGui::Separator();
+          char comboStrBuf[1024];
+          int m=0;
+          for (int j=0; j<data->getDriverCount(); j++) {
+            for (int k=0; k<data->getDriver(j)->getBufferCount(); k++) {
+              DataBuffer* buf = data->getDriver(j)->getBuffer(k);
+              snprintf(comboStrBuf, 1024, "%d: %s - %s", m++, data->getDriver(j)->getName(), buf->getName().c_str());
+              if (ImGui::Selectable(comboStrBuf, scopes[i]->getBuffer() == buf)) {
+                scopes[i]->setBuffer(buf);
+              }
+            }
+          }
+          ImGui::EndCombo();
+        }
+        ImGui::TableNextColumn();
+        // trigger list
+        if (ImGui::BeginCombo("##scopeTriggerSelect", triggerNames[scopes[i]->getTriggerNum()])) {
+          for (int j=0; j<TRIG_MAX; j++) {
+            if (ImGui::Selectable(triggerNames[j], j==scopes[i]->getTriggerNum())) {
+              scopes[i]->setTriger((Triggers)j);
+            }
+          }
+          ImGui::EndCombo();
+        }
+        ImGui::TableNextColumn();
+        // show waveform
+        ImGui::Checkbox("##scopeShowWaveform", &scopes[i]->showWaveform);
+        ImGui::TableNextColumn();
+        // trigger to this
+        bool sharingOnThis = shareTrigger-1 == i; 
+        if (ImGui::Button("S##scopeShareTrig")) {
+          if (sharingOnThis) {
+            shareTrigger = 0;
+          } else {
+            shareTrigger = i + 1;
+          }
+        }
+        ImGui::TableNextColumn();
+        // show controls
+        ImGui::Checkbox("##scopeShowControls", &scopes[i]->showControls);
+        ImGui::TableNextColumn();
+        // color picker
+        ImGui::ColorButton("color", scopes[i]->color);
+        if (ImGui::BeginPopupContextItem("##xycol",ImGuiPopupFlags_MouseButtonLeft)) {
+          ImGui::ColorPicker4("##xycoledit",(float*)&scopes[i]->color);
+          ImGui::EndPopup();
+        }
+        ImGui::PopID();
+      }
+      ImGui::TableNextRow();
+      ImGui::TableNextColumn();
+      if (ImGui::Button("+##scopeAdd")) {
+        
+      }
+      if (ImGui::BeginPopupContextItem("new scope", ImGuiPopupFlags_MouseButtonLeft)) {
+        char comboStrBuf[256];
+        if (ImGui::BeginCombo("Select Buffer...##scopeBufferSelect", newScopeBuffer==NULL?"":newScopeBuffer->getName().c_str())) {
+          int m=0;
+          for (int j=0; j<data->getDriverCount(); j++) {
+            for (int k=0; k<data->getDriver(j)->getBufferCount(); k++) {
+              DataBuffer* buf = data->getDriver(j)->getBuffer(k);
+              snprintf(comboStrBuf, 256, "%d: %s - %s", m++, data->getDriver(j)->getName(), buf->getName().c_str());
+              if (ImGui::Selectable(comboStrBuf, newScopeBuffer == buf)) {
+                newScopeBuffer = buf;
+              }
+            }
+          }
+          if (ImGui::Selectable("Dummy Buffer", newScopeBuffer == &dummyBuffer)) {
+            newScopeBuffer = &dummyBuffer;
+          }
+          ImGui::EndCombo();
+        }
+        snprintf(comboStrBuf, 64, "Scope Window %d", newScopeWin+1);
+        if (ImGui::BeginCombo("Select Window...##scopeWindowSelect", comboStrBuf)) {
+          for (int j=0; j<scopeWindows.size(); j++) {
+            snprintf(comboStrBuf, 64, "Scope Window %d", j+1);
+            if (ImGui::Selectable(comboStrBuf, false)) {
+              newScopeWin = j;
+            }
+          }
+          ImGui::EndCombo();
+        }
+        if (ImGui::Button("Add Scope")) {
+          ScopeChannel* scope = new ScopeChannel(newScopeBuffer);
+          scope->whichWindow = newScopeWin;
+          scopes.push_back(scope);
+          scopeWindows[newScopeWin].channels.push_back(scope);
+          newScopeBuffer = NULL;
+          newScopeWin = 0;
+          ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+      }
+      ImGui::EndTable();
+    }
+  }  
+  ImGui::End();
+}
 
-  bool trigShare = shareTrigger>0;
-  if (ImGui::Toggle("share trigger",&trigShare)) {
-    shareTrigger=-shareTrigger;
+void USCGUI::ScopeChannel::drawControls(bool trigControlsDisabled) {
+  char strbuf[64];
+  snprintf(strbuf, 64, "chan%pCtrl", this);
+  if (ImGui::BeginTable(strbuf, 4)) {
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+    float timeScaleMax=1000.0f*buffer->getSize()/buffer->getSampleRate();
+    // timebase
+    if (ImGuiKnobs::Knob(
+      "timebase", &timeScale,
+      0.0f, timeScaleMax, 0.0f,
+      "%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE,
+      0, 15)) {
+      if (timeScale < 0.0f) timeScale = 0.0f;
+      if (timeScale > timeScaleMax) timeScale = timeScaleMax;
+      samples = msToSamples(timeScale, buffer->getSampleRate());
+    }
+    ImGui::TableNextColumn();
+    // y scale
+    if (ImGuiKnobs::Knob(
+      "y scale", &yScale,
+      0.0f, 10.0f, 0.0f,
+      "%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE,
+      ImGuiKnobFlags_NoInput, 15)) {
+      if (yScale <  0.0f) yScale =  0.0f;
+      if (yScale > 10.0f) yScale = 10.0f;
+    }
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) yScale = 1.0f;
+    ImGui::TableNextColumn();
+    // x offset
+    if (ImGuiKnobs::Knob(
+      "x offset", &xOffset,
+      -1.0f, 1.0f, 0.0f,
+      "%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE,
+      ImGuiKnobFlags_NoInput, 15)) {
+      if (xOffset < -1.0f) xOffset = -1.0f;
+      if (xOffset >  1.0f) xOffset =  1.0f;
+    }
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xOffset = 0.0f;
+    ImGui::TableNextColumn();
+    // y offset
+    if (ImGuiKnobs::Knob(
+      "y offset", &yOffset,
+      -1.0f, 1.0f, 0.0f,
+      "%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE,
+      ImGuiKnobFlags_NoInput, 15)) {
+      if (yOffset < -1.0f) yOffset = -1.0f;
+      if (yOffset >  1.0f) yOffset =  1.0f;
+    }
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) yOffset = 0.0f;
+    
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+    ImGui::BeginDisabled(trigControlsDisabled);
+    {
+      int counter=0;
+      for (int i=0; i<trigger->getParams().size(); i++) {
+        trigger->getParams()[i].draw();
+        counter++;
+        ImGui::TableNextColumn();
+        if (counter==3) {
+          counter = 0;
+          ImGui::TableNextRow();
+        }
+      }
+    }
+    ImGui::EndDisabled();
+
+    ImGui::EndTable();
   }
-  if (ImGui::BeginCombo("trigger##trigMode",triggerNames[trigNum-TRIG_FALLBACK])) {
-    for (unsigned char i = TRIG_FALLBACK; i < TRIG_MAX; i++) {
-      if (ImGui::Selectable(triggerNames[i-TRIG_FALLBACK],i == trigNum)) {
-        trigNum = Triggers(i);
-        setupTrigger(trigNum);
+}
+
+void USCGUI::drawChanControls() {
+  if (scopeContainChannelControls) return;
+  char strbuf[64];
+  for (int i=0; i<scopes.size(); i++) {
+    snprintf(strbuf, 64, "Channel %d controls", i+1);
+    if (ImGui::Begin(strbuf, &scopes[i]->showControls)) {
+      scopes[i]->drawControls(shareTrigger<0 || (shareTrigger-1 == i));
+    }
+    ImGui::End();
+  }
+}
+
+void USCGUI::XYScope::drawControls(USCData* data) {
+  if (!showControls) return;
+  ImGui::ColorButton("color", color);
+  if (ImGui::BeginPopupContextItem("##xycol",ImGuiPopupFlags_MouseButtonLeft)) {
+    ImGui::ColorPicker4("##xycoledit",(float*)&color);
+    ImGui::EndPopup();
+  }
+  // buffer selectors
+  if (!buffersOK) {
+    ImGui::PushStyleColor(ImGuiCol_Border, 0xff0000ff);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+  }
+  char comboStrBuf[1024];
+  int m=0;
+  if (ImGui::BeginCombo("x channel", xChan->getName().c_str())) {
+    for (int j=0; j<data->getDriverCount(); j++) {
+      for (int k=0; k<data->getDriver(j)->getBufferCount(); k++) {
+        DataBuffer* buf = data->getDriver(j)->getBuffer(k);
+        snprintf(comboStrBuf, 1024, "%d: %s - %s", m++, data->getDriver(j)->getName(), buf->getName().c_str());
+        if (ImGui::Selectable(comboStrBuf, xChan->getBuffer() == buf)) {
+          setBuffers(buf, yChan);
+        }
       }
     }
     ImGui::EndCombo();
   }
-  
-  ImGui::Toggle("enable fallback trigger", &doFallback);
-  if (ImGui::Toggle("single shot trigger", &singleShot)) {
-    updateAudio = true;
+  ImGui::SameLine();
+  if (ImGui::Button("swap")) {
+    DataBuffer* temp = xChan;
+    xChan = yChan;
+    yChan = temp;
   }
-  if (singleShot) {
-    bool popColor = false;
-    if (updateAudio) {
-      ImGui::PushStyleColor(ImGuiCol_Button, 0xff00ff00);
-      popColor = true;
-    }
-    if (ImGui::Button("trigger!##singleTrigButton")) {
-      updateAudio = true;
-    }
-    if (popColor) ImGui::PopStyleColor();
-  } else {
-    ImGui::Toggle("update audio",&updateAudio);
-  }
-
-  if (ai->isOutputting()) {
-    if (ImGui::SliderFloat("loopback volume", &loopbackVolume, 0.0f, 1.0f)) {
-      ai->setLoopback(loopbackVolume);
-    }
-  }
-  ImGui::End();
-}
-
-#define UPDATE_TIMEBASE {float oscWidthS = (float)oscDataSize/(float)sampleRate*1000.0f; \
-  if (tc[i].timebase < 0.0f) tc[i].timebase = 0.0f; \
-  if (tc[i].timebase > oscWidthS) tc[i].timebase = oscWidthS; \
-  tc[i].traceSize = (nint)(sampleRate * tc[i].timebase / (settings.msDiv?100.f:1000.0f));}
-
-void USCGUI::drawChanControls(bool** open) {
-  for (unsigned char i = 0; i < channels; i++) {
-    char strbuf[64];
-    snprintf(strbuf,64,"Channel %d Controls",i+1);
-    if (!(*open)[i]) continue;
-    ImGui::Begin(strbuf,&(*open)[i]);
-    ImGui::Toggle("enable", &tc[i].enable);
-
-    ImGui::SameLine();
-    bool trigShare = shareTrigger > 0;
-
-    unsigned char mainCh = 0;
-    if (trigShare) mainCh = shareTrigger - 1;
-
-    bool disable = (trigShare && i != shareTrigger - 1) || (shareParams && i != mainCh);
-
-    ImGui::BeginDisabled(!trigShare);
-    ImGui::SameLine();
-    snprintf(strbuf,64, "##chan%dtrig", i+1);
-    if (trigShare) if (ImGui::RadioButton(strbuf,shareTrigger==i+1)) shareTrigger=i+1;
-    if (ImGui::IsItemHovered()) {
-      ImGui::SetTooltip("trigger to this channel");
-    }
-    ImGui::EndDisabled();
-
-    ImGui::SameLine();
-    // color picker
-    snprintf(strbuf,64, "channel %d color", i+1);
-    ImGui::ColorButton(strbuf, tc[i].color);
-    snprintf(strbuf,64, "##chan%dcol", i+1);
-    if (ImGui::BeginPopupContextItem(strbuf,ImGuiPopupFlags_MouseButtonLeft)) {
-      snprintf(strbuf,64, "##chan%dcoledit", i+1);
-      ImGui::ColorPicker4(strbuf,(float*)&tc[i].color);
-      ImGui::EndPopup();
-    }
-
-    snprintf(strbuf,64, "##chan%dctrls", i+1);
-    if (ImGui::BeginTable(strbuf, 4)) {
-      ImGui::TableSetupColumn("c1",ImGuiTableColumnFlags_WidthFixed);
-      ImGui::TableSetupColumn("c2",ImGuiTableColumnFlags_WidthStretch);
-      ImGui::TableSetupColumn("c3",ImGuiTableColumnFlags_WidthFixed);
-      ImGui::TableSetupColumn("c4",ImGuiTableColumnFlags_WidthFixed);
-      ImGui::TableNextRow();
-      ImGui::TableNextColumn();
-        // timebase knob
-        ImGui::BeginDisabled(disable);
-        tc[i].timebase = tc[i].traceSize * 1000.0f / sampleRate;
-        if (ImGuiKnobs::Knob("timebase", &tc[i].timebase, 0, (float)oscDataSize/(float)sampleRate*1000.0f, 0.0f, settings.msDiv?"%g ms/div":"%g ms", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
-          UPDATE_TIMEBASE;
-        }
-        if (disable) if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-          if (shareParams) {
-            ImGui::SetTooltip("shared with channel %d", mainCh + 1);
-          } else {
-            ImGui::SetTooltip("triggering on channel %d", shareTrigger);
-          }
-        }
-      ImGui::TableNextColumn();
-        // y scale knob
-        ImGui::EndDisabled();
-        if (ImGuiKnobs::Knob("y scale", &tc[i].yScale, 0.25f, 10.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, 0, 15)) {
-          if (tc[i].yScale < 0.0f) tc[i].yScale = 0.0f;
-        }
-        if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) tc[i].yScale = 1.0f;
-
-      ImGui::TableNextColumn();
-        // x offset knob
-        if (ImGuiKnobs::Knob("x offset", &tc[i].xOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
-          if (tc[i].xOffset < -1.0f) tc[i].xOffset = -1.0f;
-          if (tc[i].xOffset >  1.0f) tc[i].xOffset =  1.0f;
-        }
-        if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) tc[i].xOffset = 0.0f;
-
-      ImGui::TableNextColumn();
-        // y offset knob
-        if (ImGuiKnobs::Knob("y offset", &tc[i].yOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
-          if (tc[i].yOffset < -1.0f) tc[i].yOffset = -1.0f;
-          if (tc[i].yOffset >  1.0f) tc[i].yOffset =  1.0f;
-        }
-        if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) tc[i].yOffset = 0.0f;
-      ImGui::EndTable();
-    }
-    // trigger options
-    snprintf(strbuf,64, "##chan%dtrigctrls", i+1);
-    if (ImGui::BeginTable(strbuf, 4)) {
-      ImGui::TableSetupColumn("c1",ImGuiTableColumnFlags_WidthFixed);
-      ImGui::TableSetupColumn("c2",ImGuiTableColumnFlags_WidthFixed);
-      ImGui::TableSetupColumn("c3",ImGuiTableColumnFlags_WidthFixed);
-      ImGui::TableSetupColumn("c4",ImGuiTableColumnFlags_WidthFixed);
-      ImGui::TableNextRow();
-      ImGui::TableNextColumn();
-      unsigned char counter=0, buttonCounter=0;
-      ImGui::BeginDisabled(disable);
-      for (TriggerParam p : trigger[i]->getParams()) {
-        p.draw();
-        if (disable) {
-          if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-            if (shareParams) {
-              ImGui::SetTooltip("shared with channel %d", mainCh + 1);
-            } else {
-              ImGui::SetTooltip("triggering on channel %d", shareTrigger);
-            }
-          }
-        }
-        if (p.getType()!=TP_TOGGLE) {
-          if (counter==3) ImGui::TableNextRow();
-          ImGui::TableNextColumn();
-          ++counter&=3;
-        } else {
-          if (buttonCounter==3) {
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            ++counter&=3;
-          }
-          ++buttonCounter&=3;
+  m=0;
+  if (ImGui::BeginCombo("y channel", yChan->getName().c_str())) {
+    for (int j=0; j<data->getDriverCount(); j++) {
+      for (int k=0; k<data->getDriver(j)->getBufferCount(); k++) {
+        DataBuffer* buf = data->getDriver(j)->getBuffer(k);
+        snprintf(comboStrBuf, 1024, "%d: %s - %s", m++, data->getDriver(j)->getName(), buf->getName().c_str());
+        if (ImGui::Selectable(comboStrBuf, yChan->getBuffer() == buf)) {
+          setBuffers(xChan, buf);
         }
       }
-      ImGui::EndDisabled();
-
-      ImGui::EndTable();
     }
-    
-    ImGui::End();
-
-    if (shareParams && i != mainCh) {
-      tc[i].traceSize = tc[mainCh].traceSize;
-      tc[i].timebase = tc[mainCh].timebase;
-      // UPDATE_TIMEBASE;
-      for (unsigned char j = 0; j < trigger[i]->getParams().size(); j++) {
-        TriggerParam p = trigger[i]->getParams()[j];
-        memcpy(p.getValuePtr(),trigger[mainCh]->getParams()[j].getValuePtr(),TriggerParamTypeSize[p.getType()]);
-      }
+    ImGui::EndCombo();
+  }
+  if (!buffersOK) {
+    ImGui::PopStyleColor();
+    ImGui::PopStyleVar();
+    ImGui::Text("cannot use buffer of different sizes/sample rates!");
+  }
+  // knobs
+  if (ImGui::BeginTable("xyScopeCtrls", 3)) {
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
+    float maxTime = (xChan->getSize() / xChan->getSampleRate()) * 1000.0f;
+    if (maxTime > 1000.0f) maxTime = 1000.0f;
+    if (ImGuiKnobs::Knob("persistence", &persistence,
+      0.0f, maxTime, 0.0f,
+      NULL, ImGuiKnobVariant_Stepped,
+      KNOBS_SIZE, 0, 15)) {
+        if (persistence < 0.0f) persistence = 0.0f;
+        if (persistence > maxTime) persistence = maxTime;
+        sampleLen = msToSamples(persistence, xChan->getSampleRate());
     }
+    RIGHTCLICK_EXACT_INPUT(&persistence, ImGuiDataType_Float, {
+      if (persistence < 0.0f) persistence = 0.0f;
+      if (persistence > maxTime) persistence = maxTime;
+      sampleLen = msToSamples(persistence, xChan->getSampleRate());
+    })
+    ImGui::TableNextColumn();
+    ImGuiKnobs::Knob("x scale", &xScale,
+      0.5f, 4.0f, 0.0f,
+      "%g", ImGuiKnobVariant_Stepped,
+      KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xScale = 1.0f;
+    RIGHTCLICK_EXACT_INPUT(&xScale, ImGuiDataType_Float, {
+      if (xScale < 0.25f) xScale=0.25f;
+      if (xScale > 4.0f) xScale=4.0f;
+    })
+    ImGui::TableNextColumn();
+    ImGuiKnobs::Knob("y scale", &yScale,
+      0.5f, 4.0f, 0.0f,
+      "%g", ImGuiKnobVariant_Stepped,
+      KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) yScale = 1.0f;
+    RIGHTCLICK_EXACT_INPUT(&yScale, ImGuiDataType_Float, {
+      if (yScale < 0.25f) yScale=0.25f;
+      if (yScale > 4.0f) yScale=4.0f;
+    })
+    ImGui::TableNextRow();
+    ImGui::EndTable();
+
+    ImGui::TableNextColumn();
+    ImGuiKnobs::Knob("intensity", &color.w,
+      0.0f, 1.0f, 0.0f,
+      "%g", ImGuiKnobVariant_Stepped,
+      KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
+    ImGui::TableNextColumn();
+    ImGuiKnobs::Knob("x offset", &xOffset,
+      -1.0f, 1.0f, 0.0f,
+      "%g", ImGuiKnobVariant_Stepped,
+      KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xOffset = 0.0f;
+    ImGui::TableNextColumn();
+    ImGuiKnobs::Knob("y offset", &yOffset,
+      -1.0f, 1.0f, 0.0f,
+      "%g", ImGuiKnobVariant_Stepped,
+      KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) yOffset = 0.0f;
+
+    ImGui::EndTable();
   }
 }
 
 void USCGUI::drawXYScopeControls(bool* open) {
-  if (!*open || channels < 2) return;
-  ImGui::Begin("XY Scope Controls",open);
-  if (ImGui::BeginTable("##xycontrols",3)) {
-    ImGui::TableNextRow();
-    ImGui::TableNextColumn();
-
-    float maxTime = ((float)up->audioBufferSize / sampleRate) * 1000.0f;
-    if (maxTime > 1000.0f) maxTime = 1000.0f;
-    nint maxBuf = (nint)(sampleRate * maxTime / 1000.0f);
-    xyp.persistence = ((float)xyp.sampleLen / sampleRate) * 1000.0f;
-    if (ImGuiKnobs::Knob("persistence", &xyp.persistence, 0.0f, maxTime, 0.0f,NULL, ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15)) {
-      xyp.sampleLen = sampleRate * xyp.persistence / 1000.0f;
-      if (xyp.sampleLen > maxBuf) xyp.sampleLen = maxBuf;
-    }
-    RIGHTCLICK_EXACT_INPUT(&xyp.persistence, ImGuiDataType_Float, {if (xyp.persistence<0.0f) {xyp.persistence=0.0f;} if (xyp.persistence>maxTime) {xyp.persistence=maxTime;} xyp.sampleLen = (nint)(sampleRate * xyp.persistence / 1000.0f);})
-    ImGui::TableNextColumn();
-
-    ImGuiKnobs::Knob("x scale", &xyp.xScale, 0.5f, 4.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
-    if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.xScale = 1.0f;
-    RIGHTCLICK_EXACT_INPUT(&xyp.yScale, ImGuiDataType_Float, {if (xyp.yScale<0.25f) {xyp.yScale=0.25f;} if (xyp.yScale>4.0f) {xyp.yScale=4.0f;}})
-    ImGui::TableNextColumn();
-    ImGuiKnobs::Knob("y scale", &xyp.yScale, 0.5f, 4.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput|ImGuiKnobFlags_ValueTooltip, 15);
-    if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.yScale = 1.0f;
-    RIGHTCLICK_EXACT_INPUT(&xyp.xScale, ImGuiDataType_Float, {if (xyp.xScale<0.25f) {xyp.xScale=0.25f;} if (xyp.xScale>4.0f) {xyp.xScale=4.0f;}})
-    ImGui::TableNextRow();
-
-    ImGui::TableNextColumn();
-    ImGuiKnobs::Knob("intensity", &xyp.color.w, 0.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
-    ImGui::TableNextColumn();
-    ImGuiKnobs::Knob("x offset", &xyp.xOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
-    if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.xOffset = 0.0f;
-    ImGui::TableNextColumn();
-    ImGuiKnobs::Knob("y offset", &xyp.yOffset, -1.0f, 1.0f, 0.0f,"%g", ImGuiKnobVariant_Stepped, KNOBS_SIZE, ImGuiKnobFlags_NoInput, 15);
-    if (ImGui::IsItemClicked(ImGuiMouseButton_Middle)) xyp.yOffset = 0.0f;
-    ImGui::EndTable();
+  if (!*open) return;
+  if (ImGui::Begin("XY Scope Controls", open)) {
+    xyScope.drawControls(data);
   }
-
-  ImGui::Text("axis channels (x/y):");
-  if (ImGui::InputScalarN("##axisChan", ImGuiDataType_U8, xyp.axisChan, 2, &step_one, NULL, "ch %d", 0)) {
-    if (xyp.axisChan[0] < 1) xyp.axisChan[0] = 1;
-    if (xyp.axisChan[0] > channels) xyp.axisChan[0] = channels;
-    if (xyp.axisChan[1] < 1) xyp.axisChan[1] = 1;
-    if (xyp.axisChan[1] > channels) xyp.axisChan[1] = channels;
-  }
-  ImGui::SameLine();
-  if (ImGui::Button("swap")) {
-    unsigned char temp = xyp.axisChan[0];
-    xyp.axisChan[0] = xyp.axisChan[1];
-    xyp.axisChan[1] = temp;
-  }
-
-  ImGui::ColorButton("color", xyp.color);
-  if (ImGui::BeginPopupContextItem("##xycol",ImGuiPopupFlags_MouseButtonLeft)) {
-    ImGui::ColorPicker4("##xycoledit",(float*)&xyp.color);
-    ImGui::EndPopup();
-  }
-
   ImGui::End();
 }

@@ -15,9 +15,9 @@ You should have received a copy of the GNU General Public License along with
 unscope. If not, see <https://www.gnu.org/licenses/>. 
 */
 
-#include "audio/audio.h"
-#include "gui/gui.h"
-#include "../shared.h"
+#include "data.h"
+#include "gui.h"
+#include "shared.h"
 
 float clamp(float a) {
   if (a > 1.0f) return 1.0f;
@@ -31,212 +31,167 @@ const char* getErrorMsg(int e) {
 
 int main(int argc, char** argv) {
   int e;
-  unscopeParams params;
-  AudioConfig audConf;
-
-  audConf.frameSize        = 512;   // N samples
-  audConf.inputChannels    = 2;     // N (1-3)
-  audConf.outputChannels   = 2;     // N (1-3)
-  audConf.sampleRate       = 48000; // Hz (only common values?)
-  audConf.inputDevice      = 0;     // internal ID, gets overwritten anyway
-  audConf.outputDevice     = 0;     // ^
-
-  params.audioBufferSize   = 65536; // N samples
-  params.timebase          = 60;    // ms
-  params.xyPersist         = 40;    // ms
-  params.scale             = 1.0f;  // (no unit)
-  params.trigger           = 0.0f;  // (no unit)
-#ifdef USE_DIRECTX11
-  params.renderer = USC_RENDER_DIRECTX11;
-#else
-#ifdef USE_OPENGL
-  params.renderer = USC_RENDER_OPENGL2;
-#else
-// #ifdef USE_DIRECTX9 // i give up....
-//   params.renderer = USC_RENDER_DIRECTX9;
-// #else
-  params.renderer = USC_RENDER_SDLRENDERER2;
-// #endif
-#endif
-#endif
 
   // parse arguments
-  if (argc > 1) {
-    unsigned char flagStartIndex = 1;
-    int value = 0;
-    for (int i = 1; i < argc; i += 2) {
-      if (argv[i][0] == '-') {
-        flagStartIndex = 1;
-        if (argv[i][1] == '-') {
-          flagStartIndex = 2;
-        }
-        if (argv[i][flagStartIndex + 1] == 0) {
-          switch (argv[i][flagStartIndex]) {
-            case UPARAM_ABOUT:
-              printf("%s%s", verMsg, aboutMsg);
-              return 0;
-            case UPARAM_HELP:
-              printf("%s%s", verMsg, helpMsg);
-              return 0;
-            case UPARAM_LICENSE:
-              printf("%s%s", verMsg, licenseMsg);
-              return 0;
-            case UPARAM_VERSION:
-              printf("%s", verMsg);
-              return 0;
-            default: break;
-          }
-          if (i + 1 == argc) {
-            printf(ERROR_MSG "no value for argument %s given" MSG_END, argv[i]);
-            continue;
-          }
-          try {
-            value = std::stoi(argv[i + 1]);
-          } catch (...) {
-            printf(ERROR_MSG "invalid argument for %s given: %s" MSG_END, argv[i], argv[i + 1]);
-            continue;
-          }
-          switch (argv[i][flagStartIndex]) {
-            case UPARAM_BUFFERSIZE:
-              params.audioBufferSize = value;
-              break;
-            case UPARAM_FRAMESIZE:
-              audConf.frameSize = value;
-              break;
-            case UPARAM_CHANNELCOUNT: {
-              if (value > 3) {
-                printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
-                continue;
-              }
-              audConf.inputChannels  = value;
-              audConf.outputChannels = value;
-              break;
-            }
-            case UPARAM_SAMPLERATE: {
-              if ((value%8000)!=0 && (value%11025)!=0) {
-                printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
-                continue;
-              }
-              audConf.sampleRate = value;
-              break;
-            }
-            default: break;
-          }
-        } else {
-          if (strcmp(&argv[i][flagStartIndex], "help") == 0) {
-            printf("%s%s", verMsg, helpMsg);
-            return 0;
-          } else if (strcmp(&argv[i][flagStartIndex], "about") == 0) {
-            printf("%s%s", verMsg, aboutMsg);
-            return 0;
-          } else if (strcmp(&argv[i][flagStartIndex], "license") == 0) {
-            printf("%s%s", verMsg, licenseMsg);
-            return 0;
-          } else if (strcmp(&argv[i][flagStartIndex], "version") == 0) {
-            printf("%s", verMsg);
-            return 0;
-          }
-          if (i + 1 == argc) {
-            printf(ERROR_MSG "no value for argument %s given" MSG_END, argv[i]);
-            continue;
-          }
-          try {
-            value = std::stoi(argv[i + 1]);
-          } catch (...) {
-            printf(ERROR_MSG "invalid argument for %s given: %s" MSG_END, argv[i], argv[i + 1]);
-            continue;
-          }
-          if (value < 0) {
-            printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
-            continue;
-          }
-          if (strcmp(argv[i] + flagStartIndex, "bufsize") == 0) {
-            params.audioBufferSize = value;
-            continue;
-          } else if (strcmp(argv[i] + flagStartIndex, "framesize") == 0) {
-            audConf.frameSize = value;
-            continue;
-          } else if (strcmp(argv[i] + flagStartIndex, "channels") == 0) {
-            if (value > 3) {
-              printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
-              continue;
-            }
-            audConf.inputChannels = value;
-            audConf.outputChannels = value;
-            continue;
-          } else if (strcmp(argv[i] + flagStartIndex, "inputChannels") == 0) {
-            if (value > 3) {
-              printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
-              continue;
-            }
-            audConf.inputChannels = value;
-            continue;
-          } else if (strcmp(argv[i] + flagStartIndex, "outputChannels") == 0) {
-            if (value > 3) {
-              printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
-              continue;
-            }
-            audConf.outputChannels = value;
-            continue;
-          } else if (strcmp(argv[i] + flagStartIndex, "samplerate") == 0) {
-            if ((value%8000)!=0 && (value%11025)!=0) { // i bet some odd sample rate will not be caught by this
-              printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
-              continue;
-            }
-            audConf.sampleRate = value;
-            continue;
-          }
-        }
-      } else {
-        printf(ERROR_MSG "cannot parse argument %s" MSG_END, argv[i]);
-      }
-    }
-  };
+  // if (argc > 1) {
+  //   unsigned char flagStartIndex = 1;
+  //   int value = 0;
+  //   for (int i = 1; i < argc; i += 2) {
+  //     if (argv[i][0] == '-') {
+  //       flagStartIndex = 1;
+  //       if (argv[i][1] == '-') {
+  //         flagStartIndex = 2;
+  //       }
+  //       if (argv[i][flagStartIndex + 1] == 0) {
+  //         switch (argv[i][flagStartIndex]) {
+  //           case UPARAM_ABOUT:
+  //             printf("%s%s", verMsg, aboutMsg);
+  //             return 0;
+  //           case UPARAM_HELP:
+  //             printf("%s%s", verMsg, helpMsg);
+  //             return 0;
+  //           case UPARAM_LICENSE:
+  //             printf("%s%s", verMsg, licenseMsg);
+  //             return 0;
+  //           case UPARAM_VERSION:
+  //             printf("%s", verMsg);
+  //             return 0;
+  //           default: break;
+  //         }
+  //         if (i + 1 == argc) {
+  //           printf(ERROR_MSG "no value for argument %s given" MSG_END, argv[i]);
+  //           continue;
+  //         }
+  //         try {
+  //           value = std::stoi(argv[i + 1]);
+  //         } catch (...) {
+  //           printf(ERROR_MSG "invalid argument for %s given: %s" MSG_END, argv[i], argv[i + 1]);
+  //           continue;
+  //         }
+  //         switch (argv[i][flagStartIndex]) {
+  //           case UPARAM_BUFFERSIZE:
+  //             params.audioBufferSize = value;
+  //             break;
+  //           case UPARAM_FRAMESIZE:
+  //             audConf.frameSize = value;
+  //             break;
+  //           case UPARAM_CHANNELCOUNT: {
+  //             if (value > 3) {
+  //               printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
+  //               continue;
+  //             }
+  //             audConf.inputChannels  = value;
+  //             audConf.outputChannels = value;
+  //             break;
+  //           }
+  //           case UPARAM_SAMPLERATE: {
+  //             if ((value%8000)!=0 && (value%11025)!=0) {
+  //               printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
+  //               continue;
+  //             }
+  //             audConf.sampleRate = value;
+  //             break;
+  //           }
+  //           default: break;
+  //         }
+  //       } else {
+  //         if (strcmp(&argv[i][flagStartIndex], "help") == 0) {
+  //           printf("%s%s", verMsg, helpMsg);
+  //           return 0;
+  //         } else if (strcmp(&argv[i][flagStartIndex], "about") == 0) {
+  //           printf("%s%s", verMsg, aboutMsg);
+  //           return 0;
+  //         } else if (strcmp(&argv[i][flagStartIndex], "license") == 0) {
+  //           printf("%s%s", verMsg, licenseMsg);
+  //           return 0;
+  //         } else if (strcmp(&argv[i][flagStartIndex], "version") == 0) {
+  //           printf("%s", verMsg);
+  //           return 0;
+  //         }
+  //         if (i + 1 == argc) {
+  //           printf(ERROR_MSG "no value for argument %s given" MSG_END, argv[i]);
+  //           continue;
+  //         }
+  //         try {
+  //           value = std::stoi(argv[i + 1]);
+  //         } catch (...) {
+  //           printf(ERROR_MSG "invalid argument for %s given: %s" MSG_END, argv[i], argv[i + 1]);
+  //           continue;
+  //         }
+  //         if (value < 0) {
+  //           printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
+  //           continue;
+  //         }
+  //         if (strcmp(argv[i] + flagStartIndex, "bufsize") == 0) {
+  //           params.audioBufferSize = value;
+  //           continue;
+  //         } else if (strcmp(argv[i] + flagStartIndex, "framesize") == 0) {
+  //           audConf.frameSize = value;
+  //           continue;
+  //         } else if (strcmp(argv[i] + flagStartIndex, "channels") == 0) {
+  //           if (value > 3) {
+  //             printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
+  //             continue;
+  //           }
+  //           audConf.inputChannels = value;
+  //           audConf.outputChannels = value;
+  //           continue;
+  //         } else if (strcmp(argv[i] + flagStartIndex, "inputChannels") == 0) {
+  //           if (value > 3) {
+  //             printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
+  //             continue;
+  //           }
+  //           audConf.inputChannels = value;
+  //           continue;
+  //         } else if (strcmp(argv[i] + flagStartIndex, "outputChannels") == 0) {
+  //           if (value > 3) {
+  //             printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
+  //             continue;
+  //           }
+  //           audConf.outputChannels = value;
+  //           continue;
+  //         } else if (strcmp(argv[i] + flagStartIndex, "samplerate") == 0) {
+  //           if ((value%8000)!=0 && (value%11025)!=0) { // i bet some odd sample rate will not be caught by this
+  //             printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
+  //             continue;
+  //           }
+  //           audConf.sampleRate = value;
+  //           continue;
+  //         }
+  //       }
+  //     } else {
+  //       printf(ERROR_MSG "cannot parse argument %s" MSG_END, argv[i]);
+  //     }
+  //   }
+  // };
 
-  USCGUI g(&params, &audConf);
+  USCGUI gui;
 
-  e = g.init();
-  if (e != 0) {
+  e = gui.init(USC_RENDER_OPENGL2);
+  if (e) {
     printf(ERROR_MSG "error in initializing GUI! %d:%s" MSG_END, e, getErrorMsg(e));
     return 1;
   }
 
-  USCAudio i(&audConf, params.audioBufferSize);
+  USCData data;
 
-  if (i.initIO(AUDIO_PORTAUDIO)) {
-    printf(ERROR_MSG "failed to init audio io!" MSG_END);
+  e = data.addDriver(DATA_PORTAUDIO);
+  if (e) {
+    printf(ERROR_MSG "oh no!! %d" MSG_END, e);
     return 1;
   }
-  if (i.getAvailDevices() < 1) {
-    printf(ERROR_MSG "no devices found!" MSG_END);
+
+  gui.attachData(&data);
+
+  while (gui.isRunning()) {
+    gui.doFrame();
   }
 
-  g.attachAudioInput(&i);
-
-  audConf.inputDevice = i.getDefaultInputDevice();
-  audConf.outputDevice = -1;
-
-  if (i.initAudio()) {
-    printf(ERROR_MSG "failed to init audio!" MSG_END);
-    i.deinitIO();
-    return 2;
-  }
-  if (i.startAudio()) {
-    printf(ERROR_MSG "failed to start audio!" MSG_END);
-    i.deinitAudio();
-    i.deinitIO();
-    return 3;
+  for (int i=0; i<data.getDriverCount(); i++) {
+    data.dispatchDriverCommand(i, DRIVER_STOP_CALLBACK);
+    data.removeDriver(i);
   }
 
-  g.updateAudioDevices();
-
-  while (g.isRunning()) {
-    g.doFrame();
-  }
-
-  i.stopAudio();
-  i.deinitAudio();
-  i.deinitIO();
 
   return 0;
 }

@@ -21,18 +21,17 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #define LOG_F_LEVEL 1000.0f
 #define LOG_FUNC(x) log(x*LOG_F_LEVEL+1.f)/log(LOG_F_LEVEL+1.f)
 
-void TriggerSmooth::setupTrigger(unscopeParams* up, float* cb) {
-  uParams = up;
-  chanBuf = cb;
+void TriggerSmooth::setupTrigger(DataBuffer* buf) {
+  buffer = buf;
 
-  smoothBuf = new float[up->audioBufferSize];
+  smoothBuf = new float[buffer->getSize()];
 
   triggerLevel = 0.0f;
 
   params = {
-    TriggerParam(TP_KNOBUNIT,false,"smoothing"),
-    TriggerParam(TP_KNOBUNIT,false,"level ratio"),
-    TriggerParam(TP_TOGGLE,false,"trigger on minimum"),
+    TriggerParam(PARAM_KNOBUNIT,false,"smoothing"),
+    TriggerParam(PARAM_KNOBUNIT,false,"level ratio"),
+    TriggerParam(PARAM_TOGGLE,false,"trigger on minimum"),
   };
 
   params[0].setValue<float>(.9f);
@@ -44,18 +43,13 @@ void TriggerSmooth::setupTrigger(unscopeParams* up, float* cb) {
   logSmooth  = 0.f;
 
   triggered = true;
-  alignRegionSize = 0;
-}
-
-vector<TriggerParam> TriggerSmooth::getParams() {
-  return params;
 }
 
 bool TriggerSmooth::trigger(nint windowSize) {
   int iter = 0;
   triggered = false;
   int PRECALC_RANGE = windowSize;
-  nint begin = uParams->audioBufferSize - windowSize;
+  nint begin = buffer->getSize() - windowSize;
   const bool useMin = params[2].getValue<bool>();
   if (begin < PRECALC_RANGE) PRECALC_RANGE = 0;
   float smoothLvl = params[0].getValue<float>();
@@ -65,10 +59,10 @@ bool TriggerSmooth::trigger(nint windowSize) {
   }
   // smooth waveform
   memset(smoothBuf, 0xff, (begin-PRECALC_RANGE)*sizeof(float));
-  smoothBuf[begin - PRECALC_RANGE] = chanBuf[begin - PRECALC_RANGE] * (1.0f - logSmooth);
+  smoothBuf[begin - PRECALC_RANGE] = buffer->getValueScaled(begin - PRECALC_RANGE) * (1.0f - logSmooth);
   float smoothPeak = useMin?1.0f:-1.0f;
-  for (nint i = begin + 1 - PRECALC_RANGE; i < uParams->audioBufferSize; i++) {
-    smoothBuf[i] = (logSmooth * smoothBuf[i-1] + (1.0f - logSmooth) * chanBuf[i]);
+  for (nint i = begin + 1 - PRECALC_RANGE; i < buffer->getSize(); i++) {
+    smoothBuf[i] = (logSmooth * smoothBuf[i-1] + (1.0f - logSmooth) * buffer->getValueScaled(i));
     if (i < begin) continue;
     if (useMin) {
       if (smoothBuf[i] < smoothPeak) {
@@ -82,7 +76,7 @@ bool TriggerSmooth::trigger(nint windowSize) {
   }
   while (iter--) {
     smoothPeak = useMin?1.0f:-1.0f;
-    for (nint i = begin + 1 - PRECALC_RANGE; i < uParams->audioBufferSize; i++) {
+    for (nint i = begin + 1 - PRECALC_RANGE; i < buffer->getSize(); i++) {
       smoothBuf[i] = (logSmooth * smoothBuf[i-1] + (1.0f - logSmooth) * smoothBuf[i]);
       if (i < begin) continue;
       if (useMin) {
@@ -112,21 +106,11 @@ bool TriggerSmooth::trigger(nint windowSize) {
       triggerHigh = true;
       CHECK_TRIGGERED;
     }
-    if (triggerIndex < uParams->audioBufferSize - 2 * windowSize) return false; // out of window
-  }
-
-  if (triggerIndex > begin) {
-    alignRegionSize = uParams->audioBufferSize - triggerIndex;
-  } else {
-    alignRegionSize = windowSize;
+    if (triggerIndex < buffer->getSize() - 2 * windowSize) return false; // out of window
   }
 
   triggered = true;
   return true;
-}
-
-nint TriggerSmooth::getAlignRegionSize() {
-  return alignRegionSize;
 }
 
 float* TriggerSmooth::getSmoothBuffer() {
@@ -135,14 +119,6 @@ float* TriggerSmooth::getSmoothBuffer() {
 
 float TriggerSmooth::getTriggerLevel() {
   return triggerLevel;
-}
-
-nint TriggerSmooth::getTriggerIndex() {
-  return triggerIndex;
-}
-
-bool TriggerSmooth::getTriggered() {
-  return triggered;
 }
 
 TriggerSmooth::~TriggerSmooth() {

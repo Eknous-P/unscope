@@ -17,43 +17,20 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 
 #include "fallback.h"
 
-void TriggerFallback::setupTrigger(unscopeParams* up, float* cb) {
-  uParams = up;
-  chanBuf = cb;
+void TriggerFallback::setupTrigger(DataBuffer* buf) {
+  buffer = buf;
 
   params = {
 
   };
 
   triggered = true;
-  alignRegionSize = 0;
 }
 
-vector<TriggerParam> TriggerFallback::getParams() {
-  return params;
-}
 
 bool TriggerFallback::trigger(nint windowSize) {
-  // theres no need to run this loop every time once its set,
-  // since it doesnt change unless the window size does
-  if (alignRegionSize==windowSize) return true;
-
-  alignRegionSize = windowSize;
-  triggerIndex = uParams->audioBufferSize - windowSize;
-
-
+  triggerIndex = buffer->getSize() - windowSize;
   return true;
-}
-nint TriggerFallback::getAlignRegionSize() {
-  return alignRegionSize;
-}
-
-nint TriggerFallback::getTriggerIndex() {
-  return triggerIndex;
-}
-
-bool TriggerFallback::getTriggered() {
-  return triggered;
 }
 
 TriggerFallback::~TriggerFallback() {

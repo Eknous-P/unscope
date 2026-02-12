@@ -19,74 +19,50 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 
 #define CHECK_TRIGGERED foundTrigger=triggerLow&&triggerHigh
 
-void TriggerAnalog::setupTrigger(unscopeParams* up, float* cb) {
-  uParams = up;
-  chanBuf = cb;
+void TriggerAnalog::setupTrigger(DataBuffer* buf) {
+  buffer = buf;
 
   params = {
-    TriggerParam(TP_KNOBNORM,false,"level",false,true),
-    TriggerParam(TP_TOGGLE,false,"extend trigger range","allows trigger to scan for the full audio buffer,\ninstead of the visible range",false,false),
-    TriggerParam(TP_TOGGLE,false,"trigger edge","off - rising\non - falling",false,false),
+    TriggerParam(PARAM_KNOBNORM,false,"level",NULL,false,true),
+    TriggerParam(PARAM_TOGGLE,false,"extend trigger range","allows trigger to scan for the full audio buffer,\ninstead of the visible range",NULL,false,false),
+    TriggerParam(PARAM_TOGGLE,false,"trigger edge","off - rising\non - falling",NULL,false,false),
   };
 
   triggerIndex = 0;
 
   triggered = true;
-  alignRegionSize = 0;
-}
-
-vector<TriggerParam> TriggerAnalog::getParams() {
-  return params;
 }
 
 bool TriggerAnalog::trigger(nint windowSize) {
-  if (!chanBuf) return false;
   triggered = false;
   // locate trigger
   bool triggerHigh = false, triggerLow = false, foundTrigger = false, edge = !params[2].getValue<bool>();
   float trigY = params[0].getValue<float>(); // temp
-  triggerIndex = uParams->audioBufferSize - windowSize;
+  triggerIndex = buffer->getSize() - windowSize;
 
   while (triggerIndex > 0) {
     triggerIndex--;
-    if (chanBuf[triggerIndex + windowSize/2] < trigY) {
+    if (buffer->getValueScaled(triggerIndex + windowSize/2) < trigY) {
       triggerLow = true;
       CHECK_TRIGGERED;
-      if (foundTrigger && edge) break;
+      if (foundTrigger && edge) {
+        triggered = true;
+        return true;
+      }
     }
-    if (chanBuf[triggerIndex + windowSize/2] > trigY) {
+    if (buffer->getValueScaled(triggerIndex + windowSize/2) > trigY) {
       triggerHigh = true;
       CHECK_TRIGGERED;
-      if (foundTrigger && !edge) break;
+      if (foundTrigger && !edge) {
+        triggered = true;
+        return true;
+      }
     }
     if (!params[1].getValue<bool>()) {
-      if (triggerIndex < uParams->audioBufferSize - 2 * windowSize) return false; // out of window
+      if (triggerIndex < buffer->getSize() - 2 * windowSize) return false; // out of window
     }
   }
-
-
-  if (triggerIndex > uParams->audioBufferSize - windowSize) {
-    alignRegionSize = uParams->audioBufferSize - triggerIndex;
-  } else {
-    alignRegionSize = windowSize;
-  }
-
-  triggered = true;
-  return true;
-}
-
-nint TriggerAnalog::getAlignRegionSize() {
-  return alignRegionSize;
-}
-
-#ifdef PROGRAM_DEBUG
-nint TriggerAnalog::getTriggerIndex() {
-  return triggerIndex;
-}
-#endif
-
-bool TriggerAnalog::getTriggered() {
-  return triggered;
+  return false;
 }
 
 TriggerAnalog::~TriggerAnalog() {

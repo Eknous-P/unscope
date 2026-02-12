@@ -124,6 +124,12 @@ DockSpace       ID=0xD6C4A87D Window=0x1BBC0F80 Pos=0,19 Size=1280,701 Split=X S
 \n\
 ";
 
+const char* dataDriverNames[DATA_MAX]={
+  "dummy",
+  "PortAudio",
+  "SDL"
+};
+
 const char* triggerNames[]={
   "fallback",
   "analog",
@@ -136,20 +142,3 @@ const char* const spectrumModes[]={
 };
 
 const unsigned char step_one = 1;
-
-const int sampleRates[9]={
-  8000,
-  11025,
-  16000,
-  22050,
-  32000,
-  44100,
-  48000,
-  96000,
-  192000
-};
-
-const int frameSizes[8]={
-  16, 32, 64, 128,
-  256, 512, 1024, 2048
-};

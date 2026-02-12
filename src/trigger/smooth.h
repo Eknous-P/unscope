@@ -21,26 +21,13 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #include "trigger.h"
 
 class TriggerSmooth : public Trigger {
-  float *alignBuf, *chanBuf;
-  unscopeParams* uParams;
-  vector<TriggerParam> params;
-
-  nint triggerIndex;
-
-  bool triggered;
-  nint alignRegionSize;
   float* smoothBuf, triggerLevel;
 
   float prevSmooth, logSmooth;
 
   public:
-    void setupTrigger(unscopeParams* up, float* cb);
-    vector<TriggerParam> getParams();
+    void setupTrigger(DataBuffer* buf);
     bool trigger(nint windowSize);
-    bool getTriggered();
-    float* getAlignBuffer();
-    nint getAlignRegionSize();
-    nint getTriggerIndex();
 
     float* getSmoothBuffer();
     float getTriggerLevel();

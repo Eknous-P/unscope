@@ -15,16 +15,8 @@ You should have received a copy of the GNU General Public License along with
 unscope. If not, see <https://www.gnu.org/licenses/>. 
 */
 
-#ifndef TRIGGER_ANALOG_H
-#define TRIGGER_ANALOG_H
+// common stuff for audio drivers
 
-#include "trigger.h"
-
-class TriggerAnalog : public Trigger {
-  public:
-    void setupTrigger(DataBuffer* buf);
-    bool trigger(nint windowSize);
-    ~TriggerAnalog();
-};
-
-#endif
+extern int const sampleRates[10];
+extern const int frameSizes[9];
+extern const int paramChannelsLimits[2];

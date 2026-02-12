@@ -20,6 +20,8 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 
 #include <vector>
 using std::vector;
+#include <string>
+using std::string;
 extern "C" {
 #include <stdio.h>
 #include <memory.h>
@@ -29,7 +31,6 @@ extern "C" {
 #endif
 }
 
-typedef float AudioSample;
 typedef unsigned long long int nint;
 
 // program stuff
@@ -98,22 +99,6 @@ typedef unsigned long long int nint;
           ImGui::EndPopup(); \
         }
 
-enum unscopeErrors {
-  UGUIERROR_SETUPFAIL,
-  UGUIERROR_INITFAIL
-};
-
-enum unscopeArgs : char {
-  UPARAM_BUFFERSIZE   = 'b',
-  UPARAM_FRAMESIZE    = 'f',
-  UPARAM_CHANNELCOUNT = 'c',
-  UPARAM_SAMPLERATE   = 's',
-  UPARAM_ABOUT        = 'a',
-  UPARAM_HELP         = 'h',
-  UPARAM_LICENSE      = 'l',
-  UPARAM_VERSION      = 'v'
-};
-
 enum USCRenderers {
   USC_RENDER_NONE=0,
   USC_RENDER_SDLRENDERER2,
@@ -126,54 +111,6 @@ enum USCRenderers {
 #ifdef USE_DIRECTX11
   USC_RENDER_DIRECTX11,
 #endif
-};
-
-struct unscopeParams {
-  nint audioBufferSize;
-
-  // gui ...
-  float timebase;
-  float xyPersist;
-  float scale;
-  float trigger;
-
-  int renderer;
-};
-
-struct AudioConfig {
-  int inputDevice, outputDevice;
-  int inputChannels, outputChannels;
-  int sampleRate;
-  int frameSize;
-};
-
-enum AudioDeviceDirections {
-  DIR_IN  = 1<<0,
-  DIR_OUT = 1<<1,
-};
-
-struct AudioDevice {
-  unsigned char direction; // bit 0 - in, bit 1 - out
-  int dev;
-  int host;
-  char devName[256];
-  AudioDevice():
-    direction(0),
-    dev(0),
-    host(0)
-    {memset(devName, 0, 256);}
-  AudioDevice(unsigned char di, int dv, int h, char* dn) {
-    direction = di;
-    dev = dv;
-    host = h;
-    memcpy(devName, dn, 256);
-  }
-  AudioDevice(unsigned char di, int dv, int h, const char* dn) {
-    direction = di;
-    dev = dv;
-    host = h;
-    strcpy(devName, dn);
-  }
 };
 
 float clamp(float a);

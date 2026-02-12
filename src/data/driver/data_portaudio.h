@@ -15,20 +15,17 @@ You should have received a copy of the GNU General Public License along with
 unscope. If not, see <https://www.gnu.org/licenses/>. 
 */
 
-#include "audio.h"
+#include "data.h"
 #include "portaudio.h"
 
-class Audio_PA : public AudioIO {
+class DataPortAudio : public DataDriver {
   PaStream* stream;
   PaError e;
   PaStreamParameters streamParamsI, streamParamsO;
-
-  USCAudio* parent;
-  AudioConfig* conf;
-  AudioBuffer* buf;
-  vector<AudioDevice>* devs;
-  int (*callbackFunction)(void*, const void*, void*, nint);
-  bool running, outputting;
+  vector<string> inputDevices, outputDevices;
+  vector<int> inputDevicesInternal, outputDevicesInternal;
+  int inputChannels, outputChannels;
+  bool outputting, paInitSuccess;
 
   void openStream(int iDev, int oDev, int iChans, int oChans, int sampleRate, int frames);
   void closeStream();
@@ -39,17 +36,16 @@ class Audio_PA : public AudioIO {
     const PaStreamCallbackTimeInfo* timeInfo,
     PaStreamCallbackFlags statusFlags,
     void *userData);
-
   public:
-    int setup(USCAudio* p);
+    const int getFlags();
+    int setup(USCData* p);
     int init();
-    int deinit();
     int start();
     int stop();
-    bool isRunning();
-    bool isOutputting();
-    int getAvailDevices();
-    int getDefaultInputDevice();
-    int getDefaultOutputDevice();
-    const char* getLastError();
+    int enumerateDevices();
+    string getLastError();
+    int deinit();
+    const char* getName();
+    ~DataPortAudio();
 };
+

@@ -46,6 +46,32 @@ scaleFunc const yScaleFunctions[]={
   scaleFuncDb
 };
 
+void USCGUI::generateFFTFrequencies() {
+  const double sampleRate=48000;
+  fftFrequencies.clear();
+  switch (sc.scale&0xf) {
+    case 0: {
+      for (int i=0; i<sampleRate/2; i+=1000) {
+        fftFrequencies.push_back(i);
+      }
+      break;
+    }
+    case 1: {
+      int freq=0;
+      for (int j=10; j<sampleRate/2; j*=10) {
+        for (int i=1; i<10; i++) {
+          freq = i*j;
+          if (freq>sampleRate/2) break;
+          fftFrequencies.push_back(freq);
+        }
+        if (freq>sampleRate/2) break;
+      }
+      break;
+    }
+    default: break;
+  }
+}
+
 void USCGUI::drawSpectrumControls(bool* open) {
   if (!oscData) return;
   if (!*open) return;

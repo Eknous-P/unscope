@@ -15,16 +15,25 @@ You should have received a copy of the GNU General Public License along with
 unscope. If not, see <https://www.gnu.org/licenses/>. 
 */
 
-#ifndef TRIGGER_ANALOG_H
-#define TRIGGER_ANALOG_H
+#include "audio_common.h"
 
-#include "trigger.h"
-
-class TriggerAnalog : public Trigger {
-  public:
-    void setupTrigger(DataBuffer* buf);
-    bool trigger(nint windowSize);
-    ~TriggerAnalog();
+const int sampleRates[10]={
+  9,
+  8000,
+  11025,
+  16000,
+  22050,
+  32000,
+  44100,
+  48000,
+  96000,
+  192000
 };
 
-#endif
+const int frameSizes[9]={
+  8,
+  16, 32, 64, 128,
+  256, 512, 1024, 2048
+};
+
+const int paramChannelsLimits[2] = {1, 16};

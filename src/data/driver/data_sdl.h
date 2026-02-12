@@ -15,16 +15,31 @@ You should have received a copy of the GNU General Public License along with
 unscope. If not, see <https://www.gnu.org/licenses/>. 
 */
 
-#ifndef TRIGGER_ANALOG_H
-#define TRIGGER_ANALOG_H
+#include "data.h"
+#include "SDL.h"
+#include "SDL_audio.h"
 
-#include "trigger.h"
+class DataSDL : public DataDriver {
+  SDL_AudioSpec request, response;
+  vector<string> devices;
+  int deviceNum, channels;
+  int sampleRateNum, frameSizeNum;
 
-class TriggerAnalog : public Trigger {
+  int deviceNumInternal;
+
+  static void audioCallback(void* userdata, Uint8* stream, int len);
+
   public:
-    void setupTrigger(DataBuffer* buf);
-    bool trigger(nint windowSize);
-    ~TriggerAnalog();
+    const int getFlags();
+    int setup(USCData* p);
+    int init();
+    int start();
+    int stop();
+    int enumerateDevices();
+    int deinit();
+    const char* getName();
 };
 
-#endif
+extern int const sampleRates[10];
+extern const int frameSizes[9];
+

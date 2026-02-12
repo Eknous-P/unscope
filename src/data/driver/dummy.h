@@ -15,16 +15,18 @@ You should have received a copy of the GNU General Public License along with
 unscope. If not, see <https://www.gnu.org/licenses/>. 
 */
 
-#ifndef TRIGGER_ANALOG_H
-#define TRIGGER_ANALOG_H
+#ifndef DRIVER_DUMMY_H
+#define DRIVER_DUMMY_H
 
-#include "trigger.h"
+#include "data.h"
 
-class TriggerAnalog : public Trigger {
+class DummyDriver : public DataDriver {
+  nint index;
+  static int callbackFunction(void* parent, nint samples);
   public:
-    void setupTrigger(DataBuffer* buf);
-    bool trigger(nint windowSize);
-    ~TriggerAnalog();
+    const int getFlags();
+    const char* getName();
+    int setup(USCData* p);
 };
 
 #endif

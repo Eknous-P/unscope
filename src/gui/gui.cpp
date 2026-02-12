@@ -16,76 +16,19 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "gui.h"
-#include <imgui.h>
+#include "imgui.h"
 
 bool USCGUI::isRunning() {
   return running;
 }
 
-USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
-  up = params;
-  audConf = aConf;
-  renderer = (USCRenderers)up->renderer;
+USCGUI::USCGUI() {
   isGood = false;
-  channels = aConf->inputChannels;
+  // generateFFTFrequencies();
 
-  sampleRate = aConf->sampleRate;
-
-  tc = new traceParams[channels];
-
-  for (unsigned char i = 0; i < channels; i++) {
-    tc[i].enable  = true;
-    tc[i].yScale  = up->scale;
-    tc[i].xOffset = 0.0f;
-    tc[i].yOffset = 0.0f;
-    tc[i].timebase = up->timebase;
-    tc[i].traceSize = (nint)(sampleRate*tc[i].timebase/1000.0f);
-  }
-
-  tc[0].color = ImVec4(0.13f,0.97f,0.21f,0.95f);
-  if (channels > 1) {
-    tc[1].color = ImVec4(0.93f,0.17f,0.23f,0.95f);
-  }
-
-  xyp.color = ImVec4(0.13f,0.97f,0.21f,0.35f);
-  xyp.xOffset = 0.0f;
-  xyp.yOffset = 0.0f;
-  xyp.xScale = 1.0f;
-  xyp.yScale = 1.0f;
-  xyp.persistence = up->xyPersist;
-  xyp.sampleLen = (nint)(sampleRate*xyp.persistence/1000.0f);
-  xyp.axisChan[0] = 1;
-  xyp.axisChan[1] = 2;
-
-  FOR_RANGE(channels) {
-    sd.in=NULL;
-    sd.out=NULL;
-    sd.work=NULL;
-    sd.setup=NULL;
-    sd.cqt=NULL;
-    sd.updateSetup=true;
-    sd.running=false;
-  }
-
-  sc.fftBins=2048;
-  sc.cqtBins=1200;
-  sc.mode=0;
-  sc.plotType=0;
-  sc.scale=1;
-  sc.fftXOffset=0;
-  sc.fftYOffset=0;
-  sc.fftXZoom=1;
-  sc.fftYZoom=1;
-  sc.cqtOctaves=10;
-  sc.cqtBaseNote=0;
-  sc.colorModulate=false;
-
-  generateFFTFrequencies();
-
-  wo.chanControlsOpen=new bool[channels];
-  if (!wo.chanControlsOpen) return;
-  FOR_RANGE(channels) wo.chanControlsOpen[z]=true;
-  wo.mainScopeOpen       = true;
+  // wo.chanControlsOpen=new bool[channels];
+  // if (!wo.chanControlsOpen) return;
+  // FOR_RANGE(channels) wo.chanControlsOpen[z]=true;
   wo.xyScopeOpen         = true;
   wo.xyScopeControlsOpen = true;
   wo.globalControlsOpen  = true;
@@ -100,60 +43,20 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   wo.triggerDebugOpen    = false;
   wo.fftDebugOpen        = false;
 #endif
-
-  oscDataSize = up->audioBufferSize;
-
-  oscData = new float*[channels];
-  if (!oscData) {
-    return;
-  }
-  FOR_RANGE(channels) {
-    oscData[z] = new float[oscDataSize];
-
-    if (oscData[z] == NULL) {
-      return;
-    }
-
-    memset(oscData[z],0,oscDataSize*sizeof(float));
-  }
   running = false;
-  updateAudio = true;
-  restartAudio = true;
-  audioLoopback = false;
 
-  inputDeviceS  = 0;
-  outputDeviceS = 0;
-  showTrigger  = false;
   shareParams  = true;
   shareTrigger = 1;
-  trigNum      = TRIG_ANALOG;
-  triggerSet   = false;
 
   doFallback = true;
   singleShot = false;
 
-  loopbackVolume = 0.0f;
 
   fullscreen = false;
 
-  trigger = new Trigger*[channels];
-
-  HCursors[0]=plotCursor("X1",-.5f);
-  HCursors[1]=plotCursor("X2",.5f);
-  VCursors[0]=plotCursor("Y1",-.5f);
-  VCursors[1]=plotCursor("Y2",.5f);
-
-  showHCursors = false;
-  showVCursors = false;
-
   settings.msDiv=false;
 
-#ifdef PROGRAM_DEBUG
-  triggerDebugBegin = 60000;
-  triggerDebugEnd = oscDataSize;
-#endif
-
-  memset(errorText, 0, 2048 * sizeof(char));
+  errorText="";
 
   topKeyColor=ImVec4(0,0,0,.1);
   bottomKeyColor=ImVec4(1,1,1,.1);
@@ -172,15 +75,25 @@ USCGUI::USCGUI(unscopeParams *params, AudioConfig *aConf) {
   pianoColors[11]=&bottomKeyColor;
 
 
-  ai = NULL;
-  devs = NULL;
+  data = NULL;
   isGood = true;
   rd = NULL;
+
+  newScopeBuffer = NULL;
+  newDriver = DATA_PORTAUDIO;
+  newScopeWin = 0;
+
+  scopeWindows = {
+    ScopeWindow(0)
+  };
+
+#ifdef PROGRAM_DEBUG
+  debuggedChannel=0;
+#endif
 }
 
-void USCGUI::attachAudioInput(USCAudio *i) {
-  ai = i;
-  devs = ai->getDevices();
+void USCGUI::attachData(USCData *i) {
+  data = i;
 }
 
 void USCGUI::setupRenderer(USCRenderers r) {
@@ -208,55 +121,19 @@ void USCGUI::setupRenderer(USCRenderers r) {
   }
 }
 
-void USCGUI::setupTrigger(Triggers t) {
-  // destroy current trigger
-  if (triggerSet && trigger) {
-    FOR_RANGE(channels) {
-      if (trigger[z]) {
-        delete trigger[z];
-        trigger[z] = NULL;
-      }
-    }
-  }
-  // set new trigger
-  triggerSet = false;
-  FOR_RANGE(channels) {
-    Trigger* tp;
-    switch (t) {
-      case TRIG_ANALOG:
-        tp = new TriggerAnalog;
-        break;
-      case TRIG_SMOOTH:
-        tp = new TriggerSmooth;
-        break;
-      default:
-        tp = new TriggerFallback;
-        break;
-    }
-    if (!tp) return;
-    tp->setupTrigger(up, oscData[z]);
-
-    trigger[z] = tp;
-  }
-  triggerSet = true;
-}
-
-
-int USCGUI::init() {
+int USCGUI::init(USCRenderers rend) {
   if (running) return 0;
-  if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_EVENTS)!=0) return UGUIERROR_INITFAIL;
+  if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_EVENTS)!=0) return -1;
+  renderer = rend;
   setupRenderer(renderer);
-  setupTrigger(trigNum);
   if (!isGood) return -1;
-  if (rd->initRender()!=0) return UGUIERROR_INITFAIL;
+  if (rd->initRender()!=0) return -1;
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
   ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
   ImGui::GetIO().IniFilename = NULL;
   // ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
-  //io.ConfigViewportsNoAutoMerge = true;
-  //io.ConfigViewportsNoTaskBarIcon = true;
   ImGui::StyleColorsDark();
   style = ImGui::GetStyle();
   if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
@@ -269,10 +146,16 @@ int USCGUI::init() {
     (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE|SDL_WINDOW_ALLOW_HIGHDPI),
     PROGRAM_NAME_AND_VER,
     SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-    PROGRAM_WIDTH, PROGRAM_HEIGHT)!=0) return UGUIERROR_SETUPFAIL;
+    PROGRAM_WIDTH, PROGRAM_HEIGHT)!=0) return -1;
   bgColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
   running = true;
-  io = ImGui::GetIO();
+
+  dummyBuffer.init(65536, 48000, "Dummy Buffer");
+  float v=0.0f;
+  for (int i=0; i<65536; i++) {
+    v=sinf(i*M_2_PI/64.0f);
+    dummyBuffer.write(&v);
+  }
   return 0;
 }
 
@@ -315,7 +198,16 @@ void USCGUI::drawGUI() {
       ImGui::EndMenu();
     }
     if (ImGui::BeginMenu("Scopes")) {
-      ImGui::MenuItem("Main Scope",NULL,&wo.mainScopeOpen);
+      char strbuf[64];
+      const int scopeWins = scopeWindows.size();
+      for (int i=0; i<scopeWins; i++) {
+        snprintf(strbuf, 64, "Scope Window %d", i+1);
+        ImGui::MenuItem(strbuf, NULL, &scopeWindows[i].windowOpen);
+      }
+      if (ImGui::MenuItem("New Scope Window")) {
+        scopeWindows.push_back(ScopeWindow(scopeWins));
+      }
+      ImGui::Separator();
       ImGui::MenuItem("Scope (XY)",NULL,&wo.xyScopeOpen);
       ImGui::Separator();
       ImGui::MenuItem("Frequency Spectrum",NULL,&wo.spectrumOpen);
@@ -323,11 +215,7 @@ void USCGUI::drawGUI() {
     }
     if (ImGui::BeginMenu("Controls")) {
       char buf[64];
-      for (unsigned char i = 0; i < channels; i++) {
-        snprintf(buf,64,"Channel %d Controls",i+1);
-        ImGui::MenuItem(buf,NULL,&wo.chanControlsOpen[i]);
-      }
-      ImGui::MenuItem("XY Scope Controls",NULL,&wo.xyScopeControlsOpen);
+      ImGui::MenuItem("XY Scope Controls");
       ImGui::Separator();
       ImGui::MenuItem("Spectrum Controls",NULL,&wo.spectrumControlsOpen);
       ImGui::Separator();
@@ -351,247 +239,183 @@ void USCGUI::drawGUI() {
     }
     ImGui::EndMainMenuBar();
   }
-  drawGlobalControls(&wo.globalControlsOpen);
-  drawChanControls(&wo.chanControlsOpen);
+  drawChannelManager(&wo.globalControlsOpen);
   drawXYScopeControls(&wo.xyScopeControlsOpen);
-  drawSpectrumControls(&wo.spectrumControlsOpen);
+  // drawSpectrumControls(&wo.spectrumControlsOpen);
 
   drawAbout(&wo.aboutOpen);
-  drawCursors(&wo.cursorsOpen);
   drawAudioConfig(&wo.audioConfigOpen);
+  drawChanControls();
 
-  if (updateAudio) setOscData(ai->getAudioBuffer());
-
-  if (singleShot) {
-    if (shareTrigger>0) {
-      if (trigger[shareTrigger-1]->getTriggered()) updateAudio = false;
-    } else {
-      FOR_RANGE(channels) {
-        if (trigger[z]->getTriggered()) {
-          updateAudio = false;
-          break;
-        }
-      }
-    }
-  }
-
-  drawMainScope(&wo.mainScopeOpen);
+  for (ScopeWindow& s:scopeWindows) s.drawScope(true);
   drawXYScope(&wo.xyScopeOpen);
-  drawSpectrum(&wo.spectrumOpen);
+  // drawSpectrum(&wo.spectrumOpen);
 #ifdef PROGRAM_DEBUG
   if (wo.metricsOpen) ImGui::ShowMetricsWindow(&wo.metricsOpen);
   drawTriggerDebug(&wo.triggerDebugOpen);
-  drawParamDebug(&wo.paramDebugOpen);
-  drawFFTDebug(&wo.fftDebugOpen);
+  // drawParamDebug(&wo.paramDebugOpen);
+  // drawFFTDebug(&wo.fftDebugOpen);
 #endif
+  if (ImGui::BeginPopupModal("Error##ERRPOPUP", NULL, ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize)) {
+    ImGui::Text("%s", errorText.c_str());
+    if (ImGui::Button("OK")) {
+      ImGui::CloseCurrentPopup();
+    }
+    ImGui::EndPopup();
+  }
+  // drawScopeDebugImFrustrated();
 }
+
+// void USCGUI::drawScopeDebugImFrustrated() {
+//   if (data==NULL) return;
+//   if (data->getDriverCount()==0) return;
+//   if (ImGui::Begin("pain")) {
+//     char sbuf[256];
+//     for (int i=0; i<data->getDriver(0)->getBufferCount(); i++) {      
+//       DataBuffer* buf = data->getDriver(0)->getBuffer(i);
+//       if (!buf) {
+//         ImGui::Text("buffer %d NULL!", i);
+//         continue;
+//       }
+//       ImGui::Text("buffer %d (%p): %p\n%llu samples", i, buf,buf->getBuffer(),buf->getSize());  
+//       if (buf->getBuffer()==NULL) continue;
+//       snprintf(sbuf, 256, "CH %d", i);
+//       ImGui::PlotLines(sbuf, (float*)buf->getBuffer(), buf->getSize());
+//     }
+//   }
+//   ImGui::End();
+// }
 
 #ifdef PROGRAM_DEBUG
 void USCGUI::drawTriggerDebug(bool* open) {
   // very slow indeed
   if (!*open) return;
-  if (!oscData) return;
 #define DIV 4
-  ImGui::Begin("Trigger Debug", open);
-  ImGui::InputScalar("begin", ImGuiDataType_U64,  &triggerDebugBegin);
-  ImGui::InputScalar("end", ImGuiDataType_U64,  &triggerDebugEnd);
-  ImDrawList* dl = ImGui::GetWindowDrawList();
-  int count = (triggerDebugEnd-triggerDebugBegin)/DIV;
-  unsigned char chan = shareTrigger<0?0:shareTrigger-1;
-  if (!(count < 0 || triggerDebugEnd > oscDataSize || count > oscDataSize/DIV)) {
-    ImVec2 *ol = new ImVec2[count],
-           *sl = new ImVec2[count];
-    ImVec2 winSize = ImGui::GetWindowSize(), winPos = ImGui::GetWindowPos();
-    float hovering = ImGui::GetIO().MousePos.x - winPos.x;
-    float winTitleBar = ImGui::GetStyle().FramePadding.x*2 + ImGui::CalcTextSize("Trigger Debug").y;
-    winSize.y-=winTitleBar;
-    winPos.y+=winTitleBar;
-    ImGui::Text("TRIGGER: %s DIV: %d, range: %d", triggerNames[trigNum-1], DIV, count);
-    if (ImGui::IsWindowHovered()) ImGui::Text("index: %llu",(nint)((hovering/winSize.x)*count*DIV) + triggerDebugBegin);
-    if (ol && sl) {
-      float x=0.0f;
-      for (nint i = 0; i < count; i++) {
-        ol[i] = ImVec2(x,winSize.y*(1.0f-oscData[chan][triggerDebugBegin+i*DIV])/2.0f)+winPos;
-        if (trigNum == TRIG_SMOOTH && sl) {
-          sl[i] = ImVec2(x,winSize.y*clamp((1.0f-(((TriggerSmooth**)trigger)[chan]->getSmoothBuffer())[triggerDebugBegin+i*DIV])/2.f))+winPos;
-        }
-        x+=winSize.x/count;
-      }
-      dl->AddPolyline(ol, count, 0x7f7777ff, ImDrawFlags_None, 1.0f);
-      switch (trigNum) {
-        case TRIG_ANALOG: {
-          float trigIdx = (float)(((TriggerAnalog**)trigger)[chan]->getTriggerIndex() - triggerDebugBegin)/(count*DIV);
-          dl->AddLine(ImVec2(trigIdx*winSize.x,0.0f)+winPos,
-                      ImVec2(trigIdx*winSize.x,winSize.y)+winPos,
-                     0xffff00ff);
-          break;
-        }
-        case TRIG_SMOOTH: {
-          float trigIdx = (float)(((TriggerAnalog**)trigger)[chan]->getTriggerIndex() - triggerDebugBegin)/(count*DIV);
-          dl->AddLine(ImVec2(trigIdx*winSize.x,0.0f)+winPos,
-                      ImVec2(trigIdx*winSize.x,winSize.y)+winPos,
-                     0xffff00ff);
-          if (sl) {
-            dl->AddPolyline(sl, count, 0xffff66ff, ImDrawFlags_None, 1.0f);
-            dl->AddLine(ImVec2(0,winSize.y*(1.0f-((TriggerSmooth**)trigger)[chan]->getTriggerLevel())/2.f)+winPos,
-                        ImVec2(winSize.x,winSize.y*(1.0f-((TriggerSmooth**)trigger)[chan]->getTriggerLevel())/2.f)+winPos, 0xffff7777);
-          }
-          break;
-        }
-        default: break;
-      }
-
-      dl->AddRectFilled(ImVec2((1.f-(float)tc[chan].traceSize/(count*DIV))*winSize.x,0.0f)+winPos,
-                  ImVec2(winSize.x,winSize.y)+winPos,
-                  0x1155ff22);
-    } else {
-      ImGui::Text("malloc fail!:\nnol: %p\nsl: %p",ol,sl);
+  if (ImGui::Begin("Trigger Debug", open)) {
+    if (ImGui::InputInt("channel", &debuggedChannel)) {
+      if (debuggedChannel<0) debuggedChannel=0;
+      if (debuggedChannel>scopes.size()-1) debuggedChannel=scopes.size()-1;
     }
 
-    if (ol) delete[] ol;
-    if (sl) delete[] sl;
-    
-  } else {
-    ImGui::Text("invalid range!");
+    ImVec2 origin = ImGui::GetCursorScreenPos();
+    ImRect rect(origin, origin+ImGui::GetContentRegionAvail());
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    if (!scopes.empty()) {
+      ScopeChannel* chan = scopes[debuggedChannel];
+      const float* bufferData = (float*)chan->getBuffer()->getBuffer();
+      const nint bufferSize = chan->getBuffer()->getSize()/DIV;
+      ImVec2* plot = new ImVec2[bufferSize];
+
+      for (nint i=0; i<bufferSize; i++) {
+        plot[i] = ImVec2(
+          ImLerp(rect.Min.x, rect.Max.x, (float)i/bufferSize),
+          ImLerp(rect.GetCenter().y, rect.Min.y, bufferData[i*DIV])
+        );
+      }
+
+      dl->AddPolyline(plot, bufferSize, 0xffffffff, 0, 1.0f);
+
+      Trigger* trig = chan->getTrigger();
+      ImGui::Text("trigger: %p", trig);
+      if (trig) {
+        nint needlePos = (chan->getNeedle()+chan->getBuffer()->getIndex())%chan->getBuffer()->getSize();
+        ImGui::Text("needle: %llu (%llu)", needlePos, trig->getTriggerIndex());
+        float trigNeedle = (float)needlePos/chan->getBuffer()->getSize();
+        trigNeedle = ImLerp(rect.Min.x, rect.Max.x, trigNeedle);
+        dl->AddLine(
+          ImVec2(trigNeedle,rect.Min.y),
+          ImVec2(trigNeedle,rect.Max.y),
+          0xff00ff00, 2.0f
+        );
+      }
+
+      delete[] plot;
+    }
   }
   ImGui::End();
 #undef DIV
 }
 
-void USCGUI::drawParamDebug(bool* open) {
-  if (!*open) return;
-  ImGui::Begin("params",open);
-  if (ImGui::BeginTable("##paramTable", 6)) {
-    ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
-    ImGui::TableNextColumn();
-    ImGui::Text("ch");
-    ImGui::TableNextColumn();
-    ImGui::Text("label");
-    ImGui::TableNextColumn();
-    ImGui::Text("type");
-    ImGui::TableNextColumn();
-    ImGui::Text("value");
-    ImGui::TableNextColumn();
-    ImGui::Text("hovered");
-    ImGui::TableNextColumn();
-    ImGui::Text("active");
-    FOR_RANGE(channels) {
-      ImGui::PushID(z);
-      for (TriggerParam p:trigger[z]->getParams()) {
-        ImGui::TableNextRow();
-        ImGui::TableNextColumn();
-        ImGui::Text("%d",z);
-        ImGui::TableNextColumn();
-        ImGui::Text("%s",p.getLabel());
-        ImGui::TableNextColumn();
-        ImGui::Text("%d",p.getType());
-        ImGui::TableNextColumn();
-        ImGui::PushID(p.getLabel());
-        switch (p.getType()) {
-          case TP_KNOBNORM:
-            if (ImGui::InputFloat("##floatinput", (float*)p.getValuePtr())) {
-              if (p.getValue<float>()<-1.0f) p.setValue<float>(-1.0f);
-              if (p.getValue<float>()>1.0f) p.setValue<float>(1.0f);
-            }
-            break;
-          case TP_KNOBUNIT:
-            if (ImGui::InputFloat("##floatinput", (float*)p.getValuePtr())) {
-              if (p.getValue<float>()<0.0f) p.setValue<float>(0.0f);
-              if (p.getValue<float>()>1.0f) p.setValue<float>(1.0f);
-            }
-            break;
-          case TP_TOGGLE:
-            ImGui::Checkbox("##boolinput", (bool*)p.getValuePtr());
-            break;
-          default:
-            ImGui::Text("%p",p.getValuePtr());
-            break;
-        }
-        ImGui::PopID();
-        ImGui::TableNextColumn();
-        ImGui::Text(p.isHovered()?"true":"false");
-        ImGui::TableNextColumn();
-        ImGui::Text(p.isActive()?"true":"false");
-      }
-      ImGui::PopID();
-    }
-    ImGui::EndTable();
-  }
-  ImGui::End();
-}
+// void USCGUI::drawParamDebug(bool* open) {
+//   if (!*open) return;
+//   ImGui::Begin("params",open);
+//   if (ImGui::BeginTable("##paramTable", 6)) {
+//     ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+//     ImGui::TableNextColumn();
+//     ImGui::Text("ch");
+//     ImGui::TableNextColumn();
+//     ImGui::Text("label");
+//     ImGui::TableNextColumn();
+//     ImGui::Text("type");
+//     ImGui::TableNextColumn();
+//     ImGui::Text("value");
+//     ImGui::TableNextColumn();
+//     ImGui::Text("hovered");
+//     ImGui::TableNextColumn();
+//     ImGui::Text("active");
+//     FOR_RANGE(channels) {
+//       ImGui::PushID(z);
+//       for (TriggerParam p:trigger[z]->getParams()) {
+//         ImGui::TableNextRow();
+//         ImGui::TableNextColumn();
+//         ImGui::Text("%d",z);
+//         ImGui::TableNextColumn();
+//         ImGui::Text("%s",p.getLabel());
+//         ImGui::TableNextColumn();
+//         ImGui::Text("%d",p.getType());
+//         ImGui::TableNextColumn();
+//         ImGui::PushID(p.getLabel());
+//         switch (p.getType()) {
+//           case PARAM_KNOBNORM:
+//             if (ImGui::InputFloat("##floatinput", (float*)p.getValuePtr())) {
+//               if (p.getValue<float>()<-1.0f) p.setValue<float>(-1.0f);
+//               if (p.getValue<float>()>1.0f) p.setValue<float>(1.0f);
+//             }
+//             break;
+//           case PARAM_KNOBUNIT:
+//             if (ImGui::InputFloat("##floatinput", (float*)p.getValuePtr())) {
+//               if (p.getValue<float>()<0.0f) p.setValue<float>(0.0f);
+//               if (p.getValue<float>()>1.0f) p.setValue<float>(1.0f);
+//             }
+//             break;
+//           case PARAM_TOGGLE:
+//             ImGui::Checkbox("##boolinput", (bool*)p.getValuePtr());
+//             break;
+//           default:
+//             ImGui::Text("%p",p.getValuePtr());
+//             break;
+//         }
+//         ImGui::PopID();
+//         ImGui::TableNextColumn();
+//         ImGui::Text(p.isHovered()?"true":"false");
+//         ImGui::TableNextColumn();
+//         ImGui::Text(p.isActive()?"true":"false");
+//       }
+//       ImGui::PopID();
+//     }
+//     ImGui::EndTable();
+//   }
+//   ImGui::End();
+// }
 #endif
-
-void USCGUI::setOscData(float** d) {
-  if (d == NULL) return;
-  if (!updateAudio) return;
-  FOR_RANGE(channels) memcpy(oscData[z], d[z], oscDataSize*sizeof(float));
-}
-
-bool USCGUI::doRestartAudio() {
-  return restartAudio;
-}
 
 void USCGUI::errorPopup(const char* errorTxt, ...) {
   va_list args;
   va_start(args, errorTxt);
-  vsnprintf(errorText, sizeof(errorText), errorTxt, args);
+  size_t len = vsnprintf(NULL, 0, errorTxt, args);
   va_end(args);
+  errorText.reserve(len+1);
+  errorText.resize(len);
+  vsnprintf(&errorText[0], len, errorTxt, args);
   ImGui::OpenPopup("Error##ERRPOPUP");
-}
-
-void USCGUI::updateAudioDevices() {
-  inputDeviceS = -1;
-  outputDeviceS = -1;
-  for (int i = 0; i < devs->size(); i++) {
-    AudioDevice d = (*devs)[i];
-    if (d.dev == audConf->inputDevice && inputDeviceS == -1) {
-      inputDeviceS = i;
-    }
-    if (d.dev == audConf->outputDevice && outputDeviceS == -1) {
-      outputDeviceS = i;
-    }
-  }
-  if (inputDeviceS == -1) inputDeviceS=0;
-  if (outputDeviceS == -1) outputDeviceS=0;
-}
-
-void USCGUI::generateFFTFrequencies() {
-  fftFrequencies.clear();
-  switch (sc.scale&0xf) {
-    case 0: {
-      for (int i=0; i<sampleRate/2; i+=1000) {
-        fftFrequencies.push_back(i);
-      }
-      break;
-    }
-    case 1: {
-      int freq=0;
-      for (int j=10; j<sampleRate/2; j*=10) {
-        for (int i=1; i<10; i++) {
-          freq = i*j;
-          if (freq>sampleRate/2) break;
-          fftFrequencies.push_back(freq);
-        }
-        if (freq>sampleRate/2) break;
-      }
-      break;
-    }
-    default: break;
-  }
 }
 
 USCGUI::~USCGUI() {
   if (isGood) {
     if (rd) rd->destroyRender();
+    DELETE_PTR(rd)
   }
-  if (sd.in) pffft_aligned_free(sd.in);
-  if (sd.out) pffft_aligned_free(sd.out);
-  if (sd.work) pffft_aligned_free(sd.work);
-  if (sd.setup) pffft_destroy_setup(sd.setup);
-  if (sd.cqt) delete sd.cqt;
-  delete[] wo.chanControlsOpen;
-  DELETE_PTR(rd)
-  DELETE_DOUBLE_PTR(trigger, channels)
-  DELETE_DOUBLE_PTR_ARR(oscData, channels)
-  DELETE_PTR_ARR(tc)
+  for (ScopeChannel*& chan:scopes) {
+    if (chan) delete chan;
+  }
 }

@@ -19,73 +19,58 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #define TRIGGER_H
 
 #include "shared.h"
+#include "param.h"
+#include "data.h"
 
-enum TriggerParamTypes : unsigned char {
-  TP_NONE = 0,
-  TP_TOGGLE,
-  TP_KNOBNORM, // [-1,1]
-  TP_KNOBUNIT, // [0,1]
-};
-
-const unsigned char TriggerParamTypeSize[]={
-  sizeof(int),
-  sizeof(bool),
-  sizeof(float),
-  sizeof(float)
-};
-
-class TriggerParam {
-  TriggerParamTypes type;
-  void *valuePtr;
-  const char *label, *desc;
-  bool exactInput;
-  bool hovered, active;
+class TriggerParam : public Parameter {
   public:
     bool bindToDragX, bindToDragY;
-
-    const char* getLabel();
-    void *getValuePtr();
-
-    template<typename T>
-    T getValue() {return *(T*)valuePtr;}
-
-    template<typename T>
-    void setValue(T v) {*(T*)valuePtr = v;}
-
-    bool draw();
-    TriggerParamTypes getType();
-    bool isHovered();
-    bool isActive();
-
-    TriggerParam();
-    TriggerParam(TriggerParamTypes t, bool i, const char* l, bool dragX=false, bool dragY=false);
-    TriggerParam(TriggerParamTypes t, bool i, const char* l, const char* d, bool dragX=false, bool dragY=false);
-    void destroy();
+    TriggerParam(ParamTypes t, bool i, const char* l, void* ext=NULL, bool dragX=false, bool dragY=false) {
+      desc       = NULL;
+      hovered    = false;
+      active     = false;
+      type       = t;
+      exactInput = i;
+      label      = l;
+      paramData  = ext;
+      bindToDragX = dragX;
+      bindToDragY = dragY;
+      INIT_PARAM_VALUE
+    }
+    TriggerParam(ParamTypes t, bool i, const char* l, const char* d, void* ext=NULL, bool dragX=false, bool dragY=false) {
+      hovered    = false;
+      active     = false;
+      type       = t;
+      exactInput = i;
+      label      = l;
+      desc       = d;
+      paramData  = ext;
+      bindToDragX = dragX;
+      bindToDragY = dragY;
+      INIT_PARAM_VALUE
+    }
 };
 
 class Trigger {
-  float *chanBuf;
-  unscopeParams* uParams;
-  vector<TriggerParam> params;
+  protected:
+    DataBuffer* buffer;
+    vector<TriggerParam> params;
 
-  nint triggerIndex;
+    nint triggerIndex;
 
-  bool triggered;
-  nint alignRegionSize;
-
+    bool triggered;
   public:
-    virtual void setupTrigger(unscopeParams* up, float* cb);
+    virtual void setupTrigger(DataBuffer* buf);
     virtual vector<TriggerParam> getParams();
     virtual bool trigger(nint windowSize);
     virtual bool getTriggered();
-    virtual nint getAlignRegionSize();
     virtual nint getTriggerIndex();
     virtual ~Trigger();
 };
 
-enum Triggers {
-  TRIG_NONE = 0,
-  TRIG_FALLBACK,
+enum Triggers : int {
+  TRIG_INVALID  = -1,
+  TRIG_FALLBACK = 0,
   TRIG_ANALOG,
   TRIG_SMOOTH,
   TRIG_MAX
