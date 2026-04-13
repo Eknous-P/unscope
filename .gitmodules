@@ -1,7 +1,7 @@
 [submodule "submodules/imgui"]
 	path = submodules/imgui
 	url = https://github.com/ocornut/imgui.git
-	branch = docking
+	branch = v1.92.6-docking
 [submodule "submodules/portaudio"]
 	path = submodules/portaudio
 	url = https://github.com/PortAudio/portaudio.git
@@ -21,3 +21,6 @@
 [submodule "submodules/showcqt-min"]
 	path = submodules/showcqt-min
 	url = https://github.com/Eknous-P/showcqt-min.git
+[submodule "submodules/yaml-cpp"]
+	path = submodules/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp.git

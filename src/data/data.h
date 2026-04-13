@@ -40,6 +40,7 @@ enum DataDrivers {
   DATA_DUMMY=0,
   DATA_PORTAUDIO,
   DATA_SDL,
+  DATA_PIPEWIRE,
   DATA_MAX
 };
 
@@ -48,10 +49,23 @@ class DataDriver;
 
 enum DataDriverCommands {
   DRIVER_ENUMERATE_DEVICES,
-  DRIVER_INITIALIZE,
-  DRIVER_START_CALLBACK,
-  DRIVER_STOP_CALLBACK,
-  DRIVER_RESTART,
+  DRIVER_ACTIVATE,
+  DRIVER_PLAY,
+  DRIVER_PAUSE,
+  DRIVER_DEACTIVATE,
+  DRIVER_DESTROY,
+};
+
+typedef int DataDriverState;
+
+enum DataDriverStates : DataDriverState {
+  DRIVERSTATE_NONE   = 0,
+  DRIVERSTATE_OK     = 1u<<0,
+  DRIVERSTATE_READY  = 1u<<1,
+  DRIVERSTATE_ACTIVE = 1u<<2,
+  DRIVERSTATE_PLAY   = 1u<<3,
+
+  DRIVERSTATE_ERROR  = 1u<<30
 };
 
 /* main data handler.
@@ -60,8 +74,8 @@ enum DataDriverCommands {
  */
 class USCData {
   private:
+    USCConfig* config;
     vector<DataDriver*> drivers;
-
   public:
     size_t getDriverCount();
     /** return the pointer to a specific driver
@@ -82,7 +96,10 @@ class USCData {
      */
     int dispatchDriverCommand(unsigned int driver, DataDriverCommands cmd);
 
-    USCData();
+    int loadFromConfig();
+    int saveToConfig();
+
+    USCData(USCConfig* conf);
     ~USCData();
 };
 
@@ -101,6 +118,13 @@ enum DataDriverFlags : unsigned int {
   DRIVERFLAG_NONE   = 0,
   DRIVERFLAG_OUTPUT = 1u<<0,
   DRIVERFLAG_INPUT  = 1u<<1,
+  DRIVERFLAG_PAUSE  = 1u<<2,
+};
+
+struct DataDriverInfo {
+  DataDrivers id;
+  int flags;
+  const char* name;
 };
 
 class DataDriver {
@@ -108,26 +132,30 @@ class DataDriver {
     USCData* parent;
     vector<DataBuffer*> buffers;
     vector<Parameter> config;
-    string lastErrorStr;
-    bool running;
+    DataDriverState state;
+    int error;
+
+    YAML::Node saveBufferToNode();
+    void loadBufferFromNode(YAML::Node node);
   public:
-    virtual const char* getName();
-    virtual const int getFlags();
+    virtual const DataDriverInfo     getDriverInfo()      const;
+    virtual       DataBuffer*        getBuffer(int which) const;
+    virtual       int                getBufferCount()     const;
+    virtual       vector<Parameter>* getParams()               ;
+    virtual       DataDriverState    getState()           const;
+    virtual       int                getLastError();
+
     virtual int setup(USCData* p);
-    virtual int init();
-    virtual int deinit();
-    virtual int start();
-    virtual int stop();
-    virtual bool isRunning();
-    virtual DataBuffer* getBuffer(int which);
-    virtual int getBufferCount();
     virtual int enumerateDevices();
-    // virtual int getDeviceCount();
-    virtual int getDefaultInputDevice();
-    virtual int getDefaultOutputDevice();
-    virtual string getLastError();
-    virtual vector<Parameter> getParams();
-    virtual void destroyParams();
+
+    virtual void activate();
+    virtual void doPlay(bool play);
+    virtual void deactivate();
+
+    virtual void destroy();
+
+    virtual YAML::Node saveToNode();
+    virtual void loadFromNode(YAML::Node& node);
 };
 
 #endif

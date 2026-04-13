@@ -27,8 +27,8 @@ void Trigger::setupTrigger(DataBuffer* buf) {
   triggered = false;
 }
 
-vector<TriggerParam> Trigger::getParams() {
-  return params;
+vector<TriggerParam>* Trigger::getParams() {
+  return &params;
 }
 
 bool Trigger::trigger(nint windowSize) {
@@ -44,5 +44,6 @@ nint Trigger::getTriggerIndex() {
 }
 
 Trigger::~Trigger(){
-  for (TriggerParam& i:params) i.destroy();
+  for (int i=0; i<params.size(); i++)
+    params[i].destroy();
 }

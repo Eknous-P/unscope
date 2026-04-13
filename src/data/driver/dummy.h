@@ -24,8 +24,7 @@ class DummyDriver : public DataDriver {
   nint index;
   static int callbackFunction(void* parent, nint samples);
   public:
-    const int getFlags();
-    const char* getName();
+    const DataDriverInfo getDriverInfo() const;
     int setup(USCData* p);
 };
 

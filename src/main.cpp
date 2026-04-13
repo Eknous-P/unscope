@@ -18,181 +18,60 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #include "data.h"
 #include "gui.h"
 #include "shared.h"
-
-float clamp(float a) {
-  if (a > 1.0f) return 1.0f;
-  if (a < -1.0f) return -1.0f;
-  return a;
-}
-
-const char* getErrorMsg(int e) {
-  return errMsgs[e];
-}
+#include "config.h"
 
 int main(int argc, char** argv) {
   int e;
+  char* prefPath = SDL_GetPrefPath(NULL, "unscope");
+#ifdef _WIN32
+#warning "SDL_GetPrefPath: set org!"
+#endif
+  string prefPathS;
+  prefPathS+=prefPath;
+  SDL_free(prefPath);
 
-  // parse arguments
-  // if (argc > 1) {
-  //   unsigned char flagStartIndex = 1;
-  //   int value = 0;
-  //   for (int i = 1; i < argc; i += 2) {
-  //     if (argv[i][0] == '-') {
-  //       flagStartIndex = 1;
-  //       if (argv[i][1] == '-') {
-  //         flagStartIndex = 2;
-  //       }
-  //       if (argv[i][flagStartIndex + 1] == 0) {
-  //         switch (argv[i][flagStartIndex]) {
-  //           case UPARAM_ABOUT:
-  //             printf("%s%s", verMsg, aboutMsg);
-  //             return 0;
-  //           case UPARAM_HELP:
-  //             printf("%s%s", verMsg, helpMsg);
-  //             return 0;
-  //           case UPARAM_LICENSE:
-  //             printf("%s%s", verMsg, licenseMsg);
-  //             return 0;
-  //           case UPARAM_VERSION:
-  //             printf("%s", verMsg);
-  //             return 0;
-  //           default: break;
-  //         }
-  //         if (i + 1 == argc) {
-  //           printf(ERROR_MSG "no value for argument %s given" MSG_END, argv[i]);
-  //           continue;
-  //         }
-  //         try {
-  //           value = std::stoi(argv[i + 1]);
-  //         } catch (...) {
-  //           printf(ERROR_MSG "invalid argument for %s given: %s" MSG_END, argv[i], argv[i + 1]);
-  //           continue;
-  //         }
-  //         switch (argv[i][flagStartIndex]) {
-  //           case UPARAM_BUFFERSIZE:
-  //             params.audioBufferSize = value;
-  //             break;
-  //           case UPARAM_FRAMESIZE:
-  //             audConf.frameSize = value;
-  //             break;
-  //           case UPARAM_CHANNELCOUNT: {
-  //             if (value > 3) {
-  //               printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
-  //               continue;
-  //             }
-  //             audConf.inputChannels  = value;
-  //             audConf.outputChannels = value;
-  //             break;
-  //           }
-  //           case UPARAM_SAMPLERATE: {
-  //             if ((value%8000)!=0 && (value%11025)!=0) {
-  //               printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
-  //               continue;
-  //             }
-  //             audConf.sampleRate = value;
-  //             break;
-  //           }
-  //           default: break;
-  //         }
-  //       } else {
-  //         if (strcmp(&argv[i][flagStartIndex], "help") == 0) {
-  //           printf("%s%s", verMsg, helpMsg);
-  //           return 0;
-  //         } else if (strcmp(&argv[i][flagStartIndex], "about") == 0) {
-  //           printf("%s%s", verMsg, aboutMsg);
-  //           return 0;
-  //         } else if (strcmp(&argv[i][flagStartIndex], "license") == 0) {
-  //           printf("%s%s", verMsg, licenseMsg);
-  //           return 0;
-  //         } else if (strcmp(&argv[i][flagStartIndex], "version") == 0) {
-  //           printf("%s", verMsg);
-  //           return 0;
-  //         }
-  //         if (i + 1 == argc) {
-  //           printf(ERROR_MSG "no value for argument %s given" MSG_END, argv[i]);
-  //           continue;
-  //         }
-  //         try {
-  //           value = std::stoi(argv[i + 1]);
-  //         } catch (...) {
-  //           printf(ERROR_MSG "invalid argument for %s given: %s" MSG_END, argv[i], argv[i + 1]);
-  //           continue;
-  //         }
-  //         if (value < 0) {
-  //           printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
-  //           continue;
-  //         }
-  //         if (strcmp(argv[i] + flagStartIndex, "bufsize") == 0) {
-  //           params.audioBufferSize = value;
-  //           continue;
-  //         } else if (strcmp(argv[i] + flagStartIndex, "framesize") == 0) {
-  //           audConf.frameSize = value;
-  //           continue;
-  //         } else if (strcmp(argv[i] + flagStartIndex, "channels") == 0) {
-  //           if (value > 3) {
-  //             printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
-  //             continue;
-  //           }
-  //           audConf.inputChannels = value;
-  //           audConf.outputChannels = value;
-  //           continue;
-  //         } else if (strcmp(argv[i] + flagStartIndex, "inputChannels") == 0) {
-  //           if (value > 3) {
-  //             printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
-  //             continue;
-  //           }
-  //           audConf.inputChannels = value;
-  //           continue;
-  //         } else if (strcmp(argv[i] + flagStartIndex, "outputChannels") == 0) {
-  //           if (value > 3) {
-  //             printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
-  //             continue;
-  //           }
-  //           audConf.outputChannels = value;
-  //           continue;
-  //         } else if (strcmp(argv[i] + flagStartIndex, "samplerate") == 0) {
-  //           if ((value%8000)!=0 && (value%11025)!=0) { // i bet some odd sample rate will not be caught by this
-  //             printf(ERROR_MSG "invalid value for %s given: %d" MSG_END, argv[i], value);
-  //             continue;
-  //           }
-  //           audConf.sampleRate = value;
-  //           continue;
-  //         }
-  //       }
-  //     } else {
-  //       printf(ERROR_MSG "cannot parse argument %s" MSG_END, argv[i]);
-  //     }
-  //   }
-  // };
+  printf(INFO_MSG "loading config..." MSG_END);
+  string confPath=prefPathS+"config.yaml";
+  USCConfig config(confPath.c_str());
+  config.loadConfig();
 
-  USCGUI gui;
+  printf(INFO_MSG "initializing data..." MSG_END);
+  USCData data(&config);
+  data.loadFromConfig();
 
+  printf(INFO_MSG "initializing GUI..." MSG_END);
+  string layoutPath=prefPathS+"layout.ini";
+  USCGUI gui(&data, &config, layoutPath);
+
+  gui.readConfig();
+#ifdef _WIN32
+  e = gui.init(USC_RENDER_DIRECTX11);
+#else
   e = gui.init(USC_RENDER_OPENGL2);
+#endif
   if (e) {
-    printf(ERROR_MSG "error in initializing GUI! %d:%s" MSG_END, e, getErrorMsg(e));
+    printf(ERROR_MSG "failed to init GUI! exiting..." MSG_END);
     return 1;
   }
 
-  USCData data;
 
-  e = data.addDriver(DATA_PORTAUDIO);
-  if (e) {
-    printf(ERROR_MSG "oh no!! %d" MSG_END, e);
-    return 1;
-  }
-
-  gui.attachData(&data);
-
+  printf(INFO_MSG "starting GUI loop" MSG_END);
   while (gui.isRunning()) {
     gui.doFrame();
   }
 
+  printf(INFO_MSG "GUI loop over" MSG_END);
+  gui.writeConfig();
+
+  data.saveToConfig();
   for (int i=0; i<data.getDriverCount(); i++) {
-    data.dispatchDriverCommand(i, DRIVER_STOP_CALLBACK);
+    data.dispatchDriverCommand(i, DRIVER_DESTROY);
     data.removeDriver(i);
   }
 
+  config.saveConfig();
 
+  printf(SUCCESS_MSG "exiting successfully." MSG_END);
   return 0;
 }
 
@@ -222,19 +101,6 @@ const char* helpMsg =
 const char* aboutMsg = 
 "An audio oscilloscope\n";
 
-const char* thirdPartyMsg = // TODO: change this to be able to use TextLinkOpenURL
-"unscope is made using these libraries:\n"
-"\n"
-"PortAudio (https://github.com/PortAudio/portaudio)\n"
-#ifdef NON_SYS_SDL
-"SDL (https://github.com/libsdl-org/SDL)\n"
-#endif
-"Dear ImGui (https://github.com/ocornut/imgui)\n"
-"ImGui Knobs (https://github.com/altschuler/imgui-knobs)\n"
-"imgui_toggle (https://github.com/cmdwtf/imgui_toggle)\n"
-"PFFFT (https://github.com/marton78/pffft)\n"
-"ShowCQT (modified) (https://github.com/mfcc64/showcqt-js)\n";
-
 const char* licenseMsg =
 "Copyright (C) 2025-2026 Eknous\n"
 "\n"
@@ -250,17 +116,6 @@ const char* licenseMsg =
 "You should have received a copy of the GNU General Public License along with\n"
 "unscope. If not, see <https://www.gnu.org/licenses/>. \n"
 ;
-
-const char* errMsgs[] = {
-  "",
-  "init fail",
-  "no devices found\n",
-  "cant open device\n",
-  "cant start device\n",
-  "cant init audioinput\n",
-  "cant setup gui renderer\n",
-  "cant init gui renderer\n"
-};
 
 const char* renderers[] = {
   "SDL2 Renderer",

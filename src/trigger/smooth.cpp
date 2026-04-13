@@ -29,9 +29,9 @@ void TriggerSmooth::setupTrigger(DataBuffer* buf) {
   triggerLevel = 0.0f;
 
   params = {
-    TriggerParam(PARAM_KNOBUNIT,false,"smoothing"),
-    TriggerParam(PARAM_KNOBUNIT,false,"level ratio"),
-    TriggerParam(PARAM_TOGGLE,false,"trigger on minimum"),
+    TriggerParam(PARAM_KNOBUNIT, false, "smoothing", "smoothing", NULL, NULL, &smooth),
+    TriggerParam(PARAM_KNOBUNIT, false, "levelRatio", "level ratio"),
+    TriggerParam(PARAM_TOGGLE, false, "trigMinimum", "trigger on minimum"),
   };
 
   params[0].setValue<float>(.9f);
@@ -52,32 +52,17 @@ bool TriggerSmooth::trigger(nint windowSize) {
   nint begin = buffer->getSize() - windowSize;
   const bool useMin = params[2].getValue<bool>();
   if (begin < PRECALC_RANGE) PRECALC_RANGE = 0;
-  float smoothLvl = params[0].getValue<float>();
-  if (prevSmooth != smoothLvl) {
-    prevSmooth = smoothLvl;
+  if (prevSmooth != smooth) {
+    prevSmooth = smooth;
     logSmooth = LOG_FUNC(prevSmooth);
   }
   // smooth waveform
-  memset(smoothBuf, 0xff, (begin-PRECALC_RANGE)*sizeof(float));
+  memset(smoothBuf, 0xff, buffer->getSize()*sizeof(float));
   smoothBuf[begin - PRECALC_RANGE] = buffer->getValueScaled(begin - PRECALC_RANGE) * (1.0f - logSmooth);
   float smoothPeak = useMin?1.0f:-1.0f;
-  for (nint i = begin + 1 - PRECALC_RANGE; i < buffer->getSize(); i++) {
-    smoothBuf[i] = (logSmooth * smoothBuf[i-1] + (1.0f - logSmooth) * buffer->getValueScaled(i));
-    if (i < begin) continue;
-    if (useMin) {
-      if (smoothBuf[i] < smoothPeak) {
-        smoothPeak = smoothBuf[i];
-      }
-    } else {
-      if (smoothBuf[i] > smoothPeak) {
-        smoothPeak = smoothBuf[i];
-      }
-    }
-  }
-  while (iter--) {
-    smoothPeak = useMin?1.0f:-1.0f;
+  do {
     for (nint i = begin + 1 - PRECALC_RANGE; i < buffer->getSize(); i++) {
-      smoothBuf[i] = (logSmooth * smoothBuf[i-1] + (1.0f - logSmooth) * smoothBuf[i]);
+      smoothBuf[i] = (logSmooth * smoothBuf[i-1] + (1.0f - logSmooth) * buffer->getValueScaled(i));
       if (i < begin) continue;
       if (useMin) {
         if (smoothBuf[i] < smoothPeak) {
@@ -89,7 +74,7 @@ bool TriggerSmooth::trigger(nint windowSize) {
         }
       }
     }
-  }
+  } while (iter--);
   // locate trigger
   bool triggerHigh = false, triggerLow = false, foundTrigger = false;
   triggerLevel = smoothPeak * params[1].getValue<float>();
@@ -122,6 +107,7 @@ float TriggerSmooth::getTriggerLevel() {
 }
 
 TriggerSmooth::~TriggerSmooth() {
-  for (TriggerParam i:params) i.destroy();
+  for (int i=0; i<params.size(); i++)
+    params[i].destroy();
   DELETE_PTR_ARR(smoothBuf)
 }

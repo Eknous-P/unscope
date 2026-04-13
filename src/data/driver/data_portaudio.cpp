@@ -19,13 +19,17 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #include "portaudio.h"
 #include "audio_common.h"
 
-const int DataPortAudio::getFlags() {
-  return DRIVERFLAG_OUTPUT|DRIVERFLAG_INPUT;
+const DataDriverInfo DataPortAudio::getDriverInfo() const {
+  return {
+    DATA_PORTAUDIO,
+    DRIVERFLAG_OUTPUT|DRIVERFLAG_INPUT|DRIVERFLAG_PAUSE,
+    "PortAudio Driver"
+  };
 }
 
 int DataPortAudio::setup(USCData* p) {
   parent = p;
-  running = false;
+  state = 0;
   paInitSuccess = false;
 
   buffers = {};
@@ -35,40 +39,61 @@ int DataPortAudio::setup(USCData* p) {
 
   inputChannels = outputChannels = 0;
 
+  inputChannelsP = 2;
+  outputChannelsP = 0;
+
   config = {
-    Parameter(PARAM_INPUTINT, false, "input channels", (void*)paramChannelsLimits),
-    Parameter(PARAM_INPUTINT, false, "output channels", (void*)paramChannelsLimits),
-    Parameter(PARAM_COMBO_INT, false, "sample rate", (void*)sampleRates),
-    Parameter(PARAM_COMBOV_STR, false, "input device", &inputDevices),
-    Parameter(PARAM_COMBOV_STR, false, "output device", &outputDevices),
-    Parameter(PARAM_COMBO_INT, false, "frame size", (void*)frameSizes),
+    Parameter(PARAM_INPUTINT, false, "inputChans", "input channels", NULL, (void*)paramChannelsLimits, &inputChannelsP),
+    // Parameter(PARAM_INPUTINT, false, "outputChans", "output channels", NULL, (void*)paramChannelsLimits, &outputChannelsP),
+    Parameter(PARAM_COMBO_INT, false, "sampleRate", "sample rate", NULL, (void*)sampleRates, &sampleRateP),
+    Parameter(PARAM_COMBOV_STR, false, "inputDevice", "input device", NULL, &inputDevices, &inputDeviceP),
+    // Parameter(PARAM_COMBOV_STR, false, "outputDevice", "output device", NULL, &outputDevices, &outputDeviceP),
+    Parameter(PARAM_COMBO_INT, false, "frameSize", "frame size", NULL, (void*)frameSizes, &frameSizeP),
   };
 
-  config[0].setValue((int)2);
-  config[1].setValue((int)2);
+  sampleRateP = 6;
+  inputDeviceP = outputDeviceP = 0;
+  frameSizeP = 5;
 
+  for (int i=0; i<16; i++) {
+    buffers.push_back(new DataBuffer_Float);
+  }
+
+  printf(INFO_MSG "PA: initializing PortAudio..." MSG_END);
   e = Pa_Initialize();
-  if (e!=paNoError) return e;
+  if (e!=paNoError) {
+    printf(ERROR_MSG "PA: failed to initialize PortAudio! %s" MSG_END, Pa_GetErrorText(e));
+    return e;
+  }
   else paInitSuccess = true;
-  return 0;
+
+  stream=NULL;
+
+  if (paInitSuccess) {
+    printf(SUCCESS_MSG "PA: initialized successfully" MSG_END);
+    state |=  DRIVERSTATE_OK|DRIVERSTATE_READY;
+    return 0;
+  }
+  return 1;
 }
 
-void DataPortAudio::openStream(int iDev, int oDev, int iChans, int oChans, int sampleRate, int frames) {
+PaError DataPortAudio::openStream(int iDev, int oDev, int iChans, int oChans, int sampleRate, int frames) {
   inputChannels = iChans;
   outputChannels = oChans;
   outputting = false;
 
-  for (int i=0 ;i<buffers.size(); i++) {
-    delete buffers[i];
-  }
-  buffers.clear();
   char strbuf[256];
+  for (int i=0; i<16; i++)
+    buffers[i]->destroy();
   for (int i=0; i<iChans; i++) {
-    DataBuffer* newBuf = new DataBuffer_Float;
     snprintf(strbuf, 256, "PortAudio Input Channel %d", i+1);
-    newBuf->init(65536, sampleRate, strbuf);
-    buffers.push_back(newBuf);
+    buffers[i]->init(65536, sampleRate, strbuf);
   }
+
+  // if (iDev > inputDevicesInternal.size() || oDev > outputDevicesInternal.size()) {
+  //   printf(ERROR_MSG "PA: invalid device number!" MSG_END);
+  //   return paInvalidDevice;
+  // }
 
   streamParamsI.device = iDev;
   streamParamsI.channelCount = iChans;
@@ -84,93 +109,133 @@ void DataPortAudio::openStream(int iDev, int oDev, int iChans, int oChans, int s
     streamParamsO.hostApiSpecificStreamInfo = NULL;
     outputting = true;
   }
-  e = Pa_OpenStream(
+  int ret = Pa_OpenStream(
     &stream,
     &streamParamsI,
     outputting?&streamParamsO:NULL,
     sampleRate,
     frames,
-    paClipOff,
+    paClipOff|paDitherOff,
     &DataPortAudio::audioCallback,
     this
   );
+  printf(MISC_MSG "Pa_OpenStream return: %d" MSG_END, ret);
+  return ret;
 }
 
-void DataPortAudio::closeStream() {
-  if (running) {
-    running = false;
-    e = Pa_CloseStream(stream);
+void DataPortAudio::activate() {
+  if ((state&DRIVERSTATE_ACTIVE))  {
+    doPlay(false);
+    deactivate();
+    if (state&DRIVERSTATE_ERROR) {
+      printf(ERROR_MSG "PA: failed to deactivate device!" MSG_END);
+      return;
+    }
   }
-}
-
-#define inputDeviceN config[3].getValue<int>()
-#define outputDeviceN config[4].getValue<int>()
-
-int DataPortAudio::init() {
-  if (running) return -1;
-  if (inputDeviceN == paNoDevice) return 1;
+  if (!(state&(DRIVERSTATE_OK|DRIVERSTATE_READY)))  {
+    printf(ERROR_MSG "PA: cannot activate!" MSG_END);
+    state |= DRIVERSTATE_ERROR;
+    return;
+  }
+  if (inputDeviceP == paNoDevice) {
+    printf(ERROR_MSG "PA: no input device!" MSG_END);
+    state |= DRIVERSTATE_ERROR;
+    return;
+  }
 
   printf(INFO_MSG "opening pa stream..." MSG_END);
-  openStream(inputDevicesInternal[inputDeviceN],
-    outputDevicesInternal[outputDeviceN],
-    config[0].getValue<int>(),
-    config[1].getValue<int>(),
-    sampleRates[config[2].getValue<int>()+1],
-    frameSizes[config[5].getValue<int>()+1]);
+  e = openStream(inputDevicesInternal[inputDeviceP],
+    outputDevicesInternal[outputDeviceP],
+    inputChannelsP,
+    outputChannelsP,
+    sampleRates[sampleRateP+1],
+    frameSizes[frameSizeP+1]);
+  if (e!=paNoError) {
+    printf(ERROR_MSG "PA: failed to open stream! %s" MSG_END, Pa_GetErrorText(e));
+    // state |= DRIVERSTATE_ERROR;
+    // return;
+  }
 
-  if (e) printf(ERROR_MSG "opening stream failed! %d: %s" MSG_END, e, Pa_GetErrorText(e));
+  // if (e) printf(ERROR_MSG "opening stream failed! %d: %s" MSG_END, e, Pa_GetErrorText(e));
   switch (e) {
     case paInvalidDevice:
       printf(INFO_MSG "trying default devices..." MSG_END);
-      openStream(Pa_GetDefaultInputDevice(),
-        outputDevicesInternal[outputDeviceN]==-1?-1:Pa_GetDefaultOutputDevice(),
-        config[0].getValue<int>(),
-        config[1].getValue<int>(),
-        sampleRates[config[2].getValue<int>()+1],
-        frameSizes[config[5].getValue<int>()+1]);
+      e = openStream(Pa_GetDefaultInputDevice(),
+        outputDevicesInternal[outputDeviceP]==-1?-1:Pa_GetDefaultOutputDevice(),
+        inputChannelsP,
+        outputChannelsP,
+        sampleRates[sampleRateP+1],
+        frameSizes[frameSizeP+1]);
       break;
     case paInvalidChannelCount: {
       // TODO: handle chan count switching
       // int outChans=conf->outputDevice>0?Pa_GetDeviceInfo(conf->outputDevice)->maxOutputChannels:0;
       printf(INFO_MSG "trying preferred channel count..." MSG_END);
-      // openStream(conf->inputDevice,
-      //   conf->outputDevice,
-      //   Pa_GetDeviceInfo(conf->inputDevice)->maxInputChannels,
-      //   outChans,
-      //   conf->sampleRate,
-      //   conf->frameSize);
-      config[0].setValue(2);
-      openStream(Pa_GetDefaultInputDevice(),
-        outputDevicesInternal[outputDeviceN]==-1?-1:Pa_GetDefaultOutputDevice(),
-        config[0].getValue<int>(),
-        config[1].getValue<int>(),
-        sampleRates[config[2].getValue<int>()+1],
-        frameSizes[config[5].getValue<int>()+1]);
+      e = openStream(Pa_GetDefaultInputDevice(),
+        outputDevicesInternal[outputDeviceP]==-1?-1:Pa_GetDefaultOutputDevice(),
+        inputChannelsP,
+        outputChannelsP,
+        sampleRates[sampleRateP+1],
+        frameSizes[frameSizeP+1]);
       break;
     }
     case paInvalidSampleRate:
       printf(INFO_MSG "trying default sample rate..." MSG_END);
-      openStream(inputDevicesInternal[inputDeviceN],
-        outputDevicesInternal[outputDeviceN],
-        config[0].getValue<int>(),
-        config[1].getValue<int>(),
-        Pa_GetDeviceInfo(inputDevicesInternal[inputDeviceN])->defaultSampleRate,
-        frameSizes[config[5].getValue<int>()+1]);
+      e = openStream(inputDevicesInternal[inputDeviceP],
+        outputDevicesInternal[outputDeviceP],
+        inputChannelsP,
+        outputChannelsP,
+        Pa_GetDeviceInfo(inputDevicesInternal[inputDeviceP])->defaultSampleRate,
+        frameSizes[frameSizeP+1]);
       break;
     case paNoError:
     default: break;
   }
 
   if (e!=paNoError) {
-    printf(ERROR_MSG "NOOOOOOO!!!" MSG_END);
-    return 2;
+    printf(ERROR_MSG "PA: NOOOOOOO!!! %s" MSG_END, Pa_GetErrorText(e));
+    state |= DRIVERSTATE_ERROR;
+    return;
   }
 
-  return 0;
+  state |= DRIVERSTATE_ACTIVE;
 }
 
-#undef inputDeviceN
-#undef outputDeviceN
+void DataPortAudio::deactivate() {
+  if (!(state&DRIVERSTATE_ACTIVE)) {
+    printf(INFO_MSG "PA: cannot decativate while inactive!" MSG_END);
+    return;
+  }
+  doPlay(false);
+  Pa_CloseStream(stream);
+  state &=~DRIVERSTATE_ACTIVE;
+}
+
+void DataPortAudio::doPlay(bool play) {
+  if (!(state&DRIVERSTATE_ACTIVE)) {
+    // state |= DRIVERSTATE_ERROR;
+    return;
+  }
+  if (play) {
+    if (state&DRIVERSTATE_PLAY) return;
+    e = Pa_StartStream(stream);
+    if (e!=paNoError) {
+      printf(ERROR_MSG "PA: failed to start stream! %s" MSG_END, Pa_GetErrorText(e));
+      state |= DRIVERSTATE_ERROR;
+      return;
+    }
+    state |= DRIVERSTATE_PLAY;
+  } else {
+    if (!(state&DRIVERSTATE_PLAY)) return;
+    e = Pa_StopStream(stream);
+    if (e!=paNoError) {
+      printf(ERROR_MSG "PA: failed to stop stream! %s" MSG_END, Pa_GetErrorText(e));
+      state |= DRIVERSTATE_ERROR;
+      return;
+    }
+    state &=~DRIVERSTATE_PLAY;
+  }
+}
 
 int DataPortAudio::audioCallback(
     const void *inputBuffer, void *outputBuffer,
@@ -205,34 +270,16 @@ int DataPortAudio::audioCallback(
   return paContinue;
 }
 
-int DataPortAudio::start() {
-  if (running) return -1;
-  e = Pa_StartStream(stream);
-  switch (e) {
-    case paNoError:
-      running = true;
-      return 0;
-    default: return 1;
-  }
-}
-
-int DataPortAudio::stop() {
-  if (!running) return -1;
-  if (Pa_IsStreamActive(stream)) e = Pa_StopStream(stream);
-  switch (e) {
-    case paNoError:
-      running = false;
-      return 0;
-    default: return 1;
-  }
-}
-
 int DataPortAudio::enumerateDevices() {
   inputDevices.clear();
   outputDevices.clear();
   inputDevicesInternal.clear();
   outputDevicesInternal.clear();
-  if (Pa_GetDeviceCount() < 1) return 1;
+  e = Pa_GetDeviceCount();
+  if (e < 1) {
+    printf(ERROR_MSG "PA: error when getting device count! %s" MSG_END, Pa_GetErrorText(e));
+    return 1;
+  }
 
   inputDevicesInternal.push_back(Pa_GetDefaultInputDevice());
   inputDevices.push_back("Default input");
@@ -246,12 +293,12 @@ int DataPortAudio::enumerateDevices() {
   for (int i=0; i<count; i++) {
     const PaDeviceInfo* dev = Pa_GetDeviceInfo(i);
     if (dev->maxInputChannels>0) {
-      snprintf(strbuf, 512, "%d: %s | %s", i, Pa_GetHostApiInfo(dev->hostApi)->name, dev->name);
+      snprintf(strbuf, 512, "%s | %s", Pa_GetHostApiInfo(dev->hostApi)->name, dev->name);
       inputDevicesInternal.push_back(i);
       inputDevices.push_back(string(strbuf));
     }
     if (dev->maxOutputChannels>0) {
-      snprintf(strbuf, 512, "%d: %s | %s", i, Pa_GetHostApiInfo(dev->hostApi)->name, dev->name);
+      snprintf(strbuf, 512, "%s | %s", Pa_GetHostApiInfo(dev->hostApi)->name, dev->name);
       outputDevicesInternal.push_back(i);
       outputDevices.push_back(string(strbuf));
     }
@@ -259,20 +306,19 @@ int DataPortAudio::enumerateDevices() {
   return 0;
 }
 
-string DataPortAudio::getLastError() {
-  lastErrorStr = Pa_GetErrorText(e);
-  return lastErrorStr;
-}
-
-int DataPortAudio::deinit() {
-  closeStream();
+void DataPortAudio::destroy() {
+  if (paInitSuccess) {
+    if (state&DRIVERSTATE_ACTIVE) {
+      if (state&DRIVERSTATE_PLAY) doPlay(false);
+      deactivate();
+    }
+    Pa_Terminate();
+    state&=~DRIVERSTATE_READY;
+  }
+  for (int i=0; i<config.size(); i++) config[i].destroy();
+  config.clear();
+  for (int i=0; i<buffers.size(); i++) buffers[i]->destroy();
   buffers.clear();
-  if (paInitSuccess) Pa_Terminate();
-  return 0;
-}
-
-const char* DataPortAudio::getName() {
-  return "PortAudio Driver";
 }
 
 DataPortAudio::~DataPortAudio() {

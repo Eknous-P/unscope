@@ -20,62 +20,103 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 #include <SDL_audio.h>
 #include <data.h>
 
-const int DataSDL::getFlags() {
-  return DRIVERFLAG_OUTPUT|DRIVERFLAG_INPUT;
+
+const DataDriverInfo DataSDL::getDriverInfo() const {
+  return {
+    DATA_SDL,
+    DRIVERFLAG_OUTPUT|DRIVERFLAG_INPUT|DRIVERFLAG_PAUSE,
+    "SDL Driver"
+  };
 }
 
 int DataSDL::setup(USCData* p) {
   parent = p;
-  running = false;
+  state = 0;
 
   buffers = {};
   devices = {};
 
   deviceNum = 0;
   channels = 2;
-  sampleRateNum = 0;
-  frameSizeNum = 0;
+  sampleRateNum = 6;
+  frameSizeNum = 5;
 
   config = {
-    Parameter(PARAM_INPUTINT, false, "channels", (void*)paramChannelsLimits, &channels),
-    Parameter(PARAM_COMBO_INT, false, "sample rate", (void*)sampleRates, &sampleRateNum),
-    Parameter(PARAM_COMBOV_STR, false, "device", &devices, &deviceNum),
-    Parameter(PARAM_COMBO_INT, false, "frame size", (void*)frameSizes, &frameSizeNum),
+    Parameter(PARAM_INPUTINT, false, "channels", "channels", NULL, (void*)paramChannelsLimits, &channels),
+    Parameter(PARAM_COMBO_INT, false, "sampleRate", "sample rate", NULL, (void*)sampleRates, &sampleRateNum),
+    Parameter(PARAM_COMBOV_STR, false, "device", "device",  NULL,&devices, &deviceNum),
+    Parameter(PARAM_COMBO_INT, false, "frameSize", "frame size", NULL, (void*)frameSizes, &frameSizeNum),
   };
 
+  for (int i=0; i<16; i++) {
+    buffers.push_back(new DataBuffer_Float);
+  }
+
   if (SDL_Init(SDL_INIT_AUDIO)) return -1;
+
+  state |= DRIVERSTATE_READY|DRIVERSTATE_OK;
+
   return 0;
 }
 
-int DataSDL::init() {
-  if (running) return -1;
-
+void DataSDL::activate() {
+  if (!(state&DRIVERSTATE_ACTIVE))  {
+    doPlay(false);
+    deactivate();
+    if (state&DRIVERSTATE_ERROR) {
+      printf(ERROR_MSG "SDL: failed to deactivate device!" MSG_END);
+      return;
+    }
+  }
+  if (!(state&(DRIVERSTATE_OK|DRIVERSTATE_READY)))  {
+    printf(ERROR_MSG "SDL: cannot activate!" MSG_END);
+    state |= DRIVERSTATE_ERROR;
+    return;
+  }
   for (int i=0 ;i<buffers.size(); i++) {
     delete buffers[i];
   }
   buffers.clear();
   char strbuf[256];
+  for (int i=0; i<16; i++)
+    buffers[i]->destroy();
   for (int i=0; i<channels; i++) {
-    DataBuffer* newBuf = new DataBuffer_Float;
     snprintf(strbuf, 256, "SDL Input Channel %d", i+1);
-    newBuf->init(65536, sampleRates[sampleRateNum], strbuf);
-    buffers.push_back(newBuf);
+    buffers[i]->init(65536, sampleRates[sampleRateNum+1], strbuf);
   }
 
   request.userdata = this;
   request.callback = audioCallback;
   request.channels = channels;
   request.format = AUDIO_F32;
-  request.freq = sampleRates[sampleRateNum];
-  request.samples = frameSizes[frameSizeNum];
+  request.freq = sampleRates[sampleRateNum+1];
+  request.samples = frameSizes[frameSizeNum+1];
 
   deviceNumInternal = SDL_OpenAudioDevice(devices[deviceNum].c_str(), 1, &request, &response, 0);
   if (deviceNumInternal == 0) {
-    printf(ERROR_MSG "OH NO!!! %s" MSG_END, SDL_GetError());
-    return 1;
+    printf(ERROR_MSG "SDL: OH NO!!! %s" MSG_END, SDL_GetError());
+    state |= DRIVERSTATE_ERROR;
+    return;
   }
   printf(INFO_MSG "SDL audio status: %d" MSG_END, SDL_GetAudioDeviceStatus(deviceNumInternal));
-  return 0;
+  state |= DRIVERSTATE_ACTIVE;
+  return;
+}
+
+void DataSDL::doPlay(bool play) {
+  if (!(state&DRIVERSTATE_ACTIVE)) {
+    // state |= DRIVERSTATE_ERROR;
+    return;
+  }
+  if (play) {
+    if (state&DRIVERSTATE_PLAY) return;
+    SDL_PauseAudioDevice(deviceNumInternal, 0);
+    state |= DRIVERSTATE_PLAY;
+  } else {
+    if (!(state&DRIVERSTATE_PLAY)) return;
+    SDL_PauseAudioDevice(deviceNumInternal, 1);
+    state &=~DRIVERSTATE_PLAY;
+  }
 }
 
 int DataSDL::enumerateDevices() {
@@ -85,7 +126,7 @@ int DataSDL::enumerateDevices() {
   for (int i=0; i<deviceNum; i++) {
     devices.push_back(SDL_GetAudioDeviceName(i, 1));
   }
-  return deviceNum;
+  return 0;
 }
 
 void DataSDL::audioCallback(void* userdata, Uint8* stream, int len) {
@@ -100,23 +141,21 @@ void DataSDL::audioCallback(void* userdata, Uint8* stream, int len) {
   }
 }
 
-int DataSDL::start() {
-  SDL_PauseAudioDevice(deviceNumInternal, 0);
-  return 0;
+void DataSDL::deactivate() {
+  if (!(state&(DRIVERSTATE_OK|DRIVERSTATE_READY))) return;
+  if (state&DRIVERSTATE_PLAY) doPlay(false);
+  SDL_CloseAudioDevice(deviceNumInternal);
+  state&=~DRIVERSTATE_ACTIVE;
 }
 
-int DataSDL::stop() {
-  SDL_CloseAudioDevice(deviceNumInternal);
-  return 0;
-}
-
-int DataSDL::deinit() {
-  SDL_CloseAudioDevice(deviceNumInternal);
+void DataSDL::destroy() {
+  if (state&DRIVERSTATE_ACTIVE) deactivate();
+  for (int i=0; i<config.size(); i++) config[i].destroy();
+  config.clear();
+  for (int i=0; i<buffers.size(); i++) buffers[i]->destroy();
   buffers.clear();
-  return 0;
 }
 
-const char* DataSDL::getName() {
-  return "SDL Driver";
+DataSDL::~DataSDL() {
+  devices.clear();
 }
-

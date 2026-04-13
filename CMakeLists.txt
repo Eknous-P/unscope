@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.20)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -9,6 +9,7 @@ set(CMAKE_PROJECT_VERSION_MINOR 0)
 set(linked_libraries)
 set(compiler_options)
 
+set(config_sources)
 set(gui_sources)
 set(audio_sources)
 set(trigger_sources)
@@ -43,6 +44,7 @@ endif()
 # flags
 if (IS_WIN)
   set(SYSTEM_SDL_DEF FALSE)
+  set(USE_PIPEWIRE_DEF FALSE)
   if (IS_32BIT)
     set(DIRECTX9_DEF TRUE)
     set(DIRECTX11_DEF FALSE)
@@ -53,6 +55,7 @@ if (IS_WIN)
 
   set(OPENGL_DEF FALSE)
 else()
+  set(USE_PIPEWIRE_DEF TRUE)
   set(SYSTEM_SDL_DEF TRUE)
   set(DIRECTX9_DEF FALSE)
   set(DIRECTX11_DEF FALSE)
@@ -63,6 +66,7 @@ option(SYSTEM_SDL "use system sdl" ${SYSTEM_SDL_DEF})
 option(RENDER_DIRECTX9 "use directx9" ${DIRECTX9_DEF})
 option(RENDER_DIRECTX11 "use directx11" ${DIRECTX11_DEF})
 option(RENDER_OPENGL "use opengl" ${OPENGL_DEF})
+option(USE_PIPEWIRE "build with pipewire support" ${USE_PIPEWIRE_DEF})
 
 # render
 if (RENDER_OPENGL)
@@ -88,7 +92,7 @@ set(SDL_JOYSTICK OFF CACHE BOOL "use sdl joystick")
 set(SDL_HIDAPI OFF CACHE BOOL "use sdl hidapi")
 set(SDL_POWER OFF CACHE BOOL "use sdl power")
 set(SDL_FILE OFF CACHE BOOL "use sdl file")
-set(SDL_FILESYSTEM OFF CACHE BOOL "use sdl filesystem")
+set(SDL_FILESYSTEM ON CACHE BOOL "use sdl filesystem")
 set(SDL_SENSOR OFF CACHE BOOL "use sdl sensor")
 set(SDL_LOCALE OFF CACHE BOOL "use sdl locale")
 set(SDL_OPENGL ${RENDER_OPENGL})
@@ -122,15 +126,38 @@ set(PA_BUILD_SHARED_LIBS OFF CACHE BOOL "Build dynamic library" FORCE)
 add_subdirectory(${submodules_path}/portaudio EXCLUDE_FROM_ALL)
 list(APPEND linked_libraries PortAudio)
 
+# yaml-cpp
+add_subdirectory(${submodules_path}/yaml-cpp EXCLUDE_FROM_ALL)
+list(APPEND linked_libraries yaml-cpp)
+
+# pipewire
+if (USE_PIPEWIRE)
+  pkg_check_modules(PIPEWIRE libpipewire-0.3)
+  if(PIPEWIRE_FOUND)
+  add_compile_definitions(USE_PIPEWIRE_DEFINE)
+    list(APPEND compiler_options ${PIPEWIRE_CFLAGS} ${PIPEWIRE_CFLAGS_OTHER})
+    list(APPEND linked_libraries ${PIPEWIRE_LIBRARIES})
+  endif()
+endif()
+
 # sources
+list(APPEND config_sources
+${sources_path}/config/config.cpp
+)
+
 list(APPEND data_sources
 ${sources_path}/data/data.cpp
+${sources_path}/data/buffer.cpp
 ${sources_path}/data/driver/abstract.cpp
-${sources_path}/data/driver/dummy.cpp
+# ${sources_path}/data/driver/dummy.cpp
 ${sources_path}/data/driver/audio_common.cpp
 ${sources_path}/data/driver/data_portaudio.cpp
 ${sources_path}/data/driver/data_sdl.cpp
 )
+
+if(USE_PIPEWIRE)
+  list(APPEND data_sources ${sources_path}/data/driver/data_pipewire.cpp)
+endif()
 
 list(APPEND trigger_sources
 ${sources_path}/trigger/abstract.cpp
@@ -162,11 +189,14 @@ ${imgui_toggle_path}/imgui_toggle.cpp
 
 ${submodules_path}/showcqt-min/showcqt.c
 
+${sources_path}/gui/font_fontaudio.cpp
 ${sources_path}/gui/consts.cpp
+
 ${sources_path}/gui/gui.cpp
+${sources_path}/gui/scope/scope.cpp
 ${sources_path}/gui/wins/about.cpp
 ${sources_path}/gui/wins/ctrls.cpp
-${sources_path}/gui/wins/scopes.cpp
+${sources_path}/gui/wins/settings.cpp
 ${sources_path}/gui/wins/dataConfig.cpp
 # ${sources_path}/gui/wins/spectrum.cpp
 
@@ -197,7 +227,7 @@ if(IS_32BIT)
   add_compile_definitions(BUILD_32BIT)
 endif()
 
-list(APPEND unscope_srcs ${gui_sources} ${data_sources} ${trigger_sources} ${param_sources} ${sources_path}/main.cpp)
+list(APPEND unscope_srcs ${config_sources} ${gui_sources} ${data_sources} ${trigger_sources} ${param_sources} ${sources_path}/main.cpp)
 
 # project
 
@@ -215,6 +245,7 @@ endif()
 
 target_include_directories(unscope SYSTEM PRIVATE
 ${SDL_INCLUDE_DIRS}
+${PIPEWIRE_INCLUDE_DIRS}
 ${imgui_path}
 ${imgui_path}/misc/cpp
 ${imgui_path}/backends
@@ -222,16 +253,14 @@ ${imgui_toggle_path}
 ${imgui_knobs_path}
 ${submodules_path}/showcqt-min
 ${sources_path}
+${sources_path}/config
 ${sources_path}/param
 ${sources_path}/data
-${sources_path}/data/io
+${sources_path}/data/driver
 ${sources_path}/trigger
 ${sources_path}/gui
+${sources_path}/gui/scope
 ${sources_path}/gui/render)
 
 target_compile_options(unscope PRIVATE ${compiler_options})
 target_link_libraries(unscope PRIVATE ${linked_libraries})
-
-message(STATUS "compiler options: " ${compiler_options})
-message(STATUS "linked libraries: " ${linked_libraries})
-

@@ -21,23 +21,57 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 void USCGUI::drawAbout(bool* open) {
   if (!*open) return;
   ImGui::OpenPopup("About");
-  ImGui::SetNextWindowSize(ImVec2(600.f, 270.f));
-  if (ImGui::BeginPopupModal("About",open,ImGuiWindowFlags_NoMove|ImGuiWindowFlags_AlwaysAutoResize)) {
+  const ImVec2 size = ImVec2(600.f, 300.f);
+  ImGui::SetNextWindowSize(size);
+  // ImGui::SetNextWindowPos( (ImVec2(windowWidth,windowHeight)-size)/2.0f);
+  if (ImGui::BeginPopupModal("About",open,ImGuiWindowFlags_NoMove|ImGuiWindowFlags_AlwaysAutoResize|ImGuiWindowFlags_NoSavedSettings)) {
     ImGui::SetCursorPosX((ImGui::GetWindowWidth()-ImGui::CalcTextSize(PROGRAM_NAME " " PROGRAM_VER).x)/2.0f);
-    ImGui::Text(PROGRAM_NAME_AND_VER);
+    ImGui::TextUnformatted(PROGRAM_NAME_AND_VER);
 
     if (ImGui::BeginChild("##aboutChild")) {
       if (ImGui::BeginTabBar("aboutTabs")) {
         if (ImGui::BeginTabItem("About")) {
-          ImGui::Text("%s",aboutMsg);
+          if (ImGui::BeginTable("aboutTable", 2)) {
+            ImGui::TableSetupColumn("txt", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("img", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            ImGui::TextUnformatted(aboutMsg);
+            ImGui::TableNextColumn();
+            ImGui::Dummy({200,200});
+            ImGui::EndTable();
+          }
           ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("3rd party")) {
-          ImGui::Text("%s",thirdPartyMsg);
+          ImGui::TextUnformatted("libraies:");
+          ImGui::Indent();
+#define _A(n,u) \
+  ImGui::TextUnformatted( #n " -"); \
+  ImGui::SameLine(); \
+  ImGui::TextLinkOpenURL("https://" #u);
+
+          _A(ImGui, github.com/ocornut/imgui)
+          _A(PortAudio, github.com/PortAudio/portaudio)
+          _A(imgui-knobs, github.com/altschuler/imgui-knobs)
+          _A(imgui_toggle, github.com/cmdwtf/imgui_toggle)
+#ifdef NON_SYS_SDL
+          _A(SDL, github.com/libsdl-org/SDL)
+#endif
+          _A(pffft, github.com/marton78/pffft)
+          _A(yaml-cpp, github.com/jbeder/yaml-cpp)
+          ImGui::Unindent();
+          ImGui::TextUnformatted("icons:");
+          ImGui::Indent();
+          _A(Fontaudio, github.com/fefanto/fontaudio)
+          ImGui::Text("with"); ImGui::SameLine();
+          _A(IconFontCppHeaders,github.com/juliettef/IconFontCppHeaders)
+          ImGui::Unindent();
           ImGui::EndTabItem();
+#undef _A
         }
         if (ImGui::BeginTabItem("License")) {
-          ImGui::Text("%s",licenseMsg);
+          ImGui::TextUnformatted(licenseMsg);
           ImGui::EndTabItem();
         }
         ImGui::EndTabBar();

@@ -16,16 +16,22 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "analog.h"
+#include "IconsFontaudio.h"
 
 #define CHECK_TRIGGERED foundTrigger=triggerLow&&triggerHigh
+
+const char* edgeToggleData[2]={
+  ICON_FAD_PUNCH_OUT "  rising",
+  ICON_FAD_PUNCH_IN  " falling"
+};
 
 void TriggerAnalog::setupTrigger(DataBuffer* buf) {
   buffer = buf;
 
   params = {
-    TriggerParam(PARAM_KNOBNORM,false,"level",NULL,false,true),
-    TriggerParam(PARAM_TOGGLE,false,"extend trigger range","allows trigger to scan for the full audio buffer,\ninstead of the visible range",NULL,false,false),
-    TriggerParam(PARAM_TOGGLE,false,"trigger edge","off - rising\non - falling",NULL,false,false),
+    TriggerParam(PARAM_KNOBNORM, false, "level", "level", NULL, NULL, NULL, false, true),
+    TriggerParam(PARAM_TOGGLE, false, "extendRange", "extend trigger range", "allows trigger to scan for the full audio buffer,\ninstead of the visible range"),
+    TriggerParam(PARAM_TEXTTOGGLE, false, "triggerEdge", "trigger edge", NULL, (void*)edgeToggleData),
   };
 
   triggerIndex = 0;
@@ -66,5 +72,6 @@ bool TriggerAnalog::trigger(nint windowSize) {
 }
 
 TriggerAnalog::~TriggerAnalog() {
-  for (TriggerParam i:params) i.destroy();
+  for (int i=0; i<params.size(); i++)
+    params[i].destroy();
 }

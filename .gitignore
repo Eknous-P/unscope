@@ -4,7 +4,9 @@
 .cache/
 build/
 release/
+config.yaml
 imgui.ini
 unscope.ini
+layout.ini
 CMakeSettings.json
 .clangd

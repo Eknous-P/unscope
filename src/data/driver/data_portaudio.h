@@ -27,8 +27,12 @@ class DataPortAudio : public DataDriver {
   int inputChannels, outputChannels;
   bool outputting, paInitSuccess;
 
-  void openStream(int iDev, int oDev, int iChans, int oChans, int sampleRate, int frames);
-  void closeStream();
+  int inputChannelsP, outputChannelsP;
+  int inputDeviceP, outputDeviceP;
+  int sampleRateP;
+  int frameSizeP;
+
+  PaError openStream(int iDev, int oDev, int iChans, int oChans, int sampleRate, int frames);
 
   static int audioCallback(
     const void *inputBuffer, void *outputBuffer,
@@ -37,15 +41,13 @@ class DataPortAudio : public DataDriver {
     PaStreamCallbackFlags statusFlags,
     void *userData);
   public:
-    const int getFlags();
+    const DataDriverInfo getDriverInfo() const;
     int setup(USCData* p);
-    int init();
-    int start();
-    int stop();
     int enumerateDevices();
-    string getLastError();
-    int deinit();
-    const char* getName();
+    void activate();
+    void doPlay(bool play);
+    void deactivate();
+    void destroy();
+    // int getLastError();
     ~DataPortAudio();
 };
-

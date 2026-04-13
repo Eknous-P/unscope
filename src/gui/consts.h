@@ -15,23 +15,9 @@ You should have received a copy of the GNU General Public License along with
 unscope. If not, see <https://www.gnu.org/licenses/>. 
 */
 
-#ifndef TRIGGER_SMOOTH_H
-#define TRIGGER_SMOOTH_H
-
-#include "trigger.h"
-
-class TriggerSmooth : public Trigger {
-  float* smoothBuf, triggerLevel;
-
-  float smooth, prevSmooth, logSmooth;
-
-  public:
-    void setupTrigger(DataBuffer* buf);
-    bool trigger(nint windowSize);
-
-    float* getSmoothBuffer();
-    float getTriggerLevel();
-    ~TriggerSmooth();
-};
-
-#endif
+extern const unsigned char step_one;
+extern const char* windowLayout;
+extern const char* const dataDriverNames[];
+extern const char* const triggerNames[];
+extern const char* const scopeModes[];
+extern const char* const spectrumModes[];

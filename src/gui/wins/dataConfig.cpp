@@ -16,12 +16,11 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "gui.h"
-#include <data.h>
-#include <imgui.h>
+#include <IconsFontaudio.h>
 
-void USCGUI::drawAudioConfig(bool* open) {
+void USCGUI::drawDataConfig(bool* open) {
   if (!*open) return;
-  if (ImGui::Begin("Data I/O controls",open)) {
+  if (ImGui::Begin("Data I/O Configuration",open)) {
     if (ImGui::BeginTable("driverList", 2)) {
       ImGui::TableSetupColumn("c1", ImGuiTableColumnFlags_WidthFixed);
       ImGui::TableSetupColumn("c2", ImGuiTableColumnFlags_WidthStretch);
@@ -37,26 +36,41 @@ void USCGUI::drawAudioConfig(bool* open) {
           continue;
         }
         ImGui::TableNextColumn();
-        if (ImGui::BeginChild("driverCtrls", ImVec2(ImGui::GetContentRegionAvail().x, 200.0f), ImGuiChildFlags_Borders)) {
-          if (ImGui::BeginMenuBar()) {
-            if (ImGui::BeginMenu(drv->getName())) {
-              ImGui::EndMenu();
+        if (ImGui::BeginChild("driverCtrls", ImVec2(), ImGuiChildFlags_Borders)) {
+          ImGui::SeparatorText(drv->getDriverInfo().name);
+          for (int j=0; j<drv->getParams()->size(); j++) {
+            drv->getParams()->at(j).draw();
+          }
+          if (ImGui::Button("refresh device list"))
+            if (data->dispatchDriverCommand(i, DRIVER_ENUMERATE_DEVICES)) {
+              printf(ERROR_MSG "failed to get any devices!" MSG_END);
             }
-            ImGui::EndMenuBar();
-          }
-          for (int j=0; j<drv->getParams().size(); j++) {
-            drv->getParams()[j].draw();
-          }
-          if (ImGui::Button("refresh device list")) data->dispatchDriverCommand(i, DRIVER_ENUMERATE_DEVICES);
+          ImGui::BeginDisabled(drv->getState()&DRIVERSTATE_ACTIVE);
+          if (ImGui::Button("open device"))
+            data->dispatchDriverCommand(i, DRIVER_ACTIVATE);
+          ImGui::EndDisabled();
           ImGui::SameLine();
-          if (ImGui::Button("restart")) data->dispatchDriverCommand(i, DRIVER_RESTART);
+  
+          ImGui::BeginDisabled(!(drv->getState()&DRIVERSTATE_ACTIVE));
+          bool playing = drv->getState()&DRIVERSTATE_PLAY;
+          if (playing) ImGui::PushStyleColor(ImGuiCol_Button, colors.widgetActiveColor);
+          if (ImGui::Button(playing?ICON_FAD_PAUSE:ICON_FAD_PLAY))
+            data->dispatchDriverCommand(i, playing?DRIVER_PAUSE:DRIVER_PLAY);
+          if (playing) ImGui::PopStyleColor();
+          
+          ImGui::SameLine();
+
+          if (ImGui::Button(ICON_FAD_STOP)) {
+            data->dispatchDriverCommand(i, DRIVER_DEACTIVATE);
+          }
+          ImGui::EndDisabled();
         }
         ImGui::EndChild();
         ImGui::PopID();
       }
       ImGui::TableNextRow();
       ImGui::TableNextColumn();
-      ImGui::Button("+");
+      ImGui::Button(ICON_FAD_FORWARD);
       if (ImGui::BeginPopupContextItem("new driver", ImGuiPopupFlags_MouseButtonLeft)) {
         if (ImGui::BeginCombo("Select Driver...##driverSelect", dataDriverNames[newDriver])) {
           char comboStrBuf[1024];

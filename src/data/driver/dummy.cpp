@@ -29,23 +29,22 @@ int DummyDriver::callbackFunction(void* self, nint samples) {
   return 0;
 }
 
-const int DummyDriver::getFlags() {
-  return DRIVERFLAG_OUTPUT;
+const DataDriverInfo DummyDriver::getDriverInfo() const {
+  return {
+    DATA_DUMMY,
+    DRIVERFLAG_OUTPUT,
+    "Dummy Driver"
+  };
 }
 
 int DummyDriver::setup(USCData* p) {
   parent       = p;
-  running      = false;
-  lastErrorStr = "";
+  state        = DRIVERSTATE_IDLE;
   config = {
-    Parameter(PARAM_KNOBUNIT, false, "amplitude"),
-    Parameter(PARAM_INPUTFLOAT, false, "frequency", (float*)freqKnobLimits),
+    Parameter(PARAM_KNOBUNIT, false, "dummyAmpl", "amplitude"),
+    Parameter(PARAM_INPUTFLOAT, false, "dummyFreq", "frequency", NULL, (float*)freqKnobLimits),
   };
   buffers.push_back(new DataBuffer_Float);
   buffers[0]->init(65536, 48000, "dummy sine");
   return 0;
-}
-
-const char* DummyDriver::getName() {
-  return "dummy driver";
 }

@@ -30,16 +30,13 @@ class DataSDL : public DataDriver {
   static void audioCallback(void* userdata, Uint8* stream, int len);
 
   public:
-    const int getFlags();
+    const DataDriverInfo getDriverInfo() const;
     int setup(USCData* p);
-    int init();
-    int start();
-    int stop();
     int enumerateDevices();
-    int deinit();
-    const char* getName();
+    void activate();
+    void doPlay(bool play);
+    void deactivate();
+    void destroy();
+    ~DataSDL();
 };
-
-extern int const sampleRates[10];
-extern const int frameSizes[9];
 

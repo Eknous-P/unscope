@@ -37,12 +37,9 @@ typedef unsigned long long int nint;
 #define PROGRAM_DEBUG
 
 #define PROGRAM_NAME "unscope"
-#define PROGRAM_VER "1.0rc1"
+#define PROGRAM_VER "1.0rc2"
 
 #define PROGRAM_NAME_AND_VER PROGRAM_NAME " " PROGRAM_VER
-
-#define PROGRAM_WIDTH 1280
-#define PROGRAM_HEIGHT 720
 
 // printf fancies
 #define ERROR_MSG "\033[31;1m"
@@ -113,8 +110,6 @@ enum USCRenderers {
 #endif
 };
 
-float clamp(float a);
-extern const char *helpMsg, *verMsg, *aboutMsg, *thirdPartyMsg, *licenseMsg, *errMsgs[], *renderers[];
-const char* getErrorMsg(int e);
+extern const char *helpMsg, *verMsg, *aboutMsg, *thirdPartyMsg, *licenseMsg, *renderers[];
 
 #endif

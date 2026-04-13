@@ -25,30 +25,10 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 class TriggerParam : public Parameter {
   public:
     bool bindToDragX, bindToDragY;
-    TriggerParam(ParamTypes t, bool i, const char* l, void* ext=NULL, bool dragX=false, bool dragY=false) {
-      desc       = NULL;
-      hovered    = false;
-      active     = false;
-      type       = t;
-      exactInput = i;
-      label      = l;
-      paramData  = ext;
-      bindToDragX = dragX;
-      bindToDragY = dragY;
-      INIT_PARAM_VALUE
-    }
-    TriggerParam(ParamTypes t, bool i, const char* l, const char* d, void* ext=NULL, bool dragX=false, bool dragY=false) {
-      hovered    = false;
-      active     = false;
-      type       = t;
-      exactInput = i;
-      label      = l;
-      desc       = d;
-      paramData  = ext;
-      bindToDragX = dragX;
-      bindToDragY = dragY;
-      INIT_PARAM_VALUE
-    }
+    TriggerParam(ParamTypes t, bool i, const char* n, const char* l, const char* d=NULL, void* ext=NULL, void* val=NULL, bool dragX=false, bool dragY=false):
+      Parameter(t, i, n, l, d, ext, val),
+      bindToDragX(dragX),
+      bindToDragY(dragY) {}
 };
 
 class Trigger {
@@ -61,19 +41,20 @@ class Trigger {
     bool triggered;
   public:
     virtual void setupTrigger(DataBuffer* buf);
-    virtual vector<TriggerParam> getParams();
+    virtual vector<TriggerParam>* getParams();
     virtual bool trigger(nint windowSize);
     virtual bool getTriggered();
     virtual nint getTriggerIndex();
     virtual ~Trigger();
 };
 
-enum Triggers : int {
+enum Triggers : signed char {
   TRIG_INVALID  = -1,
   TRIG_FALLBACK = 0,
   TRIG_ANALOG,
   TRIG_SMOOTH,
-  TRIG_MAX
+  TRIG_MAX,
+  TRIG_STOLEN
 };
 
 #endif

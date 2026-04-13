@@ -16,76 +16,110 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "data.h"
-#include <param.h>
 
-const int DataDriver::getFlags() {
-  return DRIVERFLAG_NONE;
+YAML::Node DataDriver::saveBufferToNode() {
+  YAML::Node node;
+  for (DataBuffer*& buf:buffers)
+    node.push_back(buf->writeToNode());
+  return node;
+}
+
+void DataDriver::loadBufferFromNode(YAML::Node node) {
+  for (int i=0; i<buffers.size(); i++) {
+    buffers[i]->readFromNode(node[i]);
+  }
+}
+
+const DataDriverInfo DataDriver::getDriverInfo() const {
+  return {
+    DATA_DUMMY,
+    DRIVERFLAG_NONE,
+    "",
+  };
+}
+
+DataBuffer* DataDriver::getBuffer(int which) const {
+  if (which < 0 || which > buffers.size()) return NULL;
+  return buffers[which];
+}
+
+int DataDriver::getBufferCount() const {
+  return buffers.size();
+}
+
+vector<Parameter>* DataDriver::getParams() {
+  return &config;
+}
+
+int DataDriver::getLastError() {
+  state &=~DRIVERSTATE_ERROR;
+  int oldError = error;
+  error = 0;
+  return oldError;
 }
 
 int DataDriver::setup(USCData* p) {
-  parent         = p;
-  running        = false;
-  lastErrorStr   = "";
+  parent      = p;
+  state       = 0;
+  error       = 0;
   return 0;
 }
 
-int DataDriver::init() {
-  return 0;
+void DataDriver::activate() {
+  state |= DRIVERSTATE_ACTIVE;
 }
 
-int DataDriver::deinit() {
-  buffers = {};
-  return 0;
+void DataDriver::doPlay(bool play) {
+  if (play) {
+    state |= DRIVERSTATE_PLAY;
+  } else {
+    state &=~DRIVERSTATE_PLAY;
+  }
 }
 
-int DataDriver::start() {
-  running = true;
-  return 0;
+void DataDriver::deactivate() {
+  state &=~DRIVERSTATE_ACTIVE;
 }
 
-int DataDriver::stop() {
-  running = false;
-  return 0;
-}
-
-bool DataDriver::isRunning() {
-  return running;
+DataDriverState DataDriver::getState() const {
+  return state;
 }
 
 int DataDriver::enumerateDevices() {
   return 0;
 }
 
-int DataDriver::getDefaultInputDevice() {
-  return 0;
-}
-
-int DataDriver::getDefaultOutputDevice() {
-  return 0;
-}
-
-string DataDriver::getLastError() {
-  return lastErrorStr;
-}
-
-const char* DataDriver::getName() {
-  return "";
-}
-
-DataBuffer* DataDriver::getBuffer(int which) {
-  if (which < 0 || which > buffers.size()) return NULL;
-  return buffers[which];
-}
-
-int DataDriver::getBufferCount() {
-  return buffers.size();
-}
-
-vector<Parameter> DataDriver::getParams() {
-  return config;
-}
-
-void DataDriver::destroyParams() {
+void DataDriver::destroy() {
   for (Parameter& i:config) i.destroy();
   config.clear();
+}
+
+YAML::Node DataDriver::saveToNode() {
+  YAML::Node node;
+  node["state"] = (int)(state & ~(DRIVERSTATE_OK|DRIVERSTATE_READY));
+  YAML::Node configNode;
+  for (Parameter& p:config)
+    p.writeToConfig(configNode);
+  node["config"] = configNode;
+  node["buffers"] = saveBufferToNode();
+  return node;
+}
+
+void DataDriver::loadFromNode(YAML::Node& node) {
+  YAML::Node configNode = node["config"];
+  for (Parameter& p:config)
+    p.readFromConfig(configNode);
+  loadBufferFromNode(node["buffers"]);
+  int tempState = node["state"].as<int>();
+  state = (state&(DRIVERSTATE_OK|DRIVERSTATE_READY)) | tempState;
+  // if (state&DRIVERSTATE_OK) {
+    if (state&DRIVERSTATE_ACTIVE) {
+      state&=~DRIVERSTATE_ACTIVE;
+      activate();
+    }
+    if (state&DRIVERSTATE_PLAY) {
+      state&=~DRIVERSTATE_PLAY;
+      doPlay(true);
+    }
+  // }
 }

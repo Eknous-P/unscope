@@ -16,7 +16,7 @@ unscope. If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "shared.h"
-#include <cassert>
+#include "config.h"
 
 /** 
  * data buffer class, where data shall be stored.
@@ -27,95 +27,65 @@ class DataBuffer {
     nint size, index;
     double sampleRate;
     string name;
+    bool inited;
   public:
-    virtual void init(nint len, double rate, string n) {
-      size = len;
-      sampleRate = rate;
-      name = n;
-      index = 0;
-      assert(0 && "you called the virtual constructor!");
-    }
+    DataBuffer();
+    virtual void init(nint len, double rate, string n);
     /**  function to write to the buffer and advance the needle
      * @param _data the data to write
      */
-    virtual void write(void* sample) {
-      (void)sample;
-      if (index++>size) index=0;
-    }
+    virtual void write(void* sample);
     /** return the size
      */
-    virtual nint getSize() {
-      return size;
-    }
+    virtual nint getSize() const;
     /** return the needle
      * @return the position of the needle
      */
-    virtual nint getIndex() {
-      return index;
-    }
+    virtual nint getIndex();
     /** return the sample rate
+     * @return the sample rate
      */
-    virtual double getSampleRate() {
-      return sampleRate;
-    }
+    virtual double getSampleRate() const;
     /** return the buffer pointer
+     * @return the address of the buffer
      */
-    virtual void* getBuffer() {
-      return NULL;
-    }
-    virtual string getName() {
-      return name;
-    }
-    virtual void destroy() {
-    }
-    virtual double getValueScaled(nint i) {
-      return 0.0;
-    }
-    virtual ~DataBuffer() {
-    }
+    virtual void* getBuffer();
+    /** return the name of the buffer
+     * @return the name (as a std::string)
+     */
+    virtual string getName() const;
+    /** destory the buffer - delete the buffer from memory and declare as not initialized
+     */
+    virtual void destroy();
+    /** return the scaled buffer value (used in scopes)
+     * @param i where
+     * @return the value at that point, scaled to the range [-1...1]
+     */
+    virtual double getValueScaled(nint i);
+    /** return the state of the buffer
+     * @return the buffer state (true if initialized)
+     */
+    virtual bool isInited();
+    /** save the buffer state to a node
+     * @return a YAML::Node representing the buffer state
+     */
+    virtual YAML::Node writeToNode();
+    /** load the buffer state from a node
+     * @param node a node representing the buffer
+     */
+    virtual bool readFromNode(YAML::Node node);
+    virtual ~DataBuffer();
 };
 
 class DataBuffer_Float : public DataBuffer {
   private:
     float* data;
   public:
-    DataBuffer_Float ():
-      data(NULL) {}
-    void init(nint len, double rate, string n) {
-      size = len;
-      sampleRate = rate;
-      name = n;
-      index = 0;
-      data = new float[size];
-    }
-    void write(void* sample) {
-      if (data==NULL) return;
-      data[index++]=*(float*)sample;
-      if (index>size) index=0;
-    }
-    void* getBuffer() {
-      return data;
-    }
-    void destroy() {
-      if (data) {
-        delete[] data;
-        data = NULL;
-      }
-    }
-    double getValueScaled(nint i) {
-      if (data==NULL) return 0;
-      float s;
-      if (index+i>size) {
-        s=data[index+i-size];
-      } else {
-        s=data[index+i];
-      }
-      return s;
-    }
-    ~DataBuffer_Float() {
-      if (data) {
-        delete[] data;
-        data = NULL;
-      }
-    }
+    DataBuffer_Float();
+    void init(nint len, double rate, string n);
+    void write(void* sample);
+    void* getBuffer();
+    void destroy();
+    double getValueScaled(nint i);
+    ~DataBuffer_Float();
 };
